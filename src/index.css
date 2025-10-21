@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+    --color-primary: #35D07F;
+    --color-secondary: #FBCC5C;
+    --color-accent: #2E3338;
+    --color-background: #F8F9FA;
+    --color-surface: #FFFFFF;
+    --color-text: #2E3338;
+    --color-text-light: #6B7280;
+    --color-border: #E5E7EB;
+
+    /* Gradient utilities */
+    --gradient-primary: linear-gradient(135deg, #35D07F 0%, #2BB673 100%);
+}
