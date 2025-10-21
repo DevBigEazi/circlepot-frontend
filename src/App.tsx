@@ -1,14 +1,17 @@
-import { ConnectButton } from "thirdweb/react"
-import { client } from "./thirdwebClient"
+import AuthModal from "./modals/AuthModal"
+import { Route, Routes } from "react-router"
+import Dashboard from "./pages/Dashboard"
 
 function App() {
 
   return (
     <main>
-      <div className='flex justify-center items-center'>
-        <h2 className="text-green-600">Hello CirclePot</h2>
-        <ConnectButton client={client} />
-      </div>
+      <Routes>
+        <Route index element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+      {/* Auth modal overlays the current page until user logs in */}
+      <AuthModal />
     </main>
   )
 }
