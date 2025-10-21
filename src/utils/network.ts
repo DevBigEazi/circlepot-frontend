@@ -44,7 +44,7 @@ export const isDevelopment = () => {
 // Network connectivity check
 export const checkNetworkConnectivity = async (): Promise<boolean> => {
   try {
-    const response = await fetch('https://embedded-wallet.thirdweb.com/api/health', {
+    await fetch('https://embedded-wallet.thirdweb.com/api/health', {
       method: 'HEAD',
       mode: 'no-cors'
     })

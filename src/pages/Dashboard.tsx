@@ -24,8 +24,8 @@ const Dashboard: React.FC = () => {
             setDisconnectError(null)
 
             if (wallet) {
-                disconnect(wallet)
                 navigate("/")
+                disconnect(wallet)
             }
         } catch (error: any) {
             console.error('Disconnect failed:', error)
