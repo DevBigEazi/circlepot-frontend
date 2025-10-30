@@ -13,3 +13,22 @@
     /* Gradient utilities */
     --gradient-primary: linear-gradient(135deg, #35D07F 0%, #2BB673 100%);
 }
+
+/* Base dark mode support */
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+/* Ensure body has proper background */
+body {
+  @apply bg-white dark:bg-gray-950;
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+#root {
+  @apply min-h-screen;
+}
