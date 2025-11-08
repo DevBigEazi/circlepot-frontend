@@ -1,0 +1,11 @@
+{
+  "celo-sepolia": {
+    "UserProfileV1": {
+      "address": "0x7Ed5Bd07bFE530Fe3f8Be08c14fa2F1648e172E3",
+      "startBlock": 9137355
+    },
+    "ReputationV1": {
+      "address": "0xDcb474A33E41fcf76Fa9b66F1cfF7AB1322F3979"
+    }
+  }
+}

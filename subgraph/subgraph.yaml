@@ -1,0 +1,152 @@
+specVersion: 1.3.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: UserProfileProxy
+    network: celo-sepolia
+    source:
+      address: "0x45Be9e4e1AC17866d2f57789aF5429a84c28b69C"
+      abi: UserProfileV1
+      startBlock: 9137355
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - PhotoUpdated
+        - ProfileCreated
+      abis:
+        - name: UserProfileV1
+          file: ./abis/UserProfileV1.json
+      eventHandlers:
+        - event: PhotoUpdated(indexed address,indexed string)
+          handler: handlePhotoUpdated
+        - event: ProfileCreated(indexed address,indexed string,indexed string,string,uint256)
+          handler: handleProfileCreated
+      file: ./src/user-profile-v-1.ts
+  - kind: ethereum
+    name: ReputationProxy
+    network: celo-sepolia
+    source:
+      address: "0xd19aE3434675825A9e968ad469C5dcC18d70BC12"
+      abi: ReputationV1
+      startBlock: 9137356
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - CircleCompleted
+        - LatePaymentRecorded
+        - ReputationDecreased
+        - ReputationIncreased
+        - ScoreCategoryChanged
+      abis:
+        - name: ReputationV1
+          file: ./abis/ReputationV1.json
+      eventHandlers:
+        - event: CircleCompleted(indexed address,uint256)
+          handler: handleCircleCompleted
+        - event: LatePaymentRecorded(indexed address,uint256)
+          handler: handleLatePaymentRecorded
+        - event: ReputationDecreased(indexed address,uint256,string,uint256)
+          handler: handleReputationDecreased
+        - event: ReputationIncreased(indexed address,uint256,string,uint256)
+          handler: handleReputationIncreased
+        - event: ScoreCategoryChanged(indexed address,uint8,uint8)
+          handler: handleScoreCategoryChanged
+      file: ./src/reputation-v-1.ts
+  - kind: ethereum
+    name: PersonalSavingsProxy
+    network: celo-sepolia
+    source:
+      address: "0x3754319fA0Dd919D0724fa0C446eb363C9a36FF4"
+      abi: PersonalSavingsV1
+      startBlock: 9137355
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - PersonalGoalCreated
+        - GoalCompleted
+        - GoalContribution
+        - GoalWithdrawn
+      abis:
+        - name: PersonalSavingsV1
+          file: ./abis/PersonalSavingsV1.json
+      eventHandlers:
+        - event: PersonalGoalCreated(indexed uint256,indexed address,string,indexed uint256)
+          handler: handlePersonalGoalCreated
+        - event: GoalCompleted(indexed uint256,indexed address)
+          handler: handleGoalCompleted
+        - event: GoalContribution(indexed uint256,indexed address,uint256)
+          handler: handleGoalContribution
+        - event: GoalWithdrawn(indexed uint256,indexed address,uint256,uint256)
+          handler: handleGoalWithdrawn
+      file: ./src/personal-savings-v-1.ts
+  - kind: ethereum
+    name: CircleSavingsProxy
+    network: celo-sepolia
+    source:
+      address: "0x6e222b5507F7554A163B37C4DfC6d62dE3077fA8"
+      abi: CircleSavingsV1
+      startBlock: 9137356
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - VisibilityUpdated
+        - CircleCreated
+        - CircleJoined
+        - CircleStarted
+        - PayoutDistributed
+        - CircleCompleted
+        - PositionAssigned
+        - CollateralWithdrawn
+        - VotingInitiated
+        - VoteCast
+        - MemberInvited
+        - VoteExecuted
+        - ContributionMade
+        - LatePayment
+        - MemberForfeited
+      abis:
+        - name: CircleSavingsV1
+          file: ./abis/CircleSavingsV1.json
+      eventHandlers:
+        - event: VisibilityUpdated(indexed uint256,indexed address)
+          handler: handleVisibilityUpdated
+        - event: CircleCreated(indexed uint256,string,string,indexed address,indexed uint256)
+          handler: handleCircleCreated
+        - event: CircleJoined(indexed uint256,indexed address)
+          handler: handleCircleJoined
+        - event: CircleStarted(indexed uint256,uint256)
+          handler: handleCircleStarted
+        - event: PayoutDistributed(indexed uint256,indexed uint256,indexed address,uint256)
+          handler: handlePayoutDistributed
+        - event: CircleCompleted(indexed uint256)
+          handler: handleCircleCompleted
+        - event: PositionAssigned(indexed uint256,indexed address,uint256)
+          handler: handlePositionAssigned
+        - event: CollateralWithdrawn(indexed uint256,indexed address,uint256)
+          handler: handleCollateralWithdrawn
+        - event: VotingInitiated(indexed uint256,indexed uint256)
+          handler: handleVotingInitiated
+        - event: VoteCast(indexed uint256,indexed address,uint8)
+          handler: handleVoteCast
+        - event: MemberInvited(indexed uint256,indexed address)
+          handler: handleMemberInvited
+        - event: VoteExecuted(indexed uint256,bool,uint256,uint256)
+          handler: handleVoteExecuted
+        - event: ContributionMade(indexed uint256,uint256,address,indexed uint256)
+          handler: handleContributionMade
+        - event: LatePayment(indexed uint256,uint256,address,indexed uint256)
+          handler: handleLatePayment
+        - event: MemberForfeited(indexed uint256,uint256,address,indexed uint256,indexed address)
+          handler: handleMemberForfeited
+      file: ./src/circle-savings-v-1.ts
