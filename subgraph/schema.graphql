@@ -1,0 +1,40 @@
+#General
+type Transaction @entity(immutable: true) {
+  id: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type User @entity() {
+  id: Bytes!
+  email: String! # string
+  username: String! # string
+  fullName: String! # string
+  accountId: BigInt! # uint256
+  photo: String! # string
+  lastPhotoUpdate: BigInt! # uint256
+  createdAt: BigInt! # uint256
+  hasProfile: Boolean! # bool
+  totalReputation: BigInt! # uint256
+  totalLatePayments: BigInt! # uint256
+  totalCirclesCompleted: BigInt! # uint256
+  totalGoalsCompleted: BigInt! # uint256
+  personalGoals: [PersonalGoalCreated!]! @derivedFrom(field: "user")
+  earlyWithdrawals: [GoalWithdrawn!]! @derivedFrom(field: "user")
+}
+
+#User Profile
+type ProfileCreated @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  transaction: Transaction!
+}
+
+type PhotoUpdated @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  transaction: Transaction!
+}
+
+
