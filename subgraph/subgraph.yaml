@@ -8,7 +8,7 @@ dataSources:
     name: UserProfileProxy
     network: celo-sepolia
     source:
-      address: "0x075E2dC963cE97E4D7B365CcE8473286E3C5f545"
+      address: "0x09c259E2510677dD0610b3D229C928e275a370F5"
       abi: UserProfileV1
       startBlock: 9307744
     mapping:
@@ -22,9 +22,9 @@ dataSources:
         - name: UserProfileV1
           file: ./abis/UserProfileV1.json
       eventHandlers:
-        - event: PhotoUpdated(indexed address,indexed string)
+        - event: PhotoUpdated(indexed address,string)
           handler: handlePhotoUpdated
-        - event: ProfileCreated(indexed address,indexed string,indexed string,string,uint256,string,uint256,bool)
+        - event: ProfileCreated(indexed address,string,string,string,uint256,string,uint256,bool)
           handler: handleProfileCreated
       file: ./src/user-profile-v-1.ts
   - kind: ethereum
