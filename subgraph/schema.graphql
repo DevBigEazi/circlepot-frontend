@@ -37,4 +37,50 @@ type PhotoUpdated @entity(immutable: true) {
   transaction: Transaction!
 }
 
+#User Reputation
+type LatePaymentRecorded @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  circle: CircleStarted!
+  round: BigInt! # uint256
+  fee: BigInt! # uint256
+  transaction: Transaction!
+}
 
+type CircleCompleted @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  circle: CircleStarted!
+  transaction: Transaction!
+}
+
+type GoalCompleted @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  goal: PersonalGoalCreated!
+  transaction: Transaction!
+}
+
+type ReputationDecreased @entity() {
+  id: Bytes!
+  user: User!
+  points: BigInt! # uint256
+  reason: String! # string
+  transaction: Transaction!
+}
+
+type ReputationIncreased @entity() {
+  id: Bytes!
+  user: User!
+  points: BigInt! # uint256
+  reason: String! # string
+  transaction: Transaction!
+}
+
+type ScoreCategoryChanged @entity() {
+  id: Bytes!
+  user: User!
+  oldCategory: Enum! 
+  newCategory: Enum! 
+  transaction: Transaction!
+}
