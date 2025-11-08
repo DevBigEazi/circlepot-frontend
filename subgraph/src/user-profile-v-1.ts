@@ -1,103 +1,50 @@
 import {
-  ContractUpgraded as ContractUpgradedEvent,
-  Initialized as InitializedEvent,
-  OwnershipTransferred as OwnershipTransferredEvent,
-  PhotoUpdated as PhotoUpdatedEvent,
   ProfileCreated as ProfileCreatedEvent,
-  Upgraded as UpgradedEvent
-} from "../generated/UserProfileV1/UserProfileV1"
+  PhotoUpdated as PhotoUpdatedEvent,
+  UserProfileV1,
+} from "../generated/UserProfileProxy/UserProfileV1"
 import {
-  ContractUpgraded,
-  Initialized,
-  OwnershipTransferred,
   PhotoUpdated,
   ProfileCreated,
-  Upgraded
-} from "../generated/schema"
+} from "../generated/schema";
+import { createTransaction, getOrCreateUser } from "./utils";
 
-export function handleContractUpgraded(event: ContractUpgradedEvent): void {
-  let entity = new ContractUpgraded(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.newImplementation = event.params.newImplementation
-  entity.version = event.params.version
+export function handleProfileCreated(event: ProfileCreatedEvent): void {
+   const contract = UserProfileV1.bind(event.address);
+   const transaction = createTransaction(event);
+   const userProfile = contract.getProfile(event.params.user);
+   const profileCreated = new ProfileCreated(event.transaction.hash);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+   const user = getOrCreateUser(event.params.user); 
+   user.id = event.params.user;
+   user.accountId = event.params.accountId;
+   user.email = userProfile.email;
+   user.username = userProfile.username;
+   user.fullName =event.params.fullName;
+   user.photo = userProfile.profilePhoto;
+   user.lastPhotoUpdate = userProfile.lastPhotoUpdate;
+   user.createdAt = userProfile.createdAt;
+   user.hasProfile = contract.hasProfile(event.params.user);
 
-  entity.save()
-}
+   profileCreated.transaction = transaction.id;
+   profileCreated.user = user.id
 
-export function handleInitialized(event: InitializedEvent): void {
-  let entity = new Initialized(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.version = event.params.version
+   user.save();
+   profileCreated.save();
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleOwnershipTransferred(
-  event: OwnershipTransferredEvent
-): void {
-  let entity = new OwnershipTransferred(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.previousOwner = event.params.previousOwner
-  entity.newOwner = event.params.newOwner
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
 }
 
 export function handlePhotoUpdated(event: PhotoUpdatedEvent): void {
-  let entity = new PhotoUpdated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.user = event.params.user
-  entity.photo = event.params.photo
+   const transaction = createTransaction(event);
+   const photoUpdated = new PhotoUpdated(event.transaction.hash);
+   const user = getOrCreateUser(event.params.user);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+   user.photo = event.params.photo.toString();
 
-  entity.save()
+   photoUpdated.transaction = transaction.id;
+   photoUpdated.user = user.id;
+
+   user.save();
+   photoUpdated.save();
 }
 
-export function handleProfileCreated(event: ProfileCreatedEvent): void {
-  let entity = new ProfileCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.user = event.params.user
-  entity.email = event.params.email
-  entity.username = event.params.username
-  entity.fullName = event.params.fullName
-  entity.accountId = event.params.accountId
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleUpgraded(event: UpgradedEvent): void {
-  let entity = new Upgraded(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.implementation = event.params.implementation
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
