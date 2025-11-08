@@ -84,19 +84,6 @@
         "internalType": "uint256",
         "name": "circleId",
         "type": "uint256"
-      }
-    ],
-    "name": "CircleCompleted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "circleId",
-        "type": "uint256"
       },
       {
         "indexed": false,
@@ -121,6 +108,36 @@
         "internalType": "uint256",
         "name": "contributionAmount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum CircleSavingsV1.Frequency",
+        "name": "frequency",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxMembers",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum CircleSavingsV1.Visibility",
+        "name": "visibility",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "collateralLocked",
+        "type": "uint256"
       }
     ],
     "name": "CircleCreated",
@@ -140,6 +157,18 @@
         "internalType": "address",
         "name": "member",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "currentMembers",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum CircleSavingsV1.CircleState",
+        "name": "state",
+        "type": "uint8"
       }
     ],
     "name": "CircleJoined",
@@ -159,6 +188,12 @@
         "internalType": "uint256",
         "name": "startedAt",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum CircleSavingsV1.CircleState",
+        "name": "state",
+        "type": "uint8"
       }
     ],
     "name": "CircleStarted",
@@ -276,37 +311,6 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
-      }
-    ],
-    "name": "LatePayment",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "circleId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "round",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "member",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
         "name": "deduction",
         "type": "uint256"
       },
@@ -332,8 +336,20 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "_invitee",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "invitedAt",
+        "type": "uint256"
       }
     ],
     "name": "MemberInvited",
@@ -522,6 +538,12 @@
         "indexed": true,
         "internalType": "uint256",
         "name": "circleId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "votingStartTime",
         "type": "uint256"
       },
       {
