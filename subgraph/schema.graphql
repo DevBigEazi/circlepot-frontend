@@ -84,3 +84,33 @@ type ScoreCategoryChanged @entity() {
   newCategory: Enum! 
   transaction: Transaction!
 }
+
+#Personal Goal Savings
+type PersonalGoalCreated @entity() {
+  id: Bytes!
+  user: User!
+  goalId: BigInt! # uint256
+  goalName: String! # string
+  goalAmount: BigInt! # uint256
+  currentAmount: BigInt! # uint256
+  isActive: Boolean! # bool
+  transaction: Transaction!
+}
+
+type GoalContribution @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  amount: BigInt! # uint256
+  goal: PersonalGoalCreated!
+  transaction: Transaction!
+}
+
+type GoalWithdrawn @entity(immutable: true) {
+  id: Bytes!
+  user: User!
+  goal: PersonalGoalCreated!
+  amount: BigInt! # uint256
+  penalty: BigInt! # uint256
+  transaction: Transaction!
+}
+
