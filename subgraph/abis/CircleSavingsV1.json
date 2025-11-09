@@ -342,7 +342,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_invitee",
+        "name": "invitee",
         "type": "address"
       },
       {
@@ -411,7 +411,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "circledId",
+        "name": "circleId",
         "type": "uint256"
       },
       {

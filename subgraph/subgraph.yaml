@@ -67,7 +67,7 @@ dataSources:
     name: PersonalSavingsProxy
     network: celo-sepolia
     source:
-      address: "0xa2975A3ECb8Cd2d28E99ac1394665298b3952DAC"
+      address: "0x658CA2bC74b0DecfBEc65884c515d560307D7185"
       abi: PersonalSavingsV1
       startBlock: 9307744
     mapping:
@@ -95,7 +95,7 @@ dataSources:
     name: CircleSavingsProxy
     network: celo-sepolia
     source:
-      address: "0x5b991e0f4BD8A349d58388f8f99FD5189E2dF8D1"
+      address: "0xDD71BB078F6dFE1989e7f240E987BaFD28306722"
       abi: CircleSavingsV1
       startBlock: 9307744
     mapping:

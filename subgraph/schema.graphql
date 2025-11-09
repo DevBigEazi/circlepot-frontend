@@ -23,6 +23,9 @@ type User @entity(immutable: false) {
   totalGoalsCompleted: BigInt! # uint256
   personalGoals: [PersonalGoalCreated!]! @derivedFrom(field: "user")
   earlyWithdrawals: [GoalWithdrawn!]! @derivedFrom(field: "user")
+  circlesCreated: [CircleCreated!]! @derivedFrom(field: "user")
+  circlesJoined: [CircleJoined!]! @derivedFrom(field: "user")
+  circlesCompleted: [CircleCompleted]! @derivedFrom(field: "user")
 }
 
 #User Profile
@@ -201,7 +204,7 @@ type VoteExecuted @entity(immutable: true) {
   id: Bytes!
   circle: CircleCreated!
   circleStarted: Boolean! 
-  StartVoteTotal: BigInt! # uint256
+  startVoteTotal: BigInt! # uint256
   withdrawVoteTotal: BigInt! # uint256
   transaction: Transaction!
 }
@@ -218,7 +221,7 @@ type PayoutDistributed @entity(immutable: true) {
 type CollateralWithdrawn @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleStarted!
+  circle: CircleCreated!
   amount: BigInt! # uint256
   transaction: Transaction!
 }
