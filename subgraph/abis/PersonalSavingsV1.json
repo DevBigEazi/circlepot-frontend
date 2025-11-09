@@ -91,30 +91,17 @@
         "internalType": "address",
         "name": "owner",
         "type": "address"
-      }
-    ],
-    "name": "GoalCompleted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "goalId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
         "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "currentAmount",
         "type": "uint256"
       }
     ],
@@ -210,6 +197,18 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "currentAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
       }
     ],
     "name": "PersonalGoalCreated",

@@ -25,8 +25,12 @@ export function getOrCreateUser(address: Bytes): User {
     user.lastPhotoUpdate = BigInt.fromI32(0);
     user.createdAt = BigInt.fromI32(0);
     user.hasProfile = false;
+    user.repCategory = 0;
     user.totalReputation = BigInt.fromI32(0);
     user.totalLatePayments = BigInt.fromI32(0);
+    user.totalGoalsCompleted = BigInt.fromI32(0);
+    user.totalCirclesCompleted = BigInt.fromI32(0);
+
     user.save();
   }
 

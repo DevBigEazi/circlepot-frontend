@@ -1,175 +1,117 @@
+import { Bytes } from "@graphprotocol/graph-ts";
 import {
   CircleCompleted as CircleCompletedEvent,
-  ContractAuthorized as ContractAuthorizedEvent,
-  ContractRevoked as ContractRevokedEvent,
-  Initialized as InitializedEvent,
+  GoalCompleted as GoalCompletedEvent,
   LatePaymentRecorded as LatePaymentRecordedEvent,
-  OwnershipTransferred as OwnershipTransferredEvent,
   ReputationDecreased as ReputationDecreasedEvent,
   ReputationIncreased as ReputationIncreasedEvent,
   ScoreCategoryChanged as ScoreCategoryChangedEvent,
-  Upgraded as UpgradedEvent,
-} from "../generated/ReputationV1/ReputationV1"
+} from "../generated/ReputationProxy/ReputationV1";
 import {
   CircleCompleted,
-  ContractAuthorized,
-  ContractRevoked,
-  Initialized,
+  GoalCompleted,
   LatePaymentRecorded,
-  OwnershipTransferred,
   ReputationDecreased,
   ReputationIncreased,
   ScoreCategoryChanged,
-  Upgraded,
-} from "../generated/schema"
-
-export function handleCircleCompleted(event: CircleCompletedEvent): void {
-  let entity = new CircleCompleted(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.user = event.params.user
-  entity.totalCompleted = event.params.totalCompleted
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleContractAuthorized(event: ContractAuthorizedEvent): void {
-  let entity = new ContractAuthorized(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.contractAddress = event.params.contractAddress
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleContractRevoked(event: ContractRevokedEvent): void {
-  let entity = new ContractRevoked(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.contractAddress = event.params.contractAddress
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleInitialized(event: InitializedEvent): void {
-  let entity = new Initialized(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.version = event.params.version
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
+} from "../generated/schema";
+import { createTransaction, getOrCreateUser } from "./utils";
 
 export function handleLatePaymentRecorded(
-  event: LatePaymentRecordedEvent,
+  event: LatePaymentRecordedEvent
 ): void {
-  let entity = new LatePaymentRecorded(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.user = event.params.user
-  entity.totalLatePayments = event.params.totalLatePayments
+  const transaction = createTransaction(event);
+  const user = getOrCreateUser(event.params.user);
+  user.totalLatePayments = event.params.totalLatePayments;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const latePaymentRecorded = new LatePaymentRecorded(event.transaction.hash);
+  latePaymentRecorded.user = user.id;
+  latePaymentRecorded.circle = Bytes.fromHexString(
+    event.params.cid.toHexString()
+  );
+  latePaymentRecorded.round = event.params.round;
+  latePaymentRecorded.fee = event.params.fee;
+  latePaymentRecorded.transaction = transaction.id;
 
-  entity.save()
+  user.save();
+  transaction.save();
 }
 
-export function handleOwnershipTransferred(
-  event: OwnershipTransferredEvent,
-): void {
-  let entity = new OwnershipTransferred(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.previousOwner = event.params.previousOwner
-  entity.newOwner = event.params.newOwner
+export function handleCircleCompleted(event: CircleCompletedEvent): void {
+  const transaction = createTransaction(event);
+  const user = getOrCreateUser(event.params.user);
+  user.totalCirclesCompleted = event.params.totalCompleted;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const circleCompleted = new CircleCompleted(event.transaction.hash);
+  circleCompleted.user = user.id;
+  circleCompleted.circle = Bytes.fromHexString(event.params.cid.toHexString());
+  circleCompleted.transaction = transaction.id;
 
-  entity.save()
+  user.save();
+  circleCompleted.save();
 }
 
 export function handleReputationDecreased(
-  event: ReputationDecreasedEvent,
+  event: ReputationDecreasedEvent
 ): void {
-  let entity = new ReputationDecreased(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.user = event.params.user
-  entity.points = event.params.points
-  entity.reason = event.params.reason
-  entity.newScore = event.params.newScore
+  const transaction = createTransaction(event);
+  const user = getOrCreateUser(event.params.user);
+  user.totalReputation = user.totalReputation.minus(event.params.points);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const reputationDecreased = new ReputationDecreased(event.transaction.hash);
+  reputationDecreased.user = user.id;
+  reputationDecreased.points = event.params.points;
+  reputationDecreased.reason = event.params.reason;
+  reputationDecreased.transaction = transaction.id;
 
-  entity.save()
+  user.save();
+  reputationDecreased.save();
 }
 
 export function handleReputationIncreased(
-  event: ReputationIncreasedEvent,
+  event: ReputationIncreasedEvent
 ): void {
-  let entity = new ReputationIncreased(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.user = event.params.user
-  entity.points = event.params.points
-  entity.reason = event.params.reason
-  entity.newScore = event.params.newScore
+  const transaction = createTransaction(event);
+  const user = getOrCreateUser(event.params.user);
+  user.totalReputation = user.totalReputation.plus(event.params.points);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const reputationIncreased = new ReputationIncreased(event.transaction.hash);
+  reputationIncreased.user = user.id;
+  reputationIncreased.points = event.params.points;
+  reputationIncreased.reason = event.params.reason;
+  reputationIncreased.transaction = transaction.id;
 
-  entity.save()
+  user.save();
+  reputationIncreased.save();
 }
 
 export function handleScoreCategoryChanged(
-  event: ScoreCategoryChangedEvent,
+  event: ScoreCategoryChangedEvent
 ): void {
-  let entity = new ScoreCategoryChanged(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.user = event.params.user
-  entity.oldCategory = event.params.oldCategory
-  entity.newCategory = event.params.newCategory
+  const transaction = createTransaction(event);
+  const user = getOrCreateUser(event.params.user);
+  user.repCategory = event.params.newCategory;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const scoreCategoryChanged = new ScoreCategoryChanged(event.transaction.hash);
+  scoreCategoryChanged.user = user.id;
+  scoreCategoryChanged.newCategory = event.params.newCategory;
+  scoreCategoryChanged.oldCategory = event.params.oldCategory;
+  scoreCategoryChanged.transaction = transaction.id;
 
-  entity.save()
+  user.save();
+  scoreCategoryChanged.save();
 }
 
-export function handleUpgraded(event: UpgradedEvent): void {
-  let entity = new Upgraded(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.implementation = event.params.implementation
+export function handleGoalCompleted(event: GoalCompletedEvent): void {
+  const transaction = createTransaction(event);
+  const user = getOrCreateUser(event.params.user);
+  user.totalGoalsCompleted = event.params.totalCompleted;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const goalCompleted = new GoalCompleted(event.transaction.hash);
+  goalCompleted.user = user.id;
+  goalCompleted.goal = Bytes.fromHexString(event.params.goalId.toHexString());
+  goalCompleted.transaction = transaction.id;
 
-  entity.save()
+  user.save();
+  goalCompleted.save();
 }

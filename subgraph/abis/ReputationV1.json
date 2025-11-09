@@ -53,6 +53,12 @@
         "type": "address"
       },
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "cid",
+        "type": "uint256"
+      },
+      {
         "indexed": false,
         "internalType": "uint256",
         "name": "totalCompleted",
@@ -92,6 +98,50 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "version",
+        "type": "uint256"
+      }
+    ],
+    "name": "ContractUpgraded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "goalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalCompleted",
+        "type": "uint256"
+      }
+    ],
+    "name": "GoalCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "uint64",
         "name": "version",
@@ -109,6 +159,24 @@
         "internalType": "address",
         "name": "user",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "cid",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "round",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -564,7 +632,8 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "_user", "type": "address" }
+      { "internalType": "address", "name": "_user", "type": "address" },
+      { "internalType": "uint256", "name": "_cid", "type": "uint256" }
     ],
     "name": "recordCircleCompleted",
     "outputs": [],
@@ -573,7 +642,8 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "_user", "type": "address" }
+      { "internalType": "address", "name": "_user", "type": "address" },
+      { "internalType": "uint256", "name": "_goalId", "type": "uint256" }
     ],
     "name": "recordGoalCompleted",
     "outputs": [],
@@ -582,7 +652,10 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "_user", "type": "address" }
+      { "internalType": "address", "name": "_user", "type": "address" },
+      { "internalType": "uint256", "name": "_cid", "type": "uint256" },
+      { "internalType": "uint256", "name": "_round", "type": "uint256" },
+      { "internalType": "uint256", "name": "_fee", "type": "uint256" }
     ],
     "name": "recordLatePayment",
     "outputs": [],
