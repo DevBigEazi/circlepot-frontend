@@ -14,7 +14,7 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, MemberInvited, PayoutDistributed, PositionAssigned, VisibilityUpdated, VoteCast, VoteExecuted, VotingInitiated } from "../generated/schema";
+import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, ContributionMade, MemberInvited, PayoutDistributed, PositionAssigned, VisibilityUpdated, VoteCast, VoteExecuted, VotingInitiated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
@@ -155,7 +155,17 @@ export function handleVoteExecuted(event: VoteExecutedEvent): void {
 }
 
 export function handleContributionMade(event: ContributionMadeEvent): void {
+    const transaction = createTransaction(event);
+    const user = getOrCreateUser(event.params.member)
+    
+    const contributionMade = new ContributionMade(event.transaction.hash);
+    contributionMade.user = user.id;
+    contributionMade.circle = Bytes.fromHexString(event.params.circleId.toHexString());;
+    contributionMade.round = event.params.round
+    contributionMade.amount = event.params.amount;
+    contributionMade.transaction = transaction.id;
 
+    contributionMade.save();
 }
 
 export function handleMemberForfeited(event: MemberForfeitedEvent): void {
