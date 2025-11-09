@@ -142,7 +142,16 @@ export function handleMemberInvited(event: MemberInvitedEvent): void {
 }
 
 export function handleVoteExecuted(event: VoteExecutedEvent): void {
+    const transaction = createTransaction(event);
     
+    const voteExecuted = new VoteExecuted(event.transaction.hash);
+    voteExecuted.circle = Bytes.fromHexString(event.params.circleId.toHexString());;
+    voteExecuted.circleStarted = event.params.circleStarted;
+    voteExecuted.startVoteTotal = event.params.startVoteCount
+    voteExecuted.withdrawVoteTotal = event.params.withdrawVoteCount;
+    voteExecuted.transaction = transaction.id;
+
+    voteExecuted.save();
 }
 
 export function handleContributionMade(event: ContributionMadeEvent): void {
