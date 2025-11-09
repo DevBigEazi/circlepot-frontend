@@ -82,7 +82,7 @@ export function handlePositionAssigned(event: PositionAssignedEvent): void {
 
     const positionAssigned = new PositionAssigned(event.transaction.hash);
     positionAssigned.user = user.id;
-    positionAssigned.circle = event.params.circleId;
+    positionAssigned.circle = Bytes.fromHexString(event.params.circleId.toHexString());
     positionAssigned.position = event.params.position;
     positionAssigned.transaction = transaction.id;
 
