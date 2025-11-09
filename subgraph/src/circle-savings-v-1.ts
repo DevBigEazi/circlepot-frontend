@@ -94,5 +94,11 @@ export function handleMemberForfeited(event: MemberForfeitedEvent): void {
 }
 
 export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
-   
+    const transaction = createTransaction(event);
+
+    const visibilityUpdated = new VisibilityUpdated(event.transaction.hash);
+    visibilityUpdated.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    visibilityUpdated.transaction = transaction.id;
+
+    visibilityUpdated.save();
 }
