@@ -1,5 +1,5 @@
 import { BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { PersonalGoalCreated, Transaction, User } from "../generated/schema";
+import { Transaction, User } from "../generated/schema";
 
 export function createTransaction(event: ethereum.Event): Transaction {
   const transaction = new Transaction(event.transaction.hash);
@@ -25,6 +25,7 @@ export function getOrCreateUser(address: Bytes): User {
     user.lastPhotoUpdate = BigInt.fromI32(0);
     user.createdAt = BigInt.fromI32(0);
     user.hasProfile = false;
+    user.repCategory = 0;
     user.totalReputation = BigInt.fromI32(0);
     user.totalLatePayments = BigInt.fromI32(0);
     user.totalGoalsCompleted = BigInt.fromI32(0);

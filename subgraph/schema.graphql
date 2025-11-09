@@ -16,6 +16,7 @@ type User @entity(immutable: false) {
   lastPhotoUpdate: BigInt! # uint256
   createdAt: BigInt! # uint256
   hasProfile: Boolean! # bool
+  repCategory: Int!
   totalReputation: BigInt! # uint256
   totalLatePayments: BigInt! # uint256
   totalCirclesCompleted: BigInt! # uint256
