@@ -1,3 +1,4 @@
+import { Bytes } from "@graphprotocol/graph-ts";
 import {
     VisibilityUpdated as VisibilityUpdatedEvent,
     CircleCreated as CircleCreatedEvent,
@@ -13,13 +14,28 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-
-export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
-
-}
+import { CircleCreated, VisibilityUpdated } from "../generated/schema";
+import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
+    const transaction = createTransaction(event);
+    const user = getOrCreateUser(event.params.creator);
 
+    const circleCreated = new CircleCreated(event.transaction.hash);
+    circleCreated.user = user.id;
+    circleCreated.circleId = event.params.circleId;
+    circleCreated.circleName = event.params.title;
+    circleCreated.circleDescription = event.params.description;
+    circleCreated.circleContributionAmount = event.params.contributionAmount;
+    circleCreated.collateralAmount = event.params.collateralLocked;
+    circleCreated.circleFrequency = event.params.frequency;
+    circleCreated.circleMaxMembers = event.params.maxMembers;
+    circleCreated.circleVisibility = event.params.visibility;
+    circleCreated.circleCreatedAt = event.params.createdAt;
+    circleCreated.transaction = transaction.id;
+
+    user.save();
+    circleCreated.save();
 }
 
 export function handleCircleJoined(event: CircleJoinedEvent): void {
@@ -64,4 +80,14 @@ export function handleContributionMade(event: ContributionMadeEvent): void {
 
 export function handleMemberForfeited(event: MemberForfeitedEvent): void {
 
+}
+
+export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
+    const transaction = createTransaction(event);
+
+    const visibilityUpdated = new VisibilityUpdated(event.transaction.hash);
+    visibilityUpdated.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    visibilityUpdated.transaction = transaction.id;
+
+    visibilityUpdated.save();
 }

@@ -23,6 +23,7 @@ type User @entity(immutable: false) {
   totalGoalsCompleted: BigInt! # uint256
   personalGoals: [PersonalGoalCreated!]! @derivedFrom(field: "user")
   earlyWithdrawals: [GoalWithdrawn!]! @derivedFrom(field: "user")
+  circlesCreated: [CircleCreated!]! @derivedFrom(field: "user")
   circlesJoined: [CircleJoined!]! @derivedFrom(field: "user")
   circlesCompleted: [CircleCompleted]! @derivedFrom(field: "user")
 }
