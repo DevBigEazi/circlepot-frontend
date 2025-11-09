@@ -14,7 +14,7 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-import { CircleCreated, CircleJoined, CircleStarted, PayoutDistributed, VisibilityUpdated } from "../generated/schema";
+import { CircleCreated, CircleJoined, CircleStarted, PayoutDistributed, PositionAssigned, VisibilityUpdated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
@@ -34,7 +34,6 @@ export function handleCircleCreated(event: CircleCreatedEvent): void {
     circleCreated.circleCreatedAt = event.params.createdAt;
     circleCreated.transaction = transaction.id;
 
-    user.save();
     circleCreated.save();
 }
 
@@ -49,7 +48,6 @@ export function handleCircleJoined(event: CircleJoinedEvent): void {
     circleJoined.circleState = event.params.state;
     circleJoined.transaction = transaction.id;
     
-    user.save();
     circleJoined.save();
 }
 
@@ -75,12 +73,20 @@ export function handlePayoutDistributed(event: PayoutDistributedEvent): void {
     payoutDistributed.payoutAmount = event.params.amount
     payoutDistributed.transaction = transaction.id;
 
-    user.save();
     payoutDistributed.save();
 }
 
 export function handlePositionAssigned(event: PositionAssignedEvent): void {
+    const transaction = createTransaction(event);
+    const user = getOrCreateUser(event.params.member);
 
+    const positionAssigned = new PositionAssigned(event.transaction.hash);
+    positionAssigned.user = user.id;
+    positionAssigned.circle = event.params.circleId;
+    positionAssigned.position = event.params.position;
+    positionAssigned.transaction = transaction.id;
+
+    positionAssigned.save()
 }
 
 export function handleCollateralWithdrawn(event: CollateralWithdrawnEvent): void {
