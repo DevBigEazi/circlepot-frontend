@@ -204,7 +204,7 @@ type VoteExecuted @entity(immutable: true) {
   id: Bytes!
   circle: CircleCreated!
   circleStarted: Boolean! 
-  StartVoteTotal: BigInt! # uint256
+  startVoteTotal: BigInt! # uint256
   withdrawVoteTotal: BigInt! # uint256
   transaction: Transaction!
 }
