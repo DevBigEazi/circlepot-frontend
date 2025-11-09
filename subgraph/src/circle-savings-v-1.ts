@@ -14,7 +14,7 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, ContributionMade, MemberInvited, PayoutDistributed, PositionAssigned, VisibilityUpdated, VoteCast, VoteExecuted, VotingInitiated } from "../generated/schema";
+import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, ContributionMade, MemberForfeited, MemberInvited, PayoutDistributed, PositionAssigned, VisibilityUpdated, VoteCast, VoteExecuted, VotingInitiated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
@@ -169,7 +169,18 @@ export function handleContributionMade(event: ContributionMadeEvent): void {
 }
 
 export function handleMemberForfeited(event: MemberForfeitedEvent): void {
+    const transaction = createTransaction(event);
+    const user = getOrCreateUser(event.params.forfeiter)
+    
+    const memberForfeited = new MemberForfeited(event.transaction.hash);
+    memberForfeited.forfeiter = user.id;
+    memberForfeited.circle = Bytes.fromHexString(event.params.circleId.toHexString());;
+    memberForfeited.round = event.params.round
+    memberForfeited.deductionAmount = event.params.deduction;
+    memberForfeited.forfeitedUser = event.params.member;
+    memberForfeited.transaction = transaction.id;
 
+    memberForfeited.save();
 }
 
 export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
