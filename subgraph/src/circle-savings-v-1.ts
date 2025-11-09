@@ -14,7 +14,7 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, PayoutDistributed, PositionAssigned, VisibilityUpdated } from "../generated/schema";
+import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, PayoutDistributed, PositionAssigned, VisibilityUpdated, VotingInitiated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
@@ -103,7 +103,15 @@ export function handleCollateralWithdrawn(event: CollateralWithdrawnEvent): void
 }
 
 export function handleVotingInitiated(event: VotingInitiatedEvent): void {
+    const transaction = createTransaction(event);
+    
+    const votingInitiated = new VotingInitiated(event.transaction.hash);
+    votingInitiated.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    votingInitiated.votingStartAt = event.params.votingStartTime;
+    votingInitiated.votingEndAt = event.params.votingEndTime;
+    votingInitiated.transaction = transaction.id;
 
+    votingInitiated.save();
 }
 
 export function handleVoteCast(event: VoteCastEvent): void {
