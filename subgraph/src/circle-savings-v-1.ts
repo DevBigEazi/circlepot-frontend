@@ -14,7 +14,7 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-import { CircleCreated, VisibilityUpdated } from "../generated/schema";
+import { CircleCreated, CircleJoined, VisibilityUpdated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
@@ -39,7 +39,18 @@ export function handleCircleCreated(event: CircleCreatedEvent): void {
 }
 
 export function handleCircleJoined(event: CircleJoinedEvent): void {
+    const transaction = createTransaction(event);
+    const user = getOrCreateUser(event.params.member);
 
+    const circleJoined = new CircleJoined(event.transaction.hash);
+    circleJoined.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    circleJoined.user = user.id
+    circleJoined.currentMembers = event.params.currentMembers;
+    circleJoined.circleState = event.params.state;
+    circleJoined.transaction = transaction.id;
+    
+    user.save();
+    circleJoined.save();
 }
 
 export function handleCircleStarted(event: CircleStartedEvent): void {
@@ -83,11 +94,5 @@ export function handleMemberForfeited(event: MemberForfeitedEvent): void {
 }
 
 export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
-    const transaction = createTransaction(event);
-
-    const visibilityUpdated = new VisibilityUpdated(event.transaction.hash);
-    visibilityUpdated.circle = Bytes.fromHexString(event.params.circleId.toHexString());
-    visibilityUpdated.transaction = transaction.id;
-
-    visibilityUpdated.save();
+   
 }
