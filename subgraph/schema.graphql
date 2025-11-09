@@ -221,7 +221,7 @@ type PayoutDistributed @entity(immutable: true) {
 type CollateralWithdrawn @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleStarted!
+  circle: CircleCreated!
   amount: BigInt! # uint256
   transaction: Transaction!
 }
