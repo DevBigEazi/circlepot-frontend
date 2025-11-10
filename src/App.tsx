@@ -24,7 +24,7 @@ interface AppProps {
 
 function App({ client }: AppProps) {
   const account = useActiveAccount();
-  const { hasProfile, isLoading, refreshProfile, userId } =
+  const { hasProfile, isLoading, profile, refreshProfile } =
     useUserProfile(client);
 
   // Show auth modal if not authenticated
@@ -43,6 +43,17 @@ function App({ client }: AppProps) {
     refreshProfile();
   };
 
+  // Check if current URL is invalid dashboard ID
+  const isInvalidDashboardId = () => {
+    const path = window.location.pathname;
+    const dashboardMatch = path.match(/^\/dashboard\/(.+)$/);
+    if (dashboardMatch && profile?.accountId) {
+      const urlId = dashboardMatch[1];
+      return urlId !== String(profile.accountId);
+    }
+    return false;
+  };
+
   return (
     <main className="min-h-screen bg-background">
       {/* Enable auto-reconnection of wallet on page load */}
@@ -57,14 +68,14 @@ function App({ client }: AppProps) {
         </div>
       )}
 
-      {/* Private Routes - only show when authenticated and has profile */}
-      {showDashboard && (
+      {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
+      {showDashboard && !isLoading && !isInvalidDashboardId() && (
         <Routes>
           <Route element={<Layout />}>
             {/* Redirect root to dashboard with user ID */}
             <Route
               index
-              element={<Navigate to={`/dashboard/${userId}`} replace />}
+              element={<Navigate to={`/dashboard/${profile?.accountId}`} replace />}
             />
             <Route path="/dashboard/:userId" element={<Dashboard />} />
             <Route path="/create" element={<Create />}>
@@ -86,6 +97,9 @@ function App({ client }: AppProps) {
           <Route path="*" element={<Erorr404 />} />
         </Routes>
       )}
+
+      {/* Show 404 without Layout for invalid dashboard IDs */}
+      {showDashboard && isInvalidDashboardId() && <Erorr404 />}
 
       {/* Auth Modal - shows when not authenticated */}
       {showAuthModal && <AuthModal />}
