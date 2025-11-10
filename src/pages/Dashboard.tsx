@@ -2,13 +2,16 @@ import React, { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useActiveAccount, useDisconnect, useActiveWallet } from 'thirdweb/react'
 import { useUserProfile } from '../hooks/useUserProfile'
-// import { useAuthContext } from '../context/AuthContext'
+// import { useParams } from 'react-router';
 import { client } from '../thirdwebClient'
 import { useThemeColors } from '../hooks/useThemeColors'
-import { User, Mail, Wallet, LogOut, Hash } from 'lucide-react'
+import { User, Mail, Wallet, LogOut, Hash, Settings, Bell, History } from 'lucide-react'
 import ErrorDisplay from '../components/ErrorDisplay'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { normalizeIpfsUrl } from '../utils/ipfs'
+import Links from '../components/Links'
+import NavBar from '../components/NavBar'
+
 
 const Dashboard: React.FC = () => {
     const { disconnect } = useDisconnect()
@@ -17,6 +20,9 @@ const Dashboard: React.FC = () => {
   
     const navigate = useNavigate()
     const colors = useThemeColors()
+
+    // const { userId } = useParams();
+
     // cons } = useAuthContext()
     const { profile, isLoading: isLoadingProfile } = useUserProfile(client)
     const [isDisconnecting, setIsDisconnecting] = React.useState(false)
@@ -63,6 +69,41 @@ const Dashboard: React.FC = () => {
     }
 
     return (
+        <>
+        <NavBar 
+        colors={colors}
+        userName={profile?.username}
+        fullName={profile?.fullName}
+        profileImage={profileImageUrl}
+        actions={
+          <div className="flex gap-2">
+            <button 
+              onClick={() => navigate("/transactions-history")}
+              className="p-2 rounded-xl transition hover:opacity-80"
+              style={{ color: colors.text }}
+            >
+              <History size={18} />
+            </button>
+            <button 
+              onClick={() => navigate('/notifications')}
+              className="p-2 rounded-xl relative transition hover:opacity-80"
+              style={{ color: colors.text }}
+            >
+              <Bell size={18} />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <button 
+              onClick={() => navigate('/settings')}
+              className="p-2 rounded-xl transition hover:opacity-80"
+              style={{ color: colors.text }}
+            >
+              <Settings size={18} />
+            </button>
+            </div>
+        }
+        />
+        
+        {/* Main Dashboard - not the real ui implementaion for */}
         <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
@@ -263,7 +304,10 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <Links/>
         </div>
+        </>
     )
 }
 
