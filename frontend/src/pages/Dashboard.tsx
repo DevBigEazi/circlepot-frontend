@@ -2,10 +2,10 @@ import React, { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useActiveAccount, useDisconnect, useActiveWallet } from 'thirdweb/react'
 import { useUserProfile } from '../hooks/useUserProfile'
-import { useAuthContext } from '../context/AuthContext'
+// import { useAuthContext } from '../context/AuthContext'
 import { client } from '../thirdwebClient'
 import { useThemeColors } from '../hooks/useThemeColors'
-import { User, Mail, Wallet, LogOut } from 'lucide-react'
+import { User, Mail, Wallet, LogOut, Hash } from 'lucide-react'
 import ErrorDisplay from '../components/ErrorDisplay'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { normalizeIpfsUrl } from '../utils/ipfs'
@@ -14,13 +14,13 @@ const Dashboard: React.FC = () => {
     const { disconnect } = useDisconnect()
     const account = useActiveAccount()
     const wallet = useActiveWallet()
+  
     const navigate = useNavigate()
     const colors = useThemeColors()
-    const { userEmail } = useAuthContext()
+    // cons } = useAuthContext()
     const { profile, isLoading: isLoadingProfile } = useUserProfile(client)
     const [isDisconnecting, setIsDisconnecting] = React.useState(false)
     const [disconnectError, setDisconnectError] = React.useState<string | null>(null)
-
     // Normalize IPFS URL to ensure it's properly formatted
     const profileImageUrl = useMemo(() => {
         if (!profile?.profilePhoto) return null;
@@ -35,7 +35,10 @@ const Dashboard: React.FC = () => {
         console.log('Dashboard - Profile state:', {
             hasProfile: !!profile,
             username: profile?.username,
+            fullName: profile?.fullName,
             email: profile?.email,
+            accountId: profile?.accountId,
+            lastPhotoUpdate: profile?.lastPhotoUpdate,
             profilePhoto: profile?.profilePhoto,
             profilePhotoLength: profile?.profilePhoto?.length,
             isLoading: isLoadingProfile
@@ -160,24 +163,30 @@ const Dashboard: React.FC = () => {
                                 </div>
 
                                 {/* Profile Info */}
-                                <div className="flex-1 text-center md:text-left">
+                                <div className="flex-1">
                                     <h3 
-                                        className="text-3xl font-bold mb-2"
+                                        className="text-3xl font-bold mb-1"
                                         style={{ color: colors.text }}
                                     >
                                         {profile.username}
                                     </h3>
+                                    <p 
+                                        className="text-lg mb-4"
+                                        style={{ color: colors.textLight }}
+                                    >
+                                        {profile.fullName}
+                                    </p>
                                     <div className="flex flex-col gap-3">
-                                        <div className="flex items-center gap-2 justify-center md:justify-start">
+                                        <div className="flex items-center gap-2">
                                             <Mail size={18} style={{ color: colors.primary }} />
                                             <span 
                                                 className="text-sm"
                                                 style={{ color: colors.textLight }}
                                             >
-                                                {profile.email || userEmail}
+                                                {profile.email}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2 justify-center md:justify-start">
+                                        <div className="flex items-center gap-2">
                                             <Wallet size={18} style={{ color: colors.primary }} />
                                             <span 
                                                 className="text-xs font-mono"
@@ -187,6 +196,15 @@ const Dashboard: React.FC = () => {
                                                     `${account.address.slice(0, 6)}...${account.address.slice(-4)}` 
                                                     : 'Not connected'
                                                 }
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Hash size={18} style={{ color: colors.primary }} />
+                                            <span 
+                                                className="text-sm font-mono"
+                                                style={{ color: colors.textLight }}
+                                            >
+                                                Account ID: {profile.accountId?.toString()}
                                             </span>
                                         </div>
                                     </div>

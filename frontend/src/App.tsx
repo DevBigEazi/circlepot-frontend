@@ -5,9 +5,6 @@ import Dashboard from './pages/Dashboard';
 import { useActiveAccount } from 'thirdweb/react';
 import { useUserProfile } from './hooks/useUserProfile';
 import LoadingSpinner from './components/LoadingSpinner';
-import { useAuthContext } from './context/AuthContext';
-import { getUserEmail } from 'thirdweb/wallets/in-app';
-import { useEffect } from 'react';
 import AutoConnectWallet from './components/AutoConnectWallet';
 
 
@@ -18,35 +15,13 @@ interface AppProps {
 function App({ client }: AppProps) {
   const account = useActiveAccount();
   const { hasProfile, isLoading, refreshProfile } = useUserProfile(client);
-  const { userEmail, setUserEmail } = useAuthContext();
-
-  // Auto-fetch email when wallet reconnects
-  useEffect(() => {
-    const fetchEmail = async () => {
-      if (account && !userEmail) {
-        try {
-          const email = await getUserEmail({ client });
-          if (email) {
-            
-            setUserEmail(email);
-            // Refresh profile after email is retrieved to ensure sync
-            refreshProfile();
-          }
-        } catch (error) {
-          
-        }
-      }
-    };
-
-    fetchEmail();
-  }, [account, client, userEmail, setUserEmail, refreshProfile]);
 
   // Show auth modal if not authenticated
   const showAuthModal = !account;
 
   // Show profile creation modal if authenticated but no profile
   // Only show after initial loading completes and hasProfile is explicitly false
-  const showProfileModal = account && hasProfile === false && !isLoading && userEmail;
+  const showProfileModal = account && hasProfile === false && !isLoading;
 
   // Show dashboard if authenticated and has profile
   const showDashboard = account && hasProfile === true;

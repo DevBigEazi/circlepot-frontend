@@ -3,7 +3,6 @@ import { User, Camera, Check, AlertCircle, Upload } from 'lucide-react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { usePinata } from '../hooks/usePinata';
-import { useAuthContext } from '../context/AuthContext';
 import { useActiveAccount } from 'thirdweb/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
@@ -16,11 +15,11 @@ interface ProfileCreationModalProps {
 const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onProfileCreated }) => {
   const colors = useThemeColors();
   const account = useActiveAccount();
-  const { userEmail } = useAuthContext();
-  const { createProfile, checkUsernameAvailability, isLoading } = useUserProfile(client);
+  const { createProfile, checkUsernameAvailability, isLoading, profile } = useUserProfile(client);
   const { uploadImage, isUploading, uploadProgress } = usePinata();
 
   const [userName, setUserName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -29,6 +28,8 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameCheckTimeout = useRef<number | undefined>(undefined);
+
+  const userEmail = profile?.email;
 
   const handleUsernameChange = useCallback((value: string) => {
     setUserName(value);
@@ -100,7 +101,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
       return;
     }
 
-    if (!userEmail) {
+    if (!profile?.email) {
       setError('Email is required. Please make sure you signed in with email.');
       return;
     }
@@ -125,30 +126,35 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
       return;
     }
 
-    // IMPORTANT: Contract requires a profile photo
-    if (!selectedFile) {
-      setError('Profile photo is required. Please upload an image to continue.');
+    if (!fullName.trim()) {
+      setError('Full name is required');
       return;
     }
 
     try {
       setError(null);
 
-      // Step 1: Upload image to Pinata
-      const uploadResult = await uploadImage(selectedFile, {
-        name: `profile-${userName}-${Date.now()}`,
-        keyvalues: {
-          username: userName,
-          email: userEmail,
-          type: 'profile_photo'
-        }
-      });
+      let profilePhotoUrl = '';
 
-      // Step 2: Create profile on-chain with IPFS URL
+      // Step 1: Upload image to Pinata if one is selected
+      if (selectedFile) {
+        const uploadResult = await uploadImage(selectedFile, {
+          name: `profile-${userName}-${Date.now()}`,
+          keyvalues: {
+            username: userName,
+            email: userEmail,
+            type: 'profile_photo'
+          }
+        });
+        profilePhotoUrl = uploadResult.ipfsUrl;
+      }
+
+      // Step 2: Create profile on-chain with all required fields
       await createProfile(
-        userEmail,
+        userEmail!, // assert defined (email check above)
         userName.trim(),
-        uploadResult.ipfsUrl
+        fullName.trim(),
+        profilePhotoUrl
       );
 
       // Step 3: Call success callback
@@ -163,7 +169,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
 
       // Special handling: If profile already exists, refresh and close modal
       if (err.message?.includes('ProfileAlreadyExists')) {
-        // Trigger success callback to close modal and refresh
         onProfileCreated?.();
         return;
       }
@@ -197,7 +202,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
     userName.trim().length >= 3 && 
     usernameAvailable === true &&
     !isCheckingUsername &&
-    selectedFile !== null; // Image is now required
+    fullName.trim().length > 0;
 
   const isProcessing = isLoading || isUploading;
 
@@ -298,7 +303,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
               ) : (
                 <>
                   <Upload size={16} />
-                  Upload Photo (Required)
+                  Upload Photo (Optional)
                 </>
               )}
             </button>
@@ -319,12 +324,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
                   />
                 </div>
               </div>
-            )}
-
-            {!selectedFile && (
-              <p className="text-xs text-center mt-2 text-red-500">
-                ⚠️ Profile photo is required by the smart contract
-              </p>
             )}
           </div>
 
@@ -365,7 +364,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
           </div>
 
           {/* Username Field */}
-          <div>
+          <div className="mb-4">
             <label className="block text-sm font-medium mb-2" style={{ color: colors.text }}>
               Username *
             </label>
@@ -423,6 +422,30 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
                 This will be visible to other members. Username cannot be changed after setup.
               </p>
             </div>
+          </div>
+
+          {/* Full Name Field */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: colors.text }}>
+              Full Name *
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+              style={{ 
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                color: colors.text
+              }}
+              placeholder="Enter your full name"
+              disabled={isProcessing}
+              maxLength={50}
+            />
+            <p className="text-xs mt-1" style={{ color: colors.textLight }}>
+              Your full name will be stored on-chain and cannot be changed
+            </p>
           </div>
         </div>
 
