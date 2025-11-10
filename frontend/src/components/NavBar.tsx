@@ -3,16 +3,19 @@ import { ArrowLeft } from 'lucide-react';
 
 interface NavBarProps {
   title?: string;
+  titleIcon?: React.ReactNode;
   onBack?: () => void;
   actions?: React.ReactNode;
   colors: {
     surface: string;
     border: string;
     text: string;
+    primary?: string;
   };
   userName?: string;
   fullName?: string;
   profileImage?: string | null;
+  variant?: 'default' | 'minimal';
 }
 
 // get time-based greeting
@@ -24,12 +27,15 @@ const getGreeting = () => {
 };
 
 const NavBar: React.FC<NavBarProps> = ({  
+  title,
+  titleIcon,
   onBack, 
   actions, 
   colors, 
   userName = 'User',
   fullName = 'No Name',
-  profileImage = null
+  profileImage = null,
+  variant = 'default'
 }) => {
   const userInitials = fullName
   ? fullName
@@ -40,6 +46,41 @@ const NavBar: React.FC<NavBarProps> = ({
       .join('')
   : 'NN';
   
+  // Minimal variant (for pages like TransactionsHistory)
+  if (variant === 'minimal') {
+    return (
+      <div className="sticky top-0 z-10 border-b" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {onBack && (
+                <button 
+                  onClick={onBack}
+                  className="p-2 rounded-xl transition hover:opacity-80"
+                  style={{ color: colors.text }}
+                >
+                  <ArrowLeft size={20} />
+                </button>
+              )}
+              {title && (
+                <div className="flex items-center gap-3">
+                  {titleIcon && (
+                    <div style={{ color: colors.primary }}>
+                      {titleIcon}
+                    </div>
+                  )}
+                  <h1 className="text-xl font-bold" style={{ color: colors.text }}>{title}</h1>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2">{actions}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default variant (with user greeting and profile)
   return (
     <header className="sticky top-0 z-40 shadow-sm" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
