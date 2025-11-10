@@ -9,7 +9,6 @@ import NetworkTroubleshooting from "../components/NetworkTroubleshooting";
 import { BiCheckCircle } from "react-icons/bi";
 import { FiZap, FiShield, FiClock } from "react-icons/fi";
 import { BsArrowLeft } from "react-icons/bs";
-import { useAuthContext } from "../context/AuthContext";
 import { getUserEmail } from "thirdweb/wallets/in-app";
 import { client } from "../thirdwebClient";
 
@@ -24,8 +23,6 @@ const AuthModal: React.FC = () => {
 
   const googleAuth = useGoogleAuth();
   const emailAuth = useEmailAuth();
-
-  const { setUserEmail } = useAuthContext();
 
   // the first available error (priority: google > email)
   const currentError = googleAuth.error || emailAuth.error;
@@ -42,7 +39,7 @@ const AuthModal: React.FC = () => {
       // Get the user's email after successful authentication
       const email = await getUserEmail({ client });
       if (email) {
-        setUserEmail(email);
+        setEmail(email);
       }
     } catch (error) {
       // Error is already handled in the useGoogleAuth
@@ -58,7 +55,7 @@ const AuthModal: React.FC = () => {
       const success = await emailAuth.loginWithEmail(email, verificationCode);
       if (success) {
         // Store the email in context for profile creation
-        setUserEmail(email);
+        setEmail(email);
       }
     }
   };

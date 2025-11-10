@@ -6,13 +6,17 @@ import { ThirdwebClient } from 'thirdweb';
 import { USER_PROFILE_ABI } from '../abis/UserProfileV1';
 
 interface UserProfile {
-  username: string;
+  userAddress: string;
   email: string;
+  username: string;
+  fullName: string;
   profilePhoto: string;
+  accountId: bigint;
+  lastPhotoUpdate: bigint;
   createdAt: bigint;
 }
 
-const CONTRACT_ADDRESS = "0x920230F82265cB636D90Be33D94434e28b25c92f";
+const CONTRACT_ADDRESS = import.meta.env.VITE_USERPROFILE_ADDRESS;
 const CHAIN_ID = 11142220; // Celo-Sepolia testnet
 
 export const useUserProfile = (client: ThirdwebClient) => {
@@ -76,7 +80,12 @@ export const useUserProfile = (client: ThirdwebClient) => {
   }, [account?.address, contract]);
 
   // Create profile function
-  const createProfile = useCallback(async (email: string, username: string, profilePhoto: string) => {
+  const createProfile = useCallback(async (
+    email: string,
+    username: string,
+    fullName: string,
+    profilePhoto: string = ''
+  ) => {
     if (!account?.address) {
       const error = 'No wallet connected';
       console.error('❌ [UserProfile] Create profile failed:', error);
@@ -96,15 +105,17 @@ export const useUserProfile = (client: ThirdwebClient) => {
         throw new Error('Username is required and cannot be empty');
       }
 
-      // IMPORTANT: Contract requires non-empty photo
-      if (!profilePhoto || profilePhoto.trim().length === 0) {
-        throw new Error('Profile photo is required by the contract. Please upload an image.');
+      if (!fullName || fullName.trim().length === 0) {
+        throw new Error('Full name is required and cannot be empty');
       }
+
+      // Photo is optional - pass empty string if not provided
+      const photoUrl = profilePhoto?.trim() || '';
 
       const transaction = prepareContractCall({
         contract,
         method: "createProfile",
-        params: [email, username, profilePhoto],
+        params: [email, username, fullName, photoUrl],
       });
 
       // Send transaction using the hook from top level
@@ -176,7 +187,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
       });
     } catch (err) {
       const error = err as Error;
-      console.error('UserProfile Error updating photo:', {
+      console.error('❌ [UserProfile] Error updating photo:', {
         message: error.message,
         details: error
       });
