@@ -1,21 +1,36 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 
+export interface Tab {
+  id: string;
+  label: string;
+}
+
 interface NavBarProps {
   title?: string;
   titleIcon?: React.ReactNode;
+  subtitle?: string;
   onBack?: () => void;
   actions?: React.ReactNode;
   colors: {
     surface: string;
     border: string;
     text: string;
+    textLight?: string;
     primary?: string;
+    gradient?: string;
+    infoBg?: string;
   };
   userName?: string;
   fullName?: string;
   profileImage?: string | null;
-  variant?: 'default' | 'minimal';
+  variant?: 'default' | 'minimal' | 'tabs';
+  tabs?: Tab[];
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
+  badge?: number;
+  onActionClick?: () => void;
+  actionButtonText?: string;
 }
 
 // get time-based greeting
@@ -29,13 +44,17 @@ const getGreeting = () => {
 const NavBar: React.FC<NavBarProps> = ({  
   title,
   titleIcon,
+  subtitle,
   onBack, 
   actions, 
   colors, 
   userName = 'User',
   fullName = 'No Name',
   profileImage = null,
-  variant = 'default'
+  variant = 'default',
+  badge = 0,
+  onActionClick,
+  actionButtonText
 }) => {
   const userInitials = fullName
   ? fullName
@@ -46,6 +65,65 @@ const NavBar: React.FC<NavBarProps> = ({
       .join('')
   : 'NN';
   
+  // Tabs variant (for pages like Notifications)
+  if (variant === 'tabs') {
+    return (
+      <div className="sticky top-0 z-10 border-b" style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {onBack && (
+                <button 
+                  onClick={onBack}
+                  className="p-2 rounded-xl transition hover:opacity-80"
+                  style={{ color: colors.text }}
+                >
+                  <ArrowLeft size={20} />
+                </button>
+              )}
+              {title && (
+                <div className="flex items-center gap-3">
+                  {titleIcon && (
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center relative"
+                      style={{ backgroundColor: colors.primary }}
+                    >
+                      <div style={{ color: 'white' }}>
+                        {titleIcon}
+                      </div>
+                      {badge > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                          {badge > 9 ? '9+' : badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-xl font-bold" style={{ color: colors.text }}>{title}</h1>
+                    {subtitle && (
+                      <p className="text-sm" style={{ color: colors.textLight }}>
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {actionButtonText && (
+              <button 
+                onClick={onActionClick}
+                className="px-4 py-2 rounded-lg font-semibold text-sm transition border hover:opacity-80"
+                style={{ borderColor: colors.border, color: colors.text }}
+              >
+                {actionButtonText}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Minimal variant (for pages like TransactionsHistory)
   if (variant === 'minimal') {
     return (
