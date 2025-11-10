@@ -17,7 +17,6 @@ import Create from "./pages/Create";
 import Browse from "./pages/Browse";
 import Erorr404 from "./pages/404";
 import Layout from "./layouts/Layout";
-import BrowseLayout from "./layouts/BrowseLayout";
 
 interface AppProps {
   client: any; // thirdweb client
@@ -72,19 +71,17 @@ function App({ client }: AppProps) {
               <Route path="personal-goal" element={<CreatePersonalGoal />} />
               <Route path="circle" element={<CreateCircle />} />
             </Route>
+            <Route path="/browse" element={<Browse />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/goals" element={<Goals />} />
             <Route
-              path="/trasactions-history"
+              path="/transactions-history"
               element={<TransactionsHistory />}
             />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 
-          <Route element={<BrowseLayout />}>
-            <Route path="/browse" element={<Browse />} />
-          </Route>
           {/* Not Found */}
           <Route path="*" element={<Erorr404 />} />
         </Routes>
