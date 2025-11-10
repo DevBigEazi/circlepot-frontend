@@ -13,7 +13,7 @@ const Create: React.FC = () => {
 
   return (
     <>
-      <NavBar colors={colors} userName={profile?.username} fullName={profile?.fullName} onBack={() => navigate('/')} />
+      <NavBar colors={colors} userName={profile?.username} fullName={profile?.fullName} onBack={() => navigate(-1)} />
 
         {/* main UI */}
       <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
