@@ -1,11 +1,22 @@
 import AuthModal from './modals/AuthModal';
 import ProfileCreationModal from './modals/ProfileCreationModal';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, Navigate } from 'react-router';
 import Dashboard from './pages/Dashboard';
 import { useActiveAccount } from 'thirdweb/react';
 import { useUserProfile } from './hooks/useUserProfile';
 import LoadingSpinner from './components/LoadingSpinner';
 import AutoConnectWallet from './components/AutoConnectWallet';
+import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
+import TransactionsHistory from './pages/TransactionsHistory';
+import Goals from './pages/Goals';
+import CreateCircle from './pages/CreateCircle';
+import Analytics from './pages/Analytics';
+import CreatePersonalGoal from './pages/CreatePersonalGoal';
+import Create from './pages/Create';
+import Browse from './pages/Browse';
+import Erorr404 from './pages/404';
+import Layout from './layouts/Layout';
 
 
 interface AppProps {
@@ -14,7 +25,7 @@ interface AppProps {
 
 function App({ client }: AppProps) {
   const account = useActiveAccount();
-  const { hasProfile, isLoading, refreshProfile } = useUserProfile(client);
+  const { hasProfile, isLoading, refreshProfile, userId } = useUserProfile(client);
 
   // Show auth modal if not authenticated
   const showAuthModal = !account;
@@ -49,8 +60,24 @@ function App({ client }: AppProps) {
       {/* Private Routes - only show when authenticated and has profile */}
       {showDashboard && (
         <Routes>
-          <Route index element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route element={<Layout />}>
+          {/* Redirect root to dashboard with user ID */}
+          <Route index element={<Navigate to={`/dashboard/${userId}`} replace />} />
+          <Route path="/dashboard/:userId" element={<Dashboard />} />
+          <Route path="/create" element={<Create />}>
+            <Route path="personal-goal" element={<CreatePersonalGoal />} />
+            <Route path="circle" element={<CreateCircle />} />
+          </Route>
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/goals" element={<Goals />} />
+          <Route path="/trasactions-history" element={<TransactionsHistory />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/settings" element={<Settings />} />
+
+          </Route>
+          <Route path="/browse" element={<Browse />} />
+          {/* Not Found */}
+          <Route path="*" element={<Erorr404/>} />
         </Routes>
       )}
 
