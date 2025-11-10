@@ -78,10 +78,9 @@ function App({ client }: AppProps) {
               element={<Navigate to={`/dashboard/${profile?.accountId}`} replace />}
             />
             <Route path="/dashboard/:userId" element={<Dashboard />} />
-            <Route path="/create" element={<Create />}>
-              <Route path="personal-goal" element={<CreatePersonalGoal />} />
-              <Route path="circle" element={<CreateCircle />} />
-            </Route>
+            <Route path="/create" element={<Create />} />
+            <Route path="/create/personal-goal" element={<CreatePersonalGoal />} />
+            <Route path="/create/circle" element={<CreateCircle />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/goals" element={<Goals />} />
@@ -93,7 +92,7 @@ function App({ client }: AppProps) {
             <Route path="/settings" element={<Settings />} />
           </Route>
 
-          {/* Not Found */}
+          {/* Not Found - outside Layout so no bottom nav */}
           <Route path="*" element={<Erorr404 />} />
         </Routes>
       )}
