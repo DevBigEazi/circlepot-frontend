@@ -2,13 +2,15 @@ import React, { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useActiveAccount, useDisconnect, useActiveWallet } from 'thirdweb/react'
 import { useUserProfile } from '../hooks/useUserProfile'
-// import { useAuthContext } from '../context/AuthContext'
+// import { useParams } from 'react-router';
 import { client } from '../thirdwebClient'
 import { useThemeColors } from '../hooks/useThemeColors'
 import { User, Mail, Wallet, LogOut, Hash } from 'lucide-react'
 import ErrorDisplay from '../components/ErrorDisplay'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { normalizeIpfsUrl } from '../utils/ipfs'
+import Links from '../components/Links'
+
 
 const Dashboard: React.FC = () => {
     const { disconnect } = useDisconnect()
@@ -17,6 +19,9 @@ const Dashboard: React.FC = () => {
   
     const navigate = useNavigate()
     const colors = useThemeColors()
+
+    // const { userId } = useParams();
+
     // cons } = useAuthContext()
     const { profile, isLoading: isLoadingProfile } = useUserProfile(client)
     const [isDisconnecting, setIsDisconnecting] = React.useState(false)
@@ -263,6 +268,8 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <Links/>
         </div>
     )
 }
