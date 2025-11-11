@@ -2,7 +2,6 @@ import React, { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useActiveAccount, useDisconnect, useActiveWallet } from 'thirdweb/react'
 import { useUserProfile } from '../hooks/useUserProfile'
-// import { useParams } from 'react-router';
 import { client } from '../thirdwebClient'
 import { useThemeColors } from '../hooks/useThemeColors'
 import { User, Mail, Wallet, LogOut, Hash, Settings, Bell, History } from 'lucide-react'
@@ -12,7 +11,6 @@ import { normalizeIpfsUrl } from '../utils/ipfs'
 import Links from '../components/Links'
 import NavBar from '../components/NavBar'
 
-
 const Dashboard: React.FC = () => {
     const { disconnect } = useDisconnect()
     const account = useActiveAccount()
@@ -21,18 +19,15 @@ const Dashboard: React.FC = () => {
     const navigate = useNavigate()
     const colors = useThemeColors()
 
-    // const { userId } = useParams();
-
-    // cons } = useAuthContext()
     const { profile, isLoading: isLoadingProfile } = useUserProfile(client)
     const [isDisconnecting, setIsDisconnecting] = React.useState(false)
     const [disconnectError, setDisconnectError] = React.useState<string | null>(null)
     // Normalize IPFS URL to ensure it's properly formatted
     const profileImageUrl = useMemo(() => {
-        if (!profile?.profilePhoto) return null;
-        const normalized = normalizeIpfsUrl(profile.profilePhoto);  
+        if (!profile?.photo) return null;
+        const normalized = normalizeIpfsUrl(profile.photo);  
         return normalized;
-    }, [profile?.profilePhoto])
+    }, [profile?.photo])
 
     // Debug logging
     useEffect(() => {
@@ -45,8 +40,8 @@ const Dashboard: React.FC = () => {
             email: profile?.email,
             accountId: profile?.accountId,
             lastPhotoUpdate: profile?.lastPhotoUpdate,
-            profilePhoto: profile?.profilePhoto,
-            profilePhotoLength: profile?.profilePhoto?.length,
+            photo: profile?.photo,
+            photoLength: profile?.photo?.length,
             isLoading: isLoadingProfile
         })
     }, [account, wallet, profile, isLoadingProfile])
