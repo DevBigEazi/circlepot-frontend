@@ -4,32 +4,48 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { usePinata } from '../hooks/usePinata';
 import { useActiveAccount } from 'thirdweb/react';
+import { getUserEmail } from "thirdweb/wallets/in-app";
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
 
 interface ProfileCreationModalProps {
   client: any;
   onProfileCreated?: () => void;
+  userEmail?: string;
 }
 
 const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onProfileCreated }) => {
   const colors = useThemeColors();
   const account = useActiveAccount();
-  const { createProfile, checkUsernameAvailability, isLoading, profile } = useUserProfile(client);
+  const { createProfile, checkUsernameAvailability, isLoading } = useUserProfile(client);
   const { uploadImage, isUploading, uploadProgress } = usePinata();
 
   const [userName, setUserName] = useState('');
   const [fullName, setFullName] = useState('');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameCheckTimeout = useRef<number | undefined>(undefined);
 
-  const userEmail = profile?.email;
+  // Fetch user email on component mount
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const email = await getUserEmail({ client });
+        setUserEmail(email ?? null);
+        console.log(email);
+      } catch (err) {
+        console.error('Failed to fetch user email:', err);
+        setError('Failed to retrieve your email. Please try signing in again.');
+      }
+    };
+
+    fetchUserEmail();
+  }, [client]);
 
   const handleUsernameChange = useCallback((value: string) => {
     setUserName(value);
@@ -68,19 +84,16 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size must be less than 5MB');
         return;
       }
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please select a valid image file');
         return;
       }
 
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
@@ -101,7 +114,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
       return;
     }
 
-    if (!profile?.email) {
+    if (!userEmail) {
       setError('Email is required. Please make sure you signed in with email.');
       return;
     }
@@ -136,7 +149,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
 
       let profilePhotoUrl = '';
 
-      // Step 1: Upload image to Pinata if one is selected
       if (selectedFile) {
         const uploadResult = await uploadImage(selectedFile, {
           name: `profile-${userName}-${Date.now()}`,
@@ -149,15 +161,13 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         profilePhotoUrl = uploadResult.ipfsUrl;
       }
 
-      // Step 2: Create profile on-chain with all required fields
       await createProfile(
-        userEmail!, // assert defined (email check above)
+        userEmail,
         userName.trim(),
         fullName.trim(),
         profilePhotoUrl
       );
 
-      // Step 3: Call success callback
       onProfileCreated?.();
 
     } catch (err: any) {
@@ -167,13 +177,11 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         details: err
       });
 
-      // Special handling: If profile already exists, refresh and close modal
       if (err.message?.includes('ProfileAlreadyExists')) {
         onProfileCreated?.();
         return;
       }
 
-      // Better error messages
       let errorMessage = err.message || 'Failed to create profile';
 
       if (err.code === 'PINATA_UPLOAD_ERROR') {

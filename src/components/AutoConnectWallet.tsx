@@ -14,6 +14,10 @@ export const AutoConnectWallet: React.FC = () => {
         auth: {
           options: ['google', 'email'],
         },
+        executionMode: {
+          mode: 'EIP7702',
+          sponsorGas: true,
+        },
       }),
     ],
     onConnect: () => {
