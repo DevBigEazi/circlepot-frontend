@@ -274,6 +274,85 @@ export const useUserProfile = (client: ThirdwebClient) => {
     }
   }, []);
 
+
+  // Get profile by AccountId
+  const getProfileByAccountId = useCallback(async (accountId: string) => {
+    try {
+      const query = gql`
+        query GetUserByAccountId($accountId: String!) {
+          users(where: { accountId: $accountId }) {
+            id
+            email
+            username
+            fullName
+            accountId
+            photo
+            lastPhotoUpdate
+            createdAt
+            hasProfile
+            repCategory
+            totalReputation
+            totalLatePayments
+            totalGoalsCompleted
+            totalCirclesCompleted
+          }
+        }
+      `;
+
+      const result = await request(
+        SUBGRAPH_URL,
+        query,
+        { accountId: accountId },
+        SUBGRAPH_HEADERS
+      );
+
+      // Return first user if found
+      return result.users && result.users.length > 0 ? result.users[0] : null;
+    } catch (err) {
+      console.error("❌ [UserProfile] Error getting profile by username:", err);
+      throw err;
+    }
+  }, []);
+
+  // Get profile by Email
+  const getProfileByEmail = useCallback(async (email: string) => {
+    try {
+      const query = gql`
+        query GetUserByEmail($email: String!) {
+          users(where: { email: $email }) {
+            id
+            email
+            username
+            fullName
+            accountId
+            photo
+            lastPhotoUpdate
+            createdAt
+            hasProfile
+            repCategory
+            totalReputation
+            totalLatePayments
+            totalGoalsCompleted
+            totalCirclesCompleted
+          }
+        }
+      `;
+
+      const result = await request(
+        SUBGRAPH_URL,
+        query,
+        { email: email },
+        SUBGRAPH_HEADERS
+      );
+
+      // Return first user if found
+      return result.users && result.users.length > 0 ? result.users[0] : null;
+    } catch (err) {
+      console.error("❌ [UserProfile] Error getting profile by username:", err);
+      throw err;
+    }
+  }, []);
+
   // Get profile by username
   const getProfileByUsername = useCallback(async (username: string) => {
     try {
@@ -294,7 +373,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
             totalLatePayments
             totalGoalsCompleted
             totalCirclesCompleted
-            user.id = address;
           }
         }
       `;
@@ -322,6 +400,8 @@ export const useUserProfile = (client: ThirdwebClient) => {
     createProfile,
     updatePhoto,
     checkUsernameAvailability,
+    getProfileByAccountId,
+    getProfileByEmail,
     getProfileByUsername,
     refreshProfile: refetchUser,
     contract,
