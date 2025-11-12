@@ -1,12 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
+import { PinataSDK } from "pinata";
 
 // Pinata credentials
-const PINATA_JWT = import.meta.env.VITE_PINATA_JWT;
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'https://gateway.pinata.cloud';
-// Ensure gateway URL has https:// protocol
-const PINATA_GATEWAY = GATEWAY_URL.startsWith('http://') || GATEWAY_URL.startsWith('https://') 
-  ? GATEWAY_URL 
-  : `https://${GATEWAY_URL}`;
+const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+const SERVER_BEARER = import.meta.env.VITE_SERVER_BEARER;
+
+// Initialize Pinata SDK
+const pinata = new PinataSDK({
+  pinataGateway: GATEWAY_URL,
+});
 
 export interface PinataUploadResult {
   ipfsUrl: string;
@@ -32,106 +35,100 @@ export const usePinata = () => {
    * @param metadata Optional metadata for the file
    * @returns Promise with the IPFS URL and hash
    */
-  const uploadFile = useCallback(async (
-    file: File,
-    metadata?: {
-      name?: string;
-      keyvalues?: Record<string, any>;
-    }
-  ): Promise<PinataUploadResult> => {
-    if (!PINATA_JWT) {
-      throw new Error('Pinata JWT is not configured. Please add VITE_PINATA_JWT to your .env file');
-    }
-
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      setError(null);
-
-      // Validate file
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        throw new Error('File size must be less than 10MB');
+  const uploadFile = useCallback(
+    async (
+      file: File,
+      _metadata?: {
+        name?: string;
+        keyvalues?: Record<string, any>;
       }
+    ): Promise<PinataUploadResult> => {
+      try {
+        setIsUploading(true);
+        setUploadProgress(0);
+        setError(null);
 
-      if (!file.type.startsWith('image/')) {
-        throw new Error('Only image files are supported');
-      }
-
-      // Create FormData
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Add metadata
-      const pinataMetadata = {
-        name: metadata?.name || `upload-${Date.now()}-${file.name}`,
-        keyvalues: {
-          uploadedAt: new Date().toISOString(),
-          originalName: file.name,
-          size: file.size,
-          type: file.type,
-          ...metadata?.keyvalues
+        // Validate file
+        if (file.size > 10 * 1024 * 1024) {
+          // 10MB limit
+          throw new Error("File size must be less than 10MB");
         }
-      };
-      formData.append('pinataMetadata', JSON.stringify(pinataMetadata));
 
-      setUploadProgress(30);
+        if (!file.type.startsWith("image/")) {
+          throw new Error("Only image files are supported");
+        }
 
-      // Upload to Pinata
-      const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${PINATA_JWT}`,
-        },
-        body: formData,
-      });
+        setUploadProgress(30);
 
-      setUploadProgress(70);
+        // Get presigned URL from server
+        const urlResponse = await fetch(`${SERVER_URL}/presigned_url`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${SERVER_BEARER}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        throw new Error(
-          errorData.error?.details || 
-          errorData.message || 
-          `Upload failed: ${response.statusText}`
-        );
+        if (!urlResponse.ok) {
+          throw new Error("Failed to get presigned URL from server");
+        }
+
+        const urlData = await urlResponse.json();
+        setUploadProgress(50);
+
+        // Upload file to Pinata using presigned URL
+        const upload = await pinata.upload.public.file(file).url(urlData.url);
+
+        setUploadProgress(80);
+
+        if (!upload.cid) {
+          throw new Error("Upload failed: No CID returned");
+        }
+
+        // Convert CID to gateway URL
+        const ipfsUrl = await pinata.gateways.public.convert(upload.cid);
+        setUploadProgress(100);
+        setLastUploadedUrl(ipfsUrl);
+
+        return {
+          ipfsUrl,
+          ipfsHash: upload.cid,
+          size: file.size,
+        };
+      } catch (err: any) {
+        console.error("❌ [Pinata] Upload error:", err);
+
+        const pinataError: PinataError = {
+          code: "PINATA_UPLOAD_ERROR",
+          message: err.message || "Failed to upload to IPFS",
+          details: err,
+        };
+
+        if (err.message?.includes("JWT")) {
+          pinataError.code = "PINATA_AUTH_ERROR";
+          pinataError.message =
+            "Invalid Pinata credentials. Please check your API key.";
+        } else if (
+          err.message?.includes("network") ||
+          err.message?.includes("fetch")
+        ) {
+          pinataError.code = "NETWORK_ERROR";
+          pinataError.message =
+            "Network error. Please check your connection and try again.";
+        } else if (err.message?.includes("presigned")) {
+          pinataError.code = "SERVER_ERROR";
+          pinataError.message =
+            "Failed to get upload URL from server. Please try again.";
+        }
+
+        setError(pinataError);
+        throw pinataError;
+      } finally {
+        setIsUploading(false);
       }
-
-      const data = await response.json();
-      const ipfsUrl = `${PINATA_GATEWAY}/ipfs/${data.IpfsHash}`;
-      
-      setUploadProgress(100);
-      setLastUploadedUrl(ipfsUrl);
-
-      
-      return {
-        ipfsUrl,
-        ipfsHash: data.IpfsHash,
-        size: data.PinSize
-      };
-    } catch (err: any) {
-      console.error('❌ [Pinata] Upload error:', err);
-      
-      const pinataError: PinataError = {
-        code: 'PINATA_UPLOAD_ERROR',
-        message: err.message || 'Failed to upload to IPFS',
-        details: err
-      };
-
-      if (err.message?.includes('JWT')) {
-        pinataError.code = 'PINATA_AUTH_ERROR';
-        pinataError.message = 'Invalid Pinata credentials. Please check your API key.';
-      } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
-        pinataError.code = 'NETWORK_ERROR';
-        pinataError.message = 'Network error. Please check your connection and try again.';
-      }
-
-      setError(pinataError);
-      throw pinataError;
-    } finally {
-      setIsUploading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Upload image with preview generation
@@ -139,29 +136,32 @@ export const usePinata = () => {
    * @param metadata Optional metadata
    * @returns Promise with upload result and preview URL
    */
-  const uploadImage = useCallback(async (
-    file: File,
-    metadata?: { name?: string; keyvalues?: Record<string, any> }
-  ): Promise<PinataUploadResult & { preview: string }> => {
-    // Generate preview
-    const preview = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+  const uploadImage = useCallback(
+    async (
+      file: File,
+      metadata?: { name?: string; keyvalues?: Record<string, any> }
+    ): Promise<PinataUploadResult & { preview: string }> => {
+      // Generate preview
+      const preview = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-    // Upload to Pinata
-    const result = await uploadFile(file, {
-      name: metadata?.name || `image-${Date.now()}`,
-      keyvalues: {
-        type: 'image',
-        ...metadata?.keyvalues
-      }
-    });
+      // Upload to Pinata
+      const result = await uploadFile(file, {
+        name: metadata?.name || `image-${Date.now()}`,
+        keyvalues: {
+          type: "image",
+          ...metadata?.keyvalues,
+        },
+      });
 
-    return { ...result, preview };
-  }, [uploadFile]);
+      return { ...result, preview };
+    },
+    [uploadFile]
+  );
 
   /**
    * Clear error state
@@ -188,6 +188,6 @@ export const usePinata = () => {
     error,
     lastUploadedUrl,
     clearError,
-    reset
+    reset,
   };
 };
