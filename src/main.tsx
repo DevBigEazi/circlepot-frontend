@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router";
 import { ThirdwebProvider } from "thirdweb/react";
-import { ThemeProvider } from "./context/ThemeContext.tsx";
+import { ThemeProvider } from "./contexts/ThemeContext.tsx";
 import { client } from "./thirdwebClient.ts";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
