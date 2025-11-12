@@ -155,6 +155,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
           keyvalues: {
             username: userName,
             email: userEmail,
+            fullName: fullName,
             type: 'profile_photo'
           }
         });
