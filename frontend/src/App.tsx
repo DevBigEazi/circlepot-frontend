@@ -17,6 +17,7 @@ import Create from "./pages/Create";
 import Browse from "./pages/Browse";
 import Erorr404 from "./pages/404";
 import Layout from "./layouts/Layout";
+import { BiometricProvider } from "./contexts/BiometricContext";
 
 interface AppProps {
   client: any; // thirdweb client
@@ -55,7 +56,9 @@ function App({ client }: AppProps) {
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen">
+      <BiometricProvider userId={profile?.accountId ? String(profile.accountId) : ""}>
+
       {/* Enable auto-reconnection of wallet on page load */}
       <AutoConnectWallet />
 
@@ -100,8 +103,15 @@ function App({ client }: AppProps) {
       {/* Show 404 without Layout for invalid dashboard IDs */}
       {showDashboard && isInvalidDashboardId() && <Erorr404 />}
 
-      {/* Auth Modal - shows when not authenticated */}
-      {showAuthModal && <AuthModal />}
+      {/* Landing page + Auth Modal for unauthenticated users */}
+      {showAuthModal && (
+        <>
+          {/* Landing page background */}
+          <Dashboard />
+          {/* Auth modal overlay */}
+          <AuthModal />
+        </>
+      )}
 
       {/* Profile Creation Modal - shows after auth but before profile creation */}
       {showProfileModal && (
@@ -110,6 +120,7 @@ function App({ client }: AppProps) {
           onProfileCreated={handleProfileCreated}
         />
       )}
+      </BiometricProvider>
     </main>
   );
 }
