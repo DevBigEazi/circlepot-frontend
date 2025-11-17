@@ -2,7 +2,6 @@ import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import {
   useActiveAccount,
-  useDisconnect,
   useActiveWallet,
 } from "thirdweb/react";
 import { useUserProfile } from "../hooks/useUserProfile";
@@ -12,20 +11,17 @@ import {
   User,
   Mail,
   Wallet,
-  LogOut,
   Hash,
   Settings,
   Bell,
   History,
 } from "lucide-react";
-import ErrorDisplay from "../components/ErrorDisplay";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { normalizeIpfsUrl } from "../utils/ipfs";
 import Links from "../components/Links";
 import NavBar from "../components/NavBar";
 
 const Dashboard: React.FC = () => {
-  const { disconnect } = useDisconnect();
   const account = useActiveAccount();
   const wallet = useActiveWallet();
 
@@ -39,10 +35,6 @@ const Dashboard: React.FC = () => {
     getProfileByEmail,
     getProfileByUsername,
   } = useUserProfile(client);
-  const [isDisconnecting, setIsDisconnecting] = React.useState(false);
-  const [disconnectError, setDisconnectError] = React.useState<string | null>(
-    null
-  );
   // Normalize IPFS URL to ensure it's properly formatted
   const profileImageUrl = useMemo(() => {
     if (!profile?.photo) return null;
@@ -99,23 +91,6 @@ const Dashboard: React.FC = () => {
     getProfileByUsername,
   ]);
 
-  const handleDisconnect = async () => {
-    try {
-      setIsDisconnecting(true);
-      setDisconnectError(null);
-
-      if (wallet) {
-        navigate("/");
-        disconnect(wallet);
-      }
-    } catch (error: any) {
-      console.error("Disconnect failed:", error);
-      setDisconnectError("Failed to disconnect wallet. Please try again.");
-    } finally {
-      setIsDisconnecting(false);
-    }
-  };
-
   return (
     <>
       <NavBar
@@ -162,36 +137,7 @@ const Dashboard: React.FC = () => {
             <h2 className="text-3xl font-bold" style={{ color: colors.text }}>
               Dashboard
             </h2>
-            <button
-              onClick={handleDisconnect}
-              disabled={isDisconnecting}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-              style={{
-                backgroundColor: colors.surface,
-                color: colors.text,
-                border: `1px solid ${colors.border}`,
-              }}
-            >
-              {isDisconnecting ? (
-                <LoadingSpinner size="sm" text="Disconnecting..." />
-              ) : (
-                <>
-                  <LogOut size={18} />
-                  Logout
-                </>
-              )}
-            </button>
           </div>
-
-          {/* Disconnect Error */}
-          {disconnectError && (
-            <div className="mb-6">
-              <ErrorDisplay
-                error={{ code: "DISCONNECT_ERROR", message: disconnectError }}
-                onDismiss={() => setDisconnectError(null)}
-              />
-            </div>
-          )}
 
           {/* Loading State */}
           {isLoadingProfile && (
