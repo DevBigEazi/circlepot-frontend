@@ -54,7 +54,6 @@ const AuthModal: React.FC = () => {
     } else {
       const success = await emailAuth.loginWithEmail(email, verificationCode);
       if (success) {
-        // Store the email in context for profile creation
         setEmail(email);
       }
     }
@@ -108,8 +107,8 @@ const AuthModal: React.FC = () => {
     return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="rounded-3xl shadow-2xl p-6 w-full max-w-md" style={{ backgroundColor: colors.surface }}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div className="rounded-3xl shadow-2xl p-6 w-full max-w-md animate-in fade-in zoom-in-95 duration-300" style={{ backgroundColor: colors.surface }}>
         {/* App logo, title & description - only show on select step */}
         {authMethod === "select" && (
           <div className="flex flex-col items-center justify-center mb-6">
