@@ -27,6 +27,8 @@ import { client } from "../thirdwebClient";
 import LogoutModal from "../modals/LogoutModal";
 import { useDisconnect, useActiveWallet } from "thirdweb/react";
 import ErrorDisplay from "../components/ErrorDisplay";
+import { useBiometricContext } from "../contexts/BiometricContext";
+import { useBiometric } from "../hooks/useBiometric";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -45,6 +47,14 @@ const Settings: React.FC = () => {
     error: profileError,
   } = useUserProfile(client);
   const { uploadImage, isUploading, uploadProgress } = usePinata();
+  const { enableBiometric, disableBiometric } = useBiometricContext();
+  const {
+    isSupported: isBiometricSupported,
+    isAuthenticating,
+    error: bioError,
+    registerBiometric,
+    removeBiometric,
+  } = useBiometric();
 
   const [userSettings, setUserSettings] = useState({
     userName: "",
@@ -82,6 +92,26 @@ const Settings: React.FC = () => {
       setPreviewImage(profile.photo || null);
     }
   }, [profile]);
+
+  // Sync biometric toggle with actual state
+  useEffect(() => {
+    if (userSettings.accountId) {
+      const biometricState = localStorage.getItem(
+        `biometric_state_${userSettings.accountId}`
+      );
+      if (biometricState) {
+        try {
+          const state = JSON.parse(biometricState);
+          setUserSettings((prev) => ({
+            ...prev,
+            biometrics: state.isEnabled || false,
+          }));
+        } catch (err) {
+          console.error("Failed to load biometric state:", err);
+        }
+      }
+    }
+  }, [userSettings.accountId]);
 
   const canUpdatePhoto = (): boolean => {
     if (!profile?.lastPhotoUpdate) return true;
@@ -168,7 +198,7 @@ const Settings: React.FC = () => {
         profileImage: profilePhotoUrl,
         lastProfileUpdate: new Date().toISOString(),
       }));
-      console.log("New Photo", profilePhotoUrl)
+      console.log("New Photo", profilePhotoUrl);
       setSuccess("Profile photo updated successfully!");
       setEditingProfile(false);
       setSelectedFile(null);
@@ -225,6 +255,30 @@ const Settings: React.FC = () => {
       setDisconnectError("Failed to disconnect wallet. Please try again.");
     } finally {
       setIsDisconnecting(false);
+    }
+  };
+
+  const handleBiometricToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const result = await registerBiometric({
+        userId: userSettings.accountId,
+        userName: userSettings.userName,
+        userEmail: userSettings.userEmail,
+      });
+      if (result.success) {
+        enableBiometric(); // Updates global state + localStorage
+        setUserSettings((prev) => ({ ...prev, biometrics: true })); // Update local state
+        setSuccess("Biometric registered!");
+      } else {
+        setError(result.error || "Failed to register biometric");
+        setUserSettings((prev) => ({ ...prev, biometrics: false })); // Reset on failure
+      }
+    } else {
+      removeBiometric(userSettings.accountId);
+      disableBiometric(); // Updates global state + localStorage
+      setUserSettings((prev) => ({ ...prev, biometrics: false })); // Update local state
+      setSuccess("Biometric disabled");
+      setTimeout(() => setSuccess(null), 3000);
     }
   };
 
@@ -464,11 +518,7 @@ const Settings: React.FC = () => {
                       {isLoading ? (
                         <Loader size={14} className="animate-spin" />
                       ) : (
-                        <p>
-                          {!success && (
-                            "Edit Photo"
-                          )}
-                        </p>
+                        <p>{!success && "Edit Photo"}</p>
                       )}
                     </button>
                   )}
@@ -522,7 +572,7 @@ const Settings: React.FC = () => {
                   field="username"
                 />
 
-                {(error || profileError) && (
+                {(error || profileError || bioError) && (
                   <div
                     className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
                     style={{
@@ -536,7 +586,7 @@ const Settings: React.FC = () => {
                       style={{ color: colors.accent }}
                     />
                     <p className="text-xs" style={{ color: colors.textLight }}>
-                      {error || profileError}
+                      {error || profileError || bioError}
                     </p>
                   </div>
                 )}
@@ -817,20 +867,17 @@ const Settings: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={userSettings.biometrics}
-                      onChange={(e) =>
-                        setUserSettings((prev) => ({
-                          ...prev,
-                          biometrics: e.target.checked,
-                        }))
-                      }
+                      onChange={(e) => handleBiometricToggle(e.target.checked)}
+                      disabled={!isBiometricSupported || isAuthenticating}
                       className="sr-only peer"
                     />
                     <div
-                      className="w-11 h-6 rounded-full peer"
+                      className="w-11 h-6 rounded-full peer transition"
                       style={{
                         backgroundColor: userSettings.biometrics
                           ? colors.primary
                           : colors.border,
+                        opacity: !isBiometricSupported ? 0.5 : 1,
                       }}
                     />
                     <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5" />
