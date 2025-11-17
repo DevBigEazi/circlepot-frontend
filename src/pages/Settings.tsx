@@ -4,8 +4,8 @@ import {
   Camera,
   AlertCircle,
   Palette,
-  Eye,
-  EyeOff,
+  // Eye,
+  // EyeOff,
   HelpCircle,
   Loader,
   Check,
@@ -71,7 +71,7 @@ const Settings: React.FC = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showBalance, setShowBalance] = useState(true);
+  // const [showBalance, setShowBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);

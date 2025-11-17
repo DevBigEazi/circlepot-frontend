@@ -91,7 +91,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
         {/* Subtitle */}
         <p
           className="text-center mb-8 text-sm"
-          style={{ color: colors.textSecondary }}
+          style={{ color: colors.text }}
         >
           {isAuthenticating
             ? 'Authenticating...'
@@ -113,10 +113,10 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
               style={{ color: colors.error }}
             />
             <div>
-              <p className="text-sm font-medium" style={{ color: colors.error }}>
+              <p className="text-sm font-medium" style={{ color: colors.text }}>
                 {error}
               </p>
-              <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+              <p className="text-xs mt-1" style={{ color: colors.text }}>
                 Attempt {attempts} of 3
               </p>
             </div>
@@ -148,7 +148,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
           {attempts >= 3 && (
             <p
               className="text-center text-sm mt-4"
-              style={{ color: colors.textSecondary }}
+              style={{ color: colors.text }}
             >
               Please restart the app to try again
             </p>
