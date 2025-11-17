@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 interface BiometricOptions {
-  userId: string;
+  userId: string | undefined;
   userName: string;
   userEmail: string;
 }
@@ -187,8 +187,6 @@ export const useBiometric = () => {
           };
         }
 
-        // In production, verify the assertion on your backend
-        // For now, we'll consider successful retrieval as authentication
         return { success: true };
       } catch (err) {
         const error = err as Error;

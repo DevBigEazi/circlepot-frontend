@@ -808,7 +808,7 @@ const Settings: React.FC = () => {
               </h3>
 
               <div className="space-y-2 sm:space-y-4">
-                <div
+                {/* <div
                   className="flex items-center justify-between p-2 sm:p-4 rounded-xl border"
                   style={{
                     backgroundColor: colors.surface,
@@ -840,7 +840,7 @@ const Settings: React.FC = () => {
                       <EyeOff size={18} style={{ color: colors.textLight }} />
                     )}
                   </button>
-                </div>
+                </div> */}
 
                 <div
                   className="flex items-center justify-between p-2 sm:p-4 rounded-xl border"
