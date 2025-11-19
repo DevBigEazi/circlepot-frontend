@@ -1,56 +1,62 @@
-import { useState, useCallback } from 'react'
-import { useActiveAccount, useConnect } from 'thirdweb/react'
-import { inAppWallet, preAuthenticate } from 'thirdweb/wallets/in-app'
-import { celo } from 'thirdweb/chains'
-import { client } from '../thirdwebClient'
+import { useState, useCallback } from "react";
+import { useActiveAccount, useConnect } from "thirdweb/react";
+import { inAppWallet, preAuthenticate } from "thirdweb/wallets/in-app";
+import { celo } from "thirdweb/chains";
+import { client } from "../thirdwebClient";
 
 export interface AuthError {
-  code: string
-  message: string
-  details?: any
+  code: string;
+  message: string;
+  details?: any;
 }
 
 export interface AuthState {
-  isLoading: boolean
-  error: AuthError | null
-  isConnected: boolean
+  isLoading: boolean;
+  error: AuthError | null;
+  isConnected: boolean;
 }
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
     isLoading: false,
     error: null,
-    isConnected: false
-  })
+    isConnected: false,
+  });
 
-  const account = useActiveAccount()
-  const { connect, isConnecting } = useConnect()
+  const account = useActiveAccount();
+  const { connect, isConnecting } = useConnect();
 
   const wallet = inAppWallet({
     auth: {
-      options: ['google', 'email'],
+      options: ["google", "email"],
     },
     executionMode: {
-      mode: 'EIP7702',
+      mode: "EIP7702",
       sponsorGas: true,
     },
-  })
+  });
 
   const clearError = useCallback(() => {
-    setAuthState(prev => ({ ...prev, error: null }))
-  }, [])
+    setAuthState((prev) => ({ ...prev, error: null }));
+  }, []);
 
   const setLoading = useCallback((loading: boolean) => {
-    setAuthState(prev => ({ ...prev, isLoading: loading }))
-  }, [])
+    setAuthState((prev) => ({ ...prev, isLoading: loading }));
+  }, []);
 
   const setError = useCallback((error: AuthError) => {
-    setAuthState(prev => ({ ...prev, error, isLoading: false }))
-  }, [])
+    console.log("Setting error:", error);
+    setAuthState((prev) => ({ ...prev, error, isLoading: false }));
+  }, []);
 
   const handleAuthSuccess = useCallback(() => {
-    setAuthState(prev => ({ ...prev, isLoading: false, error: null, isConnected: true }))
-  }, [])
+    setAuthState((prev) => ({
+      ...prev,
+      isLoading: false,
+      error: null,
+      isConnected: true,
+    }));
+  }, []);
 
   return {
     ...authState,
@@ -61,72 +67,101 @@ export const useAuth = () => {
     clearError,
     setLoading,
     setError,
-    handleAuthSuccess
-  }
-}
+    handleAuthSuccess,
+  };
+};
 
 export const useGoogleAuth = () => {
-  const { isLoading, error, isConnected, account, wallet, connect, isConnecting, clearError, setLoading, setError, handleAuthSuccess } = useAuth()
+  const {
+    isLoading,
+    error,
+    isConnected,
+    account,
+    wallet,
+    connect,
+    isConnecting,
+    clearError,
+    setLoading,
+    setError,
+    handleAuthSuccess,
+  } = useAuth();
 
   const loginWithGoogle = useCallback(async () => {
     try {
-      setLoading(true)
-      clearError()
+      setLoading(true);
+      clearError();
 
-      await connect(async () => {
-        try {
-          await wallet.connect({
-            client,
-            chain: celo,
-            strategy: "google"
-          })
-          return wallet
-        } catch (error: any) {
-          // If the error is from the connect attempt, rethrow it to be caught in the outer catch
-          if (error?.message?.includes('User rejected') || error?.message?.includes('User closed login window')) {
-            throw new Error('USER_CANCELLED')
-          } else if (error?.message?.includes('popup')) {
-            throw new Error('POPUP_BLOCKED')
+      let connectionSuccessful = false;
+
+      try {
+        await connect(async () => {
+          try {
+            await wallet.connect({
+              client,
+              chain: celo,
+              strategy: "google",
+            });
+            connectionSuccessful = true;
+            return wallet;
+          } catch (connectError: any) {
+            console.error("Wallet connect error:", connectError);
+            connectionSuccessful = false;
+            throw connectError;
           }
-          throw error
-        }
-      })
+        });
+      } catch (connectError: any) {
+        console.error("Connect wrapper error:", connectError);
+        throw connectError;
+      }
 
-      handleAuthSuccess()
+      if (!connectionSuccessful) {
+        throw new Error("Google authentication was not successful");
+      }
+
+      handleAuthSuccess();
+      setLoading(false);
     } catch (error: any) {
-      console.error('Google login failed:', error)
-      
-      let errorMessage = 'Failed to connect with Google'
-      let errorCode = 'GOOGLE_AUTH_ERROR'
+      let errorMessage = "Failed to connect with Google";
+      let errorCode = "GOOGLE_AUTH_ERROR";
 
-      if (error?.message === 'USER_CANCELLED') {
-        errorMessage = 'Authentication was cancelled'
-        errorCode = 'USER_CANCELLED'
-      } else if (error?.message === 'POPUP_BLOCKED' || error?.message?.includes('popup')) {
-        errorMessage = 'Popup was blocked. Please allow popups and try again'
-        errorCode = 'POPUP_BLOCKED'
-      } else if (error?.message?.includes('network') || 
-                error?.message?.includes('Failed to fetch') || 
-                error?.message?.includes('ERR_PROXY_CERTIFICATE_INVALID')) {
-        errorMessage = 'Network error. Please check your internet connection and try again'
-        errorCode = 'NETWORK_ERROR'
-      } else if (error?.message?.includes('rate limit') || error?.message?.includes('too many requests')) {
-        errorMessage = 'Too many attempts. Please wait a moment and try again'
-        errorCode = 'RATE_LIMITED'
+      const errorMsg = error?.message?.toLowerCase() || "";
+
+      if (
+        errorMsg.includes("user rejected") ||
+        errorMsg.includes("user closed")
+      ) {
+        errorMessage = "Authentication was cancelled";
+        errorCode = "USER_CANCELLED";
+      } else if (errorMsg.includes("popup")) {
+        errorMessage = "Popup was blocked. Please allow popups and try again";
+        errorCode = "POPUP_BLOCKED";
+      } else if (
+        errorMsg.includes("network") ||
+        errorMsg.includes("failed to fetch") ||
+        errorMsg.includes("err_proxy_certificate_invalid")
+      ) {
+        errorMessage =
+          "Network error. Please check your internet connection and try again";
+        errorCode = "NETWORK_ERROR";
+      } else if (
+        errorMsg.includes("rate limit") ||
+        errorMsg.includes("too many requests")
+      ) {
+        errorMessage = "Too many attempts. Please wait a moment and try again";
+        errorCode = "RATE_LIMITED";
       }
 
       const authError: AuthError = {
         code: errorCode,
         message: errorMessage,
-        details: error
-      }
-      
-      setError(authError)
-      
-      // Re-throw the error so components can handle it if needed
-      throw authError
+        details: error,
+      };
+
+      setError(authError);
+      setLoading(false);
+      throw authError;
     }
-  }, [setLoading, clearError, connect, wallet, handleAuthSuccess, setError])
+  }, [setLoading, clearError, connect, wallet, handleAuthSuccess, setError]);
 
   return {
     isLoading,
@@ -140,9 +175,9 @@ export const useGoogleAuth = () => {
     setLoading,
     setError,
     handleAuthSuccess,
-    loginWithGoogle
-  }
-}
+    loginWithGoogle,
+  };
+};
 
 interface UseEmailAuthReturn {
   isLoading: boolean;
@@ -158,134 +193,174 @@ interface UseEmailAuthReturn {
   setError: (error: AuthError) => void;
   handleAuthSuccess: () => void;
   loginWithEmail: (email: string, verificationCode: string) => Promise<boolean>;
-  sendEmailCode: (email: string) => Promise<void>;
+  sendEmailCode: (email: string) => Promise<boolean>;
   resetEmailFlow: () => void;
 }
 
 export const useEmailAuth = (): UseEmailAuthReturn => {
-  const { 
-    isLoading, 
-    error, 
-    isConnected, 
-    account, 
-    wallet, 
-    connect, 
-    isConnecting, 
-    clearError, 
-    setLoading, 
-    setError, 
-    handleAuthSuccess 
-  } = useAuth()
-  
-  const [emailSent, setEmailSent] = useState(false)
+  const {
+    isLoading,
+    error,
+    isConnected,
+    account,
+    wallet,
+    connect,
+    isConnecting,
+    clearError,
+    setLoading,
+    setError,
+    handleAuthSuccess,
+  } = useAuth();
+
+  const [emailSent, setEmailSent] = useState(false);
 
   const resetEmailFlow = useCallback(() => {
-    setEmailSent(false)
-    clearError()
-  }, [clearError, setEmailSent])
+    setEmailSent(false);
+    clearError();
+  }, [clearError]);
 
-  const sendEmailCode = useCallback(async (email: string) => {
-    try {
-      setLoading(true)
-      clearError()
+  const sendEmailCode = useCallback(
+    async (email: string): Promise<boolean> => {
+      try {
+        setLoading(true);
+        clearError();
 
-      await preAuthenticate({
-        client,
-        strategy: "email",
-        email: email,
-      })
-      
-      setEmailSent(true)
-      setLoading(false)
-    } catch (error: any) {
-      console.error('Failed to send email code:', error)
-      
-      let errorMessage = 'Failed to send verification code'
-      let errorCode = 'EMAIL_SEND_ERROR'
+        await preAuthenticate({
+          client,
+          strategy: "email",
+          email: email,
+        });
 
-      if (error?.message?.includes('invalid email')) {
-        errorMessage = 'Please enter a valid email address'
-        errorCode = 'INVALID_EMAIL'
-      } else if (error?.message?.includes('rate limit')) {
-        errorMessage = 'Too many requests. Please wait a moment and try again'
-        errorCode = 'RATE_LIMITED'
-      } else if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_PROXY_CERTIFICATE_INVALID') || error?.message?.includes('network')) {
-        errorMessage = 'Network error. Please check your internet connection and try again'
-        errorCode = 'NETWORK_ERROR'
-      }
+        console.log("Email code sent successfully");
+        setEmailSent(true);
+        setLoading(false);
+        return true;
+      } catch (error: any) {
+        console.error("Failed to send email code:", error);
 
-      setError({
-        code: errorCode,
-        message: errorMessage,
-        details: error
-      })
-    }
-  }, [setLoading, clearError, setError])
+        let errorMessage = "Failed to send verification code";
+        let errorCode = "EMAIL_SEND_ERROR";
 
-  const loginWithEmail = useCallback(async (email: string, verificationCode: string): Promise<boolean> => {
-    try {
-      setLoading(true)
-      clearError()
+        const errorMsg = error?.message?.toLowerCase() || "";
 
-      if (!verificationCode || verificationCode.length !== 6) {
-        throw new Error('INVALID_CODE')
-      }
-
-      await connect(async () => {
-        try {
-          await wallet.connect({
-            client,
-            chain: celo,
-            strategy: "email",
-            email: email,
-            verificationCode: verificationCode,
-          })
-          return wallet
-        } catch (error: any) {
-          // Transform specific errors to be caught in the outer catch
-          if (error?.message?.includes('invalid code') || error?.message?.includes('invalid verification code')) {
-            throw new Error('INVALID_CODE')
-          } else if (error?.message?.includes('expired')) {
-            throw new Error('CODE_EXPIRED')
-          } else if (error?.message?.includes('rate limit') || error?.message?.includes('too many attempts')) {
-            throw new Error('RATE_LIMITED')
-          }
-          throw error
+        if (errorMsg.includes("invalid email")) {
+          errorMessage = "Please enter a valid email address";
+          errorCode = "INVALID_EMAIL";
+        } else if (errorMsg.includes("rate limit")) {
+          errorMessage =
+            "Too many requests. Please wait a moment and try again";
+          errorCode = "RATE_LIMITED";
+        } else if (
+          errorMsg.includes("failed to fetch") ||
+          errorMsg.includes("err_proxy_certificate_invalid") ||
+          errorMsg.includes("network")
+        ) {
+          errorMessage =
+            "Network error. Please check your internet connection and try again";
+          errorCode = "NETWORK_ERROR";
         }
-      })
 
-      handleAuthSuccess()
-      return true
-    } catch (error: any) {
-      console.error('Email login failed:', error)
-      
-      let errorMessage = 'Failed to verify email code'
-      let errorCode = 'EMAIL_VERIFY_ERROR'
+        const authError: AuthError = {
+          code: errorCode,
+          message: errorMessage,
+          details: error,
+        };
 
-      if (error?.message === 'INVALID_CODE') {
-        errorMessage = 'Invalid verification code. Please check and try again'
-        errorCode = 'INVALID_CODE'
-      } else if (error?.message === 'CODE_EXPIRED') {
-        errorMessage = 'Verification code has expired. Please request a new one'
-        errorCode = 'CODE_EXPIRED'
-      } else if (error?.message?.includes('Failed to fetch') || 
-                error?.message?.includes('ERR_PROXY_CERTIFICATE_INVALID') || 
-                error?.message?.includes('network')) {
-        errorMessage = 'Network error. Please check your internet connection and try again'
-        errorCode = 'NETWORK_ERROR'
-      } else if (error?.message === 'RATE_LIMITED' || error?.message?.includes('rate limit')) {
-        errorMessage = 'Too many attempts. Please wait a moment and try again'
-        errorCode = 'RATE_LIMITED'
+        console.log("Setting auth error:", authError);
+        setError(authError);
+        setLoading(false);
+        return false;
       }
+    },
+    [setLoading, clearError, setError]
+  );
 
-      setError({
-        code: errorCode,
-        message: errorMessage,
-        details: error
-      })
-      return false
-    }
-  }, [setLoading, clearError, connect, wallet, handleAuthSuccess, setError])
+  const loginWithEmail = useCallback(
+    async (email: string, verificationCode: string): Promise<boolean> => {
+      try {
+        setLoading(true);
+        clearError();
+
+        if (!verificationCode || verificationCode.length !== 6) {
+          console.log("Invalid code length:", verificationCode.length);
+          const authError: AuthError = {
+            code: "INVALID_CODE",
+            message:
+              "The verification code you entered is incorrect or has expired. Please try again.",
+          };
+          setError(authError);
+          setLoading(false);
+          return false;
+        }
+
+        let connectionSuccessful = false;
+
+        try {
+          await connect(async () => {
+            try {
+              await wallet.connect({
+                client,
+                chain: celo,
+                strategy: "email",
+                email: email,
+                verificationCode: verificationCode,
+              });
+              connectionSuccessful = true;
+              return wallet;
+            } catch (connectError: any) {
+              connectionSuccessful = false;
+              throw connectError;
+            }
+          });
+        } catch (connectError: any) {
+          throw connectError;
+        }
+
+        if (!connectionSuccessful) {
+          throw new Error("Email authentication was not successful");
+        }
+
+        console.log("Email login successful");
+        handleAuthSuccess();
+        setLoading(false);
+        return true;
+      } catch (error: any) {
+        let errorMessage =
+          "The verification code you entered is incorrect or has expired. Please try again.";
+        let errorCode = "INVALID_CODE";
+
+        const errorMsg = error?.message?.toLowerCase() || "";
+
+        if (
+          errorMsg.includes("failed to fetch") ||
+          errorMsg.includes("err_proxy_certificate_invalid") ||
+          errorMsg.includes("network")
+        ) {
+          errorMessage =
+            "Network error. Please check your internet connection and try again";
+          errorCode = "NETWORK_ERROR";
+        } else if (
+          errorMsg.includes("rate limit") ||
+          errorMsg.includes("too many attempts")
+        ) {
+          errorMessage =
+            "Too many attempts. Please wait a moment and try again";
+          errorCode = "RATE_LIMITED";
+        }
+
+        const authError: AuthError = {
+          code: errorCode,
+          message: errorMessage,
+          details: error,
+        };
+
+        setError(authError);
+        setLoading(false);
+        return false;
+      }
+    },
+    [setLoading, clearError, connect, wallet, handleAuthSuccess, setError]
+  );
 
   return {
     isLoading,
@@ -302,6 +377,6 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
     emailSent,
     sendEmailCode,
     loginWithEmail,
-    resetEmailFlow
-  }
-}
+    resetEmailFlow,
+  };
+};
