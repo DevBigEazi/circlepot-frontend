@@ -10,7 +10,7 @@ const Analytics: React.FC = () => {
   const navigate = useNavigate()
   const colors = useThemeColors()
 
-  const { profile } = useUserProfile(client)
+   const { profile } = useUserProfile(client)
     // Normalize IPFS URL to ensure it's properly formatted
     const profileImageUrl = useMemo(() => {
       if (!profile?.photo) return null;
