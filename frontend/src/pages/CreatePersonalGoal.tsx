@@ -1,24 +1,696 @@
-import React from 'react'
-import { useNavigate } from 'react-router'
-import { useThemeColors } from '../hooks/useThemeColors'
-import NavBar from '../components/NavBar'
-import { useUserProfile } from '../hooks/useUserProfile'
-import { client } from '../thirdwebClient'
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import {
+  Target,
+  Lock,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
+import { useThemeColors } from "../hooks/useThemeColors";
+import { useUserProfile } from "../hooks/useUserProfile";
+import { usePersonalGoals } from "../hooks/usePersonalGoals";
+import { client } from "../thirdwebClient";
+import NavBar from "../components/NavBar";
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 const CreatePersonalGoal: React.FC = () => {
-  const navigate = useNavigate()
-  const colors = useThemeColors()
+  const navigate = useNavigate();
+  const colors = useThemeColors();
+  const { profile } = useUserProfile(client);
+  const { createPersonalGoal, isLoading: isContractLoading } =
+    usePersonalGoals(client);
 
-  const { profile } = useUserProfile(client)
+  const [goalForm, setGoalForm] = useState({
+    name: "",
+    targetAmount: "",
+    contribution: "",
+    frequency: "weekly" as "daily" | "weekly" | "monthly",
+    deadline: "",
+  });
+
+  const [isCreating, setIsCreating] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Only set mounted to true after component fully mounts
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Validate form inputs early
+  const validateForm = (): string | null => {
+    if (!goalForm.name || goalForm.name.trim().length === 0) {
+      return "Goal name is required";
+    }
+
+    if (goalForm.name.length > 30) {
+      return "Goal name must be 30 characters or less";
+    }
+
+    if (!goalForm.targetAmount) {
+      return "Target amount is required";
+    }
+
+    const targetAmount = parseFloat(goalForm.targetAmount);
+    if (isNaN(targetAmount) || targetAmount < 10 || targetAmount > 50000) {
+      return "Target amount must be between $10 and $50,000";
+    }
+
+    if (!goalForm.contribution) {
+      return "Contribution amount is required";
+    }
+
+    const contribution = parseFloat(goalForm.contribution);
+    if (isNaN(contribution) || contribution < 1) {
+      return "Contribution amount must be at least $1";
+    }
+
+    return null;
+  };
+
+  // Calculate estimated completion date
+  const calculateCompletionDate = () => {
+    if (!goalForm.targetAmount || !goalForm.contribution || !goalForm.frequency)
+      return null;
+
+    const target = parseFloat(goalForm.targetAmount);
+    const contribution = parseFloat(goalForm.contribution);
+
+    if (target <= 0 || contribution <= 0) return null;
+
+    const periodsNeeded = Math.ceil(target / contribution);
+    const today = new Date();
+
+    switch (goalForm.frequency) {
+      case "daily":
+        return new Date(today.getTime() + periodsNeeded * 24 * 60 * 60 * 1000);
+      case "weekly":
+        return new Date(
+          today.getTime() + periodsNeeded * 7 * 24 * 60 * 60 * 1000
+        );
+      case "monthly":
+        return new Date(
+          today.getTime() + periodsNeeded * 30 * 24 * 60 * 60 * 1000
+        );
+      default:
+        return null;
+    }
+  };
+
+  useEffect(() => {
+    const completionDate = calculateCompletionDate();
+    if (completionDate) {
+      const isoDate = completionDate.toISOString().split("T")[0];
+      setGoalForm((prev) => ({
+        ...prev,
+        deadline: isoDate,
+      }));
+    }
+  }, [goalForm.targetAmount, goalForm.contribution, goalForm.frequency]);
+
+  const completionDate = calculateCompletionDate();
+  const isReasonableGoal =
+    goalForm.targetAmount &&
+    goalForm.contribution &&
+    parseFloat(goalForm.targetAmount) >= 10 &&
+    parseFloat(goalForm.targetAmount) <= 50000 &&
+    parseFloat(goalForm.contribution) >= 1;
+
+  const validationError = validateForm();
+  const isFormValid = !!(
+    goalForm.name &&
+    goalForm.targetAmount &&
+    goalForm.contribution &&
+    !isCreating &&
+    !isContractLoading &&
+    isMounted &&
+    !validationError
+  );
+
+  const handleCreateGoal = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent any default behavior
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Validate before proceeding
+    const formError = validateForm();
+    if (formError) {
+      toast.custom(
+        () => (
+          <div
+            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
+            style={{
+              backgroundColor: "#fee2e2",
+              animation: `slideIn 0.3s ease-out`,
+            }}
+          >
+            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <span className="text-sm font-semibold text-red-600">{formError}</span>
+          </div>
+        ),
+        {
+          duration: 4000,
+          position: "top-center",
+        }
+      );
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      // Convert frequency to enum value (0 = Daily, 1 = Weekly, 2 = Monthly)
+      const frequencyMap = { daily: 0, weekly: 1, monthly: 2 } as const;
+
+      // Parse as regular numbers first
+      const targetAmount = parseFloat(goalForm.targetAmount);
+      const contribution = parseFloat(goalForm.contribution);
+
+      console.log("📝 Form values (before conversion):", {
+        targetAmount,
+        contribution,
+      });
+
+      // Convert amounts to wei (multiply by 10^18 for cUSD)
+      const targetAmountWei = BigInt(Math.floor(targetAmount * 1e18));
+      const contributionAmountWei = BigInt(Math.floor(contribution * 1e18));
+
+      console.log("🔢 Wei values:", {
+        targetAmountWei: targetAmountWei.toString(),
+        contributionAmountWei: contributionAmountWei.toString(),
+      });
+
+      // Convert deadline to Unix timestamp (seconds)
+      const deadlineTimestamp = goalForm.deadline
+        ? BigInt(Math.floor(new Date(goalForm.deadline).getTime() / 1000))
+        : BigInt(0);
+
+      const params = {
+        name: goalForm.name,
+        targetAmount: targetAmountWei,
+        contributionAmount: contributionAmountWei,
+        frequency: frequencyMap[goalForm.frequency],
+        deadline: deadlineTimestamp,
+      };
+
+      console.log("📤 Sending params to hook:", params);
+
+      await createPersonalGoal(params);
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      // Show success message
+      toast.custom(
+        () => (
+          <div
+            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm"
+            style={{
+              backgroundColor: `${colors.primary}15`,
+              borderColor: colors.primary,
+              animation: `slideIn 0.3s ease-out`,
+            }}
+          >
+            <CheckCircle size={20} style={{ color: colors.primary }} className="flex-shrink-0" />
+            <div>
+              <span className="text-sm font-bold block" style={{ color: colors.text }}>
+                🎯 Goal "{goalForm.name}" created successfully!
+              </span>
+              <span className="text-xs" style={{ color: colors.textLight }}>
+                Your savings goal is now active. Happy saving!
+              </span>
+            </div>
+          </div>
+        ),
+        {
+          duration: 4000,
+          position: "top-center",
+        }
+      );
+
+      // small delay before navigating back to goals page
+      setTimeout(() => {
+        navigate("/goals");
+      }, 500);
+    } catch (err) {
+      const error = err as Error;
+      console.error("Failed to create goal:", error);
+      // Show error message
+      toast.custom(
+        () => (
+          <div
+            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
+            style={{
+              backgroundColor: "#fee2e2",
+              animation: `slideIn 0.3s ease-out`,
+            }}
+          >
+            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <div>
+              <span className="text-sm font-bold block text-red-600">
+                ✖️ Failed to create your goal!
+              </span>
+              <span className="text-xs text-red-500">
+                {error.message}
+              </span>
+            </div>
+          </div>
+        ),
+        {
+          duration: 4000,
+          position: "top-center",
+        }
+      );
+      setIsCreating(false);
+    }
+  };
+
   return (
     <>
-      <NavBar colors={colors} userName={profile?.username} fullName={profile?.fullName} onBack={() => navigate(-1)} />
-       {/* main UI */}
-       <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
-        <h1>Create Personal Goal</h1>
+      <NavBar
+        colors={colors}
+        userName={profile?.username}
+        fullName={profile?.fullName}
+        onBack={() => navigate(-1)}
+        title="Create Savings Goal"
+      />
+
+      <div
+        className="pb-20 min-h-screen"
+        style={{ backgroundColor: colors.background }}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className="p-2 rounded-xl"
+                style={{ backgroundColor: `${colors.primary}15` }}
+              >
+                <Target style={{ color: colors.primary }} size={24} />
+              </div>
+              <div>
+                <h1
+                  className="text-2xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  Create Your Personal Goal
+                </h1>
+                <p className="text-sm" style={{ color: colors.textLight }}>
+                  Set up automated savings for your dreams
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Goal Name */}
+            <div
+              className="rounded-2xl p-6 border"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <label
+                className="block text-sm font-semibold mb-3"
+                style={{ color: colors.text }}
+              >
+                Goal Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., New Laptop, Emergency Fund, Vacation"
+                value={goalForm.name}
+                onChange={(e) =>
+                  setGoalForm({
+                    ...goalForm,
+                    name: e.target.value.slice(0, 30),
+                  })
+                }
+                disabled={isCreating || isContractLoading}
+                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+              />
+              <div className="text-xs mt-2" style={{ color: colors.textLight }}>
+                {goalForm.name.length}/30 characters
+              </div>
+            </div>
+
+            {/* Target Amount */}
+            <div
+              className="rounded-2xl p-6 border"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <label
+                className="block text-sm font-semibold mb-3"
+                style={{ color: colors.text }}
+              >
+                Target Amount (cUSD)
+              </label>
+              <input
+                type="number"
+                placeholder="500"
+                min="10"
+                max="50000"
+                step="0.01"
+                value={goalForm.targetAmount}
+                onChange={(e) =>
+                  setGoalForm({ ...goalForm, targetAmount: e.target.value })
+                }
+                disabled={isCreating || isContractLoading}
+                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+              />
+              <div className="text-xs mt-2" style={{ color: colors.textLight }}>
+                Range: $10 - $50,000
+              </div>
+            </div>
+
+            {/* Contribution Settings */}
+            <div
+              className="rounded-2xl p-6 border"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <h3 className="font-semibold mb-4" style={{ color: colors.text }}>
+                Contribution Settings
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: colors.text }}
+                  >
+                    Amount (cUSD)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="50"
+                    min="1"
+                    step="0.01"
+                    value={goalForm.contribution}
+                    onChange={(e) =>
+                      setGoalForm({ ...goalForm, contribution: e.target.value })
+                    }
+                    disabled={isCreating || isContractLoading}
+                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                    style={{
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: colors.text }}
+                  >
+                    Frequency
+                  </label>
+                  <select
+                    value={goalForm.frequency}
+                    onChange={(e) =>
+                      setGoalForm({
+                        ...goalForm,
+                        frequency: e.target.value as
+                          | "daily"
+                          | "weekly"
+                          | "monthly",
+                      })
+                    }
+                    disabled={isCreating || isContractLoading}
+                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                    style={{
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                    }}
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Goal Deadline */}
+            <div
+              className="rounded-2xl p-6 border"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <label
+                className="block text-sm font-semibold mb-3"
+                style={{ color: colors.text }}
+              >
+                Goal Deadline
+              </label>
+              <input
+                type="date"
+                value={goalForm.deadline}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) =>
+                  setGoalForm({ ...goalForm, deadline: e.target.value })
+                }
+                disabled={true}
+                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+              />
+              <div className="text-xs mt-2" style={{ color: colors.textLight }}>
+               Calculated based on the target amount, contribution amount, and frequency.
+              </div>
+            </div>
+
+            {/* Goal Preview */}
+            {isReasonableGoal && (
+              <div
+                className="rounded-2xl p-6 border"
+                style={{
+                  backgroundColor: `${colors.primary}10`,
+                  borderColor: colors.border,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp size={20} style={{ color: colors.primary }} />
+                  <span className="font-bold" style={{ color: colors.text }}>
+                    Goal Preview
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span style={{ color: colors.textLight }}>
+                      Estimated completion day:
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{ color: colors.text }}
+                    >
+                      {completionDate
+                        ? completionDate.toLocaleDateString()
+                        : "Calculating..."}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: colors.textLight }}>
+                      Periods needed:
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{ color: colors.text }}
+                    >
+                      {Math.ceil(
+                        parseFloat(goalForm.targetAmount) /
+                          parseFloat(goalForm.contribution)
+                      )}{" "}
+                      {goalForm.frequency}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: colors.textLight }}>
+                      Total contribution:
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{ color: colors.primary }}
+                    >
+                      ${goalForm.contribution} / {goalForm.frequency}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Early Withdrawal Info */}
+            <div
+              className="rounded-2xl p-6 border"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Lock size={20} style={{ color: colors.secondary }} />
+                <span className="font-bold" style={{ color: colors.text }}>
+                  Early Withdrawal Penalties
+                </span>
+              </div>
+              <div className="space-y-2 text-sm">
+                {[
+                  {
+                    range: "0-24% progress",
+                    penalty: "1.0% penalty",
+                    color: "text-red-600",
+                  },
+                  {
+                    range: "25-49% progress",
+                    penalty: "0.6% penalty",
+                    color: "text-orange-600",
+                  },
+                  {
+                    range: "50-74% progress",
+                    penalty: "0.3% penalty",
+                    color: "text-yellow-600",
+                  },
+                  {
+                    range: "75-99% progress",
+                    penalty: "0.1% penalty",
+                    color: "text-green-600",
+                  },
+                  {
+                    range: "100% completed",
+                    penalty: "0% penalty",
+                    color: "text-green-600",
+                  },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center p-2 rounded-lg"
+                    style={{ backgroundColor: colors.background }}
+                  >
+                    <span style={{ color: colors.textLight }}>
+                      {item.range}:
+                    </span>
+                    <span className={`font-semibold ${item.color}`}>
+                      {item.penalty}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div
+                className="mt-4 p-3 rounded-lg"
+                style={{ backgroundColor: colors.warningBg }}
+              >
+                <div className="flex items-start gap-2">
+                  <AlertTriangle
+                    size={14}
+                    style={{ color: colors.secondary }}
+                    className="mt-0.5"
+                  />
+                  <span className="text-xs" style={{ color: colors.textLight }}>
+                    Penalties encourage commitment while maintaining
+                    flexibility. Funds are never locked forever.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Benefits */}
+            <div
+              className="rounded-2xl p-6 border"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <CheckCircle size={20} style={{ color: colors.primary }} />
+                <span className="font-bold" style={{ color: colors.text }}>
+                  Goal Benefits
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { icon: "📊", text: "Visual progress tracking" },
+                  { icon: "⭐", text: "Trust points for completion" },
+                  { icon: "💰", text: "Zero transaction fees" },
+                  { icon: "🔒", text: "Secure digital wallet" },
+                ].map((benefit, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span>{benefit.icon}</span>
+                    <span
+                      className="text-sm"
+                      style={{ color: colors.textLight }}
+                    >
+                      {benefit.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Create Button */}
+            <div className="sticky bottom-20 z-10 pt-4">
+              <button
+                onClick={handleCreateGoal}
+                type="button"
+                disabled={!isFormValid}
+                className={`w-full py-4 font-bold rounded-2xl transition shadow-lg flex items-center justify-center gap-2 ${
+                  isFormValid
+                    ? "text-white hover:shadow-xl transform hover:scale-105"
+                    : "cursor-not-allowed opacity-50"
+                }`}
+                style={
+                  isFormValid
+                    ? { background: colors.gradient }
+                    : {
+                        backgroundColor: colors.border,
+                        color: colors.textLight,
+                      }
+                }
+              >
+                {isCreating || isContractLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Creating Goal...
+                  </>
+                ) : (
+                  "Create Savings Goal"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default CreatePersonalGoal
+export default CreatePersonalGoal;
