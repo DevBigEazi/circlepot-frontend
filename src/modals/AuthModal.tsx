@@ -112,7 +112,7 @@ const AuthModal: React.FC = () => {
         {/* App logo, title & description - only show on select step */}
         {authMethod === "select" && (
           <div className="flex flex-col items-center justify-center mb-6">
-            <img src={image.appLogo} alt="CirlePot Logo" className="w-20 h-20" />
+            <img src={image.fullLogo} alt="CirlePot Logo" className="w-32 sm:w-40 md:w-48 lg:w-56 h-auto" />
             <h2 className="text-2xl font-bold mb-3 text-center" style={{ color: colors.text }}>
               Welcome to Circlepot
             </h2>
