@@ -4,8 +4,6 @@ import {
   Camera,
   AlertCircle,
   Palette,
-  // Eye,
-  // EyeOff,
   HelpCircle,
   Loader,
   Check,
@@ -20,7 +18,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { usePinata } from "../hooks/usePinata";
-import { useTheme } from "../contexts/ThemeContext";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router";
 import { client } from "../thirdwebClient";
@@ -29,6 +26,7 @@ import { useDisconnect, useActiveWallet } from "thirdweb/react";
 import ErrorDisplay from "../components/ErrorDisplay";
 import { useBiometricContext } from "../contexts/BiometricContext";
 import { useBiometric } from "../hooks/useBiometric";
+import ThemeToggle from "../components/ThemeToggle";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -39,7 +37,6 @@ const Settings: React.FC = () => {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
 
-  const { themeMode, setTheme } = useTheme();
   const {
     profile,
     isLoading,
@@ -229,10 +226,6 @@ const Settings: React.FC = () => {
 
   const triggerFileInput = (): void => {
     fileInputRef.current?.click();
-  };
-
-  const handleThemeChange = (mode: "light" | "dark" | "system"): void => {
-    setTheme(mode);
   };
 
   const copyToClipboard = (text: string, field: string) => {
@@ -677,55 +670,7 @@ const Settings: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 sm:gap-3">
-                <button
-                  onClick={() => handleThemeChange("light")}
-                  className="flex-1 px-2 sm:px-4 py-2 rounded-xl font-medium border transition text-xs sm:text-sm"
-                  style={{
-                    borderColor:
-                      themeMode === "light" ? colors.primary : colors.border,
-                    backgroundColor:
-                      themeMode === "light"
-                        ? colors.primary
-                        : colors.background,
-                    color: themeMode === "light" ? "white" : colors.text,
-                  }}
-                >
-                  Light
-                </button>
-                <button
-                  onClick={() => handleThemeChange("dark")}
-                  className="flex-1 px-2 sm:px-4 py-2 rounded-xl font-medium transition text-xs sm:text-sm"
-                  style={{
-                    background:
-                      themeMode === "dark"
-                        ? colors.gradient
-                        : colors.background,
-                    color: themeMode === "dark" ? "white" : colors.text,
-                    border:
-                      themeMode === "dark"
-                        ? "none"
-                        : `1px solid ${colors.border}`,
-                  }}
-                >
-                  Dark
-                </button>
-                <button
-                  onClick={() => handleThemeChange("system")}
-                  className="flex-1 px-2 sm:px-4 py-2 rounded-xl font-medium border transition text-xs sm:text-sm"
-                  style={{
-                    borderColor:
-                      themeMode === "system" ? colors.primary : colors.border,
-                    backgroundColor:
-                      themeMode === "system"
-                        ? colors.primary
-                        : colors.background,
-                    color: themeMode === "system" ? "white" : colors.text,
-                  }}
-                >
-                  System
-                </button>
-              </div>
+              <ThemeToggle />
             </div>
 
             {/* Currency Settings */}
@@ -808,40 +753,6 @@ const Settings: React.FC = () => {
               </h3>
 
               <div className="space-y-2 sm:space-y-4">
-                {/* <div
-                  className="flex items-center justify-between p-2 sm:p-4 rounded-xl border"
-                  style={{
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <div className="min-w-0">
-                    <div
-                      className="font-semibold text-sm"
-                      style={{ color: colors.text }}
-                    >
-                      Show Balance
-                    </div>
-                    <div
-                      className="text-xs"
-                      style={{ color: colors.textLight }}
-                    >
-                      Hide balance
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowBalance(!showBalance)}
-                    className="p-1 sm:p-2 rounded-lg transition flex-shrink-0"
-                    style={{ backgroundColor: colors.background }}
-                  >
-                    {showBalance ? (
-                      <Eye size={18} style={{ color: colors.primary }} />
-                    ) : (
-                      <EyeOff size={18} style={{ color: colors.textLight }} />
-                    )}
-                  </button>
-                </div> */}
-
                 <div
                   className="flex items-center justify-between p-2 sm:p-4 rounded-xl border"
                   style={{
