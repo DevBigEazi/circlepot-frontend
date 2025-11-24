@@ -7,6 +7,8 @@ import { useActiveAccount } from 'thirdweb/react';
 import { getUserEmail } from "thirdweb/wallets/in-app";
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 
 interface ProfileCreationModalProps {
   client: any;
@@ -48,13 +50,15 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
   }, [client]);
 
   const handleUsernameChange = useCallback((value: string) => {
-    setUserName(value);
+    // Remove any whitespace from the input
+    const cleanedValue = value.replace(/\s/g, '');
+    setUserName(cleanedValue);
     
     if (usernameCheckTimeout.current) {
       clearTimeout(usernameCheckTimeout.current);
     }
 
-    if (value.length < 3) {
+    if (cleanedValue.length < 3) {
       setUsernameAvailable(null);
       return;
     }
@@ -62,7 +66,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
     usernameCheckTimeout.current = window.setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const available = await checkUsernameAvailability(value);
+        const available = await checkUsernameAvailability(cleanedValue);
         setUsernameAvailable(available);
       } catch (err) {
         console.error('Error checking username:', err);
@@ -169,8 +173,19 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         profilePhotoUrl
       );
 
-      onProfileCreated?.();
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      toast.success(`🎯 Your Circlepot account is ready, "${userName}"!`, {
+        description: "Start saving in dollars, and spending in your local currency",
+        duration: 4000,
+        position: "top-center",
+      });
 
+      onProfileCreated?.();
     } catch (err: any) {
       console.error('ProfileModal Profile setup failed:', {
         message: err.message,

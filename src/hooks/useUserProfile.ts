@@ -48,7 +48,7 @@ interface UserProfile {
   totalCirclesCompleted: Number;
 }
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_USERPROFILE_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_USER_PROFILE_ADDRESS;
 const CHAIN_ID = 11142220; // Celo-Sepolia testnet
 
 export const useUserProfile = (client: ThirdwebClient) => {

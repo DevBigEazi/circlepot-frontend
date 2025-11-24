@@ -18,6 +18,9 @@ import Browse from "./pages/Browse";
 import Erorr404 from "./pages/404";
 import Layout from "./layouts/Layout";
 import { BiometricProvider } from "./contexts/BiometricContext";
+import { Toaster } from "sonner";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
+
 
 interface AppProps {
   client: any; // thirdweb client
@@ -57,6 +60,7 @@ function App({ client }: AppProps) {
 
   return (
     <main className="min-h-screen">
+      <Toaster position="top-center" />
       <BiometricProvider userId={profile?.accountId ? String(profile.accountId) : ""}>
 
       {/* Enable auto-reconnection of wallet on page load */}
@@ -120,6 +124,9 @@ function App({ client }: AppProps) {
           onProfileCreated={handleProfileCreated}
         />
       )}
+
+      {/* PWA Install Prompt - Global, non-intrusive */}
+      <PWAInstallPrompt />
       </BiometricProvider>
     </main>
   );
