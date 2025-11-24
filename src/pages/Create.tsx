@@ -1,17 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router';
-import { Target, Users, Search, FolderOpen, PieChart, ArrowLeft } from 'lucide-react';
+import { Target, Users, Search, FolderOpen, PieChart } from 'lucide-react';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { useUserProfile } from '../hooks/useUserProfile';
+import { client } from '../thirdwebClient';
+import { normalizeIpfsUrl } from '../utils/ipfs';
+import NavBar from '../components/NavBar';
 
+const Create: React.FC = () => {
 
-function Create() {
  const navigate = useNavigate();
  const location = useLocation();
  const colors = useThemeColors();
+
+
+ const { profile } = useUserProfile(client)
+ // Normalize IPFS URL to ensure it's properly formatted
+ const profileImageUrl = useMemo(() => {
+   if (!profile?.photo) return null;
+   const normalized = normalizeIpfsUrl(profile.photo);
+   return normalized;
+ }, [profile?.photo]);
+
   // Determine if we're on a sub-route
  const isSubRoute = location.pathname !== '/create' && location.pathname.startsWith('/create');
  const [showCreateOptions, setShowCreateOptions] = useState(!isSubRoute);
-
 
  // Update state when route changes
  useEffect(() => {
@@ -51,20 +64,7 @@ function Create() {
  return (
    <div className="pb-20 min-h-screen" style={{ backgroundColor: colors.background }}>
      {/* Navigation Bar */}
-     <div className="border-b" style={{ borderColor: colors.border, backgroundColor: colors.surface }}>
-       <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-         <button
-           onClick={handleBack}
-           className="p-2 rounded-lg hover:opacity-80 transition"
-           style={{ backgroundColor: colors.background }}
-         >
-           <ArrowLeft size={20} style={{ color: colors.primary }} />
-         </button>
-         <h1 className="text-lg font-bold" style={{ color: colors.text }}>Create</h1>
-         <div className="w-10" />
-       </div>
-     </div>
-
+     <NavBar colors={colors} userName={profile?.username} fullName={profile?.fullName} profileImage={profileImageUrl} onBack={() => navigate(-1)} />
 
      <div className="max-w-4xl mx-auto px-4 py-6">
        <div className="mb-6">
