@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #35D07F;
-    --color-secondary: #FBCC5C;
-    --color-accent: #2E3338;
-    --color-background: #F8F9FA;
-    --color-surface: #FFFFFF;
-    --color-text: #2E3338;
-    --color-text-light: #6B7280;
-    --color-border: #E5E7EB;
+  --color-primary: #35D07F;
+  --color-secondary: #FBCC5C;
+  --color-accent: #2E3338;
+  --color-background: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-text: #2E3338;
+  --color-text-light: #6B7280;
+  --color-border: #E5E7EB;
 
-    /* Gradient utilities */
-    --gradient-primary: linear-gradient(135deg, #35D07F 0%, #2BB673 100%);
+  /* Gradient utilities */
+  --gradient-primary: linear-gradient(135deg, #35D07F 0%, #2BB673 100%);
 }
 
 /* Base dark mode support */
@@ -31,4 +31,69 @@ body {
 
 #root {
   @apply min-h-screen;
+}
+
+/* PWA Install Prompt Animation */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Desktop version with center translate */
+@media (min-width: 768px) {
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -100%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+}
+
+/* Simple slide-down for margin-based centering */
+@keyframes slide-down-simple {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down-simple {
+  animation: slide-down-simple 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
