@@ -19,6 +19,8 @@ import Erorr404 from "./pages/404";
 import Layout from "./layouts/Layout";
 import { BiometricProvider } from "./contexts/BiometricContext";
 import { Toaster } from "sonner";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
+
 
 interface AppProps {
   client: any; // thirdweb client
@@ -122,6 +124,9 @@ function App({ client }: AppProps) {
           onProfileCreated={handleProfileCreated}
         />
       )}
+
+      {/* PWA Install Prompt - Global, non-intrusive */}
+      <PWAInstallPrompt />
       </BiometricProvider>
     </main>
   );
