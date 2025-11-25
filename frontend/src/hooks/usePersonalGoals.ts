@@ -6,13 +6,18 @@ import { ThirdwebClient } from "thirdweb";
 import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
+import { CUSD_ABI } from "../abis/Cusd";
 
 const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
 const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 const userGoalsQuery = gql`
   query GetUserGoals($userId: Bytes!) {
-    personalGoalCreateds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    personalGoalCreateds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -29,32 +34,32 @@ const userGoalsQuery = gql`
         transactionHash
       }
     }
-    goalContributions(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    goalContributions(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
       }
       amount
-      goal {
-        id
-        goalId
-        goalName
-      }
+      goalId
       transaction {
         blockTimestamp
         transactionHash
       }
     }
-    goalWithdrawns(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    goalWithdrawns(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
       }
-      goal {
-        id
-        goalId
-        goalName
-      }
+      goalId
       amount
       penalty
       transaction {
@@ -128,11 +133,13 @@ interface CreateGoalParams {
 }
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_PERSONAL_SAVINGS_ADDRESS;
+const CUSD_ADDRESS = import.meta.env.VITE_CUSD_ADDRESS;
 const CHAIN_ID = 11142220; // Celo-Sepolia testnet
 
 export const usePersonalGoals = (client: ThirdwebClient) => {
   const account = useActiveAccount();
-  const { mutate: sendTransaction, isPending: isSending } = useSendTransaction();
+  const { mutate: sendTransaction, isPending: isSending } =
+    useSendTransaction();
   const [goals, setGoals] = useState<PersonalGoal[]>([]);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [withdrawals, setWithdrawals] = useState<GoalWithdrawal[]>([]);
@@ -170,7 +177,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         );
         return result;
       } catch (err) {
-        console.error("❌ [PersonalGoals] Error fetching from Subgraph:", err);
         throw err;
       }
     },
@@ -181,37 +187,57 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   useEffect(() => {
     if (goalsData) {
       // Process goals
-      const processedGoals = goalsData.personalGoalCreateds.map((goal: any) => ({
-        id: goal.id,
-        goalId: BigInt(goal.goalId),
-        goalName: goal.goalName,
-        goalAmount: BigInt(goal.goalAmount),
-        currentAmount: BigInt(goal.currentAmount),
-        isActive: goal.isActive,
-        createdAt: BigInt(goal.transaction.blockTimestamp),
-        user: goal.user,
-      }));
+      const processedGoals = goalsData.personalGoalCreateds.map(
+        (goal: any) => ({
+          id: goal.id,
+          goalId: BigInt(goal.goalId),
+          goalName: goal.goalName,
+          goalAmount: BigInt(goal.goalAmount),
+          currentAmount: BigInt(goal.currentAmount),
+          isActive: goal.isActive,
+          createdAt: BigInt(goal.transaction.blockTimestamp),
+          user: goal.user,
+        })
+      );
       setGoals(processedGoals);
 
       // Process contributions
-      const processedContributions = goalsData.goalContributions.map((contrib: any) => ({
-        id: contrib.id,
-        amount: BigInt(contrib.amount),
-        goalId: BigInt(contrib.goal.goalId),
-        goalName: contrib.goal.goalName,
-        timestamp: BigInt(contrib.transaction.blockTimestamp),
-      }));
+      const processedContributions = goalsData.goalContributions.map(
+        (contrib: any) => {
+          // Find the goal name from the goals array
+          const relatedGoal = goalsData.personalGoalCreateds.find(
+            (g: any) => g.goalId === contrib.goalId
+          );
+
+          return {
+            id: contrib.id,
+            amount: BigInt(contrib.amount),
+            goalId: BigInt(contrib.goalId),
+            goalName: relatedGoal?.goalName || "Unknown Goal",
+            timestamp: BigInt(contrib.transaction.blockTimestamp),
+          };
+        }
+      );
       setContributions(processedContributions);
 
       // Process withdrawals
-      const processedWithdrawals = goalsData.goalWithdrawns.map((withdrawal: any) => ({
-        id: withdrawal.id,
-        goalId: BigInt(withdrawal.goal.goalId),
-        goalName: withdrawal.goal.goalName,
-        amount: BigInt(withdrawal.amount),
-        penalty: BigInt(withdrawal.penalty),
-        timestamp: BigInt(withdrawal.transaction.blockTimestamp),
-      }));
+      const processedWithdrawals = goalsData.goalWithdrawns.map(
+        (withdrawal: any) => {
+          // Find the goal name from the goals array
+          const relatedGoal = goalsData.personalGoalCreateds.find(
+            (g: any) => g.goalId === withdrawal.goalId
+          );
+
+          return {
+            id: withdrawal.id,
+            goalId: BigInt(withdrawal.goalId),
+            goalName: relatedGoal?.goalName || "Unknown Goal",
+            amount: BigInt(withdrawal.amount),
+            penalty: BigInt(withdrawal.penalty),
+            timestamp: BigInt(withdrawal.transaction.blockTimestamp),
+          };
+        }
+      );
       setWithdrawals(processedWithdrawals);
 
       setError(null);
@@ -223,40 +249,54 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     async (params: CreateGoalParams) => {
       if (!account?.address) {
         const error = "No wallet connected";
-        console.error("❌ [PersonalGoals] Create goal failed:", error);
         throw new Error(error);
       }
 
       try {
         setError(null);
 
-        // Log incoming params for debugging
-        console.log('📥 [PersonalGoals] Received params:', {
-          name: params.name,
-          targetAmount: params.targetAmount.toString(),
-          contributionAmount: params.contributionAmount.toString(),
-          frequency: params.frequency,
-          deadline: params.deadline.toString()
-        });
-
-        console.log("📝 [PersonalGoals] Creating personal goal...");
-        const createTransaction = prepareContractCall({
-          contract,
-          method: "createPersonalGoal",
-          params: [params],
+        // First, approve tokens
+        const approveTx = prepareContractCall({
+          contract: getContract({
+            client,
+            chain,
+            address: CUSD_ADDRESS,
+            abi: CUSD_ABI,
+          }),
+          method: "approve",
+          params: [CONTRACT_ADDRESS, params.contributionAmount],
         });
 
         return new Promise((resolve, reject) => {
-          sendTransaction(createTransaction, {
-            onSuccess: (receipt) => {
-              console.log("✅ [PersonalGoals] Goal created:", receipt);
-              // Refetch goals after successful creation
-              setTimeout(() => refetchGoals(), 3000);
-              resolve(receipt);
+          sendTransaction(approveTx, {
+            onSuccess: () => {
+              // After approval succeeds, create the goal
+              setTimeout(() => {
+                const createTransaction = prepareContractCall({
+                  contract,
+                  method: "createPersonalGoal",
+                  params: [params],
+                });
+
+                sendTransaction(createTransaction, {
+                  onSuccess: (receipt) => {
+                    setTimeout(() => refetchGoals(), 3000);
+                    resolve(receipt);
+                  },
+                  onError: (error: any) => {
+                    const errorMsg =
+                      error?.message ||
+                      error?.toString() ||
+                      "Transaction failed";
+                    setError(errorMsg);
+                    reject(new Error(errorMsg));
+                  },
+                });
+              }, 1500);
             },
             onError: (error: any) => {
-              console.error("❌ [PersonalGoals] Transaction failed:", error);
-              const errorMsg = error?.message || error?.toString() || "Transaction failed";
+              const errorMsg =
+                error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
             },
@@ -264,17 +304,16 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [PersonalGoals] Error creating goal:", error);
         setError(error.message || "Failed to create goal");
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchGoals]
+    [account?.address, contract, sendTransaction, refetchGoals, client, chain]
   );
 
   // Contribute to goal
   const contributeToGoal = useCallback(
-    async (goalId: bigint) => {
+    async (goalId: bigint, contributionAmount: bigint) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
@@ -282,23 +321,47 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       try {
         setError(null);
 
-        console.log("📝 [PersonalGoals] Contributing to goal...");
-        const contributeTransaction = prepareContractCall({
-          contract,
-          method: "contributeToGoal",
-          params: [goalId],
+        // First, approve tokens
+        const approveTx = prepareContractCall({
+          contract: getContract({
+            client,
+            chain,
+            address: CUSD_ADDRESS,
+            abi: CUSD_ABI,
+          }),
+          method: "approve",
+          params: [CONTRACT_ADDRESS, contributionAmount],
         });
 
         return new Promise((resolve, reject) => {
-          sendTransaction(contributeTransaction, {
-            onSuccess: (receipt) => {
-              console.log("✅ [PersonalGoals] Contribution successful:", receipt);
-              setTimeout(() => refetchGoals(), 3000);
-              resolve(receipt);
+          sendTransaction(approveTx, {
+            onSuccess: () => {
+              setTimeout(() => {
+                const contributeTransaction = prepareContractCall({
+                  contract,
+                  method: "contributeToGoal",
+                  params: [goalId],
+                });
+
+                sendTransaction(contributeTransaction, {
+                  onSuccess: (receipt) => {
+                    setTimeout(() => refetchGoals(), 3000);
+                    resolve(receipt);
+                  },
+                  onError: (error: any) => {
+                    const errorMsg =
+                      error?.message ||
+                      error?.toString() ||
+                      "Contribution failed";
+                    setError(errorMsg);
+                    reject(new Error(errorMsg));
+                  },
+                });
+              }, 1500);
             },
             onError: (error: any) => {
-              console.error("❌ [PersonalGoals] Contribution failed:", error);
-              const errorMsg = error?.message || error?.toString() || "Contribution failed";
+              const errorMsg =
+                error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
             },
@@ -306,12 +369,11 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [PersonalGoals] Error contributing:", error);
         setError(error.message || "Failed to contribute");
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchGoals]
+    [account?.address, contract, sendTransaction, refetchGoals, client, chain]
   );
 
   // Withdraw from goal
@@ -324,7 +386,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       try {
         setError(null);
 
-        console.log("📝 [PersonalGoals] Withdrawing from goal...");
         const withdrawTransaction = prepareContractCall({
           contract,
           method: "withdrawFromGoal",
@@ -334,12 +395,10 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         return new Promise((resolve, reject) => {
           sendTransaction(withdrawTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [PersonalGoals] Withdrawal successful:", receipt);
               setTimeout(() => refetchGoals(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [PersonalGoals] Withdrawal failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -347,7 +406,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [PersonalGoals] Error withdrawing:", error);
         setError(error.message || "Failed to withdraw");
         throw err;
       }
@@ -365,7 +423,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       try {
         setError(null);
 
-        console.log("📝 [PersonalGoals] Completing goal...");
         const completeTransaction = prepareContractCall({
           contract,
           method: "completeGoal",
@@ -375,12 +432,10 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         return new Promise((resolve, reject) => {
           sendTransaction(completeTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [PersonalGoals] Goal completed:", receipt);
               setTimeout(() => refetchGoals(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [PersonalGoals] Goal completion failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -388,7 +443,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [PersonalGoals] Error completing goal:", error);
         setError(error.message || "Failed to complete goal");
         throw err;
       }
@@ -397,37 +451,36 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   );
 
   // Get single goal by ID
-  const getGoalById = useCallback(
-    async (goalId: string) => {
-      try {
-        const result = await request(
-          SUBGRAPH_URL,
-          singleGoalQuery,
-          { goalId },
-          SUBGRAPH_HEADERS
-        );
+  const getGoalById = useCallback(async (goalId: string) => {
+    try {
+      const result = await request(
+        SUBGRAPH_URL,
+        singleGoalQuery,
+        { goalId },
+        SUBGRAPH_HEADERS
+      );
 
-        if (result.personalGoalCreateds && result.personalGoalCreateds.length > 0) {
-          const goal = result.personalGoalCreateds[0];
-          return {
-            id: goal.id,
-            goalId: BigInt(goal.goalId),
-            goalName: goal.goalName,
-            goalAmount: BigInt(goal.goalAmount),
-            currentAmount: BigInt(goal.currentAmount),
-            isActive: goal.isActive,
-            createdAt: BigInt(goal.transaction.blockTimestamp),
-            user: goal.user,
-          };
-        }
-        return null;
-      } catch (err) {
-        console.error("❌ [PersonalGoals] Error fetching goal:", err);
-        throw err;
+      if (
+        result.personalGoalCreateds &&
+        result.personalGoalCreateds.length > 0
+      ) {
+        const goal = result.personalGoalCreateds[0];
+        return {
+          id: goal.id,
+          goalId: BigInt(goal.goalId),
+          goalName: goal.goalName,
+          goalAmount: BigInt(goal.goalAmount),
+          currentAmount: BigInt(goal.currentAmount),
+          isActive: goal.isActive,
+          createdAt: BigInt(goal.transaction.blockTimestamp),
+          user: goal.user,
+        };
       }
-    },
-    []
-  );
+      return null;
+    } catch (err) {
+      throw err;
+    }
+  }, []);
 
   return {
     goals,
