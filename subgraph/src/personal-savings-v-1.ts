@@ -25,26 +25,28 @@ export function handlePersonalGoalCreated(
   user.save();
   personalGoalCreated.save();
 }
+
 export function handleGoalContribution(event: GoalContributionEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.owner);
 
     const goalContribution = new GoalContribution(event.transaction.hash);
     goalContribution.user = user.id;
-    goalContribution.amount = event.params.amount
-    goalContribution.goal = Bytes.fromHexString(event.params.goalId.toHexString());
+    goalContribution.amount = event.params.amount;
+    goalContribution.goalId = event.params.goalId;
     goalContribution.transaction = transaction.id;
 
     user.save();
     goalContribution.save();
 }
+
 export function handleGoalWithdrawn(event: GoalWithdrawnEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.owner);
 
     const goalWithdrawn = new GoalWithdrawn(event.transaction.hash);
     goalWithdrawn.user = user.id;
-    goalWithdrawn.goal = Bytes.fromHexString(event.params.goalId.toHexString());
+    goalWithdrawn.goalId = event.params.goalId;
     goalWithdrawn.amount = event.params.amount;
     goalWithdrawn.penalty = event.params.penalty;
     goalWithdrawn.transaction = transaction.id;

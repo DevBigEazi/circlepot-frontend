@@ -42,7 +42,7 @@ export function handleCircleJoined(event: CircleJoinedEvent): void {
     const user = getOrCreateUser(event.params.member);
 
     const circleJoined = new CircleJoined(event.transaction.hash);
-    circleJoined.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    circleJoined.circleId = event.params.circleId;
     circleJoined.user = user.id
     circleJoined.currentMembers = event.params.currentMembers;
     circleJoined.circleState = event.params.state;
@@ -55,7 +55,7 @@ export function handleCircleStarted(event: CircleStartedEvent): void {
     const transaction = createTransaction(event);
 
     const circleStarted = new CircleStarted(event.transaction.hash);
-    circleStarted.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    circleStarted.circleId = event.params.circleId;
     circleStarted.circleStartedAt = event.params.startedAt;
     circleStarted.transaction = transaction.id;
 
@@ -68,7 +68,7 @@ export function handlePayoutDistributed(event: PayoutDistributedEvent): void {
 
     const payoutDistributed = new PayoutDistributed(event.transaction.hash);
     payoutDistributed.user = user.id;
-    payoutDistributed.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    payoutDistributed.circleId = event.params.circleId;
     payoutDistributed.round = event.params.round;
     payoutDistributed.payoutAmount = event.params.amount
     payoutDistributed.transaction = transaction.id;
@@ -82,7 +82,7 @@ export function handlePositionAssigned(event: PositionAssignedEvent): void {
 
     const positionAssigned = new PositionAssigned(event.transaction.hash);
     positionAssigned.user = user.id;
-    positionAssigned.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    positionAssigned.circleId = event.params.circleId;
     positionAssigned.position = event.params.position;
     positionAssigned.transaction = transaction.id;
 
@@ -95,7 +95,7 @@ export function handleCollateralWithdrawn(event: CollateralWithdrawnEvent): void
 
     const collateralWithdrawn = new CollateralWithdrawn(event.transaction.hash);
     collateralWithdrawn.user = user.id;
-    collateralWithdrawn.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    collateralWithdrawn.circleId = event.params.circleId;
     collateralWithdrawn.amount = event.params.amount;
     collateralWithdrawn.transaction = transaction.id;
 
@@ -106,7 +106,7 @@ export function handleVotingInitiated(event: VotingInitiatedEvent): void {
     const transaction = createTransaction(event);
     
     const votingInitiated = new VotingInitiated(event.transaction.hash);
-    votingInitiated.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    votingInitiated.circleId = event.params.circleId;
     votingInitiated.votingStartAt = event.params.votingStartTime;
     votingInitiated.votingEndAt = event.params.votingEndTime;
     votingInitiated.transaction = transaction.id;
@@ -120,7 +120,7 @@ export function handleVoteCast(event: VoteCastEvent): void {
     
     const voteCast = new VoteCast(event.transaction.hash);
     voteCast.voter = user.id;
-    voteCast.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    voteCast.circleId = event.params.circleId;
     voteCast.choice = event.params.choice;
     voteCast.transaction = transaction.id;
 
@@ -134,7 +134,7 @@ export function handleMemberInvited(event: MemberInvitedEvent): void {
     const memberInvited = new MemberInvited(event.transaction.hash);
     memberInvited.inviter = user.id;
     memberInvited.invitee = event.params.invitee;
-    memberInvited.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    memberInvited.circleId = event.params.circleId;
     memberInvited.invitedAt = event.params.invitedAt;
     memberInvited.transaction = transaction.id;
 
@@ -145,7 +145,7 @@ export function handleVoteExecuted(event: VoteExecutedEvent): void {
     const transaction = createTransaction(event);
     
     const voteExecuted = new VoteExecuted(event.transaction.hash);
-    voteExecuted.circle = Bytes.fromHexString(event.params.circleId.toHexString());;
+    voteExecuted.circleId = event.params.circleId;
     voteExecuted.circleStarted = event.params.circleStarted;
     voteExecuted.startVoteTotal = event.params.startVoteCount
     voteExecuted.withdrawVoteTotal = event.params.withdrawVoteCount;
@@ -160,7 +160,7 @@ export function handleContributionMade(event: ContributionMadeEvent): void {
     
     const contributionMade = new ContributionMade(event.transaction.hash);
     contributionMade.user = user.id;
-    contributionMade.circle = Bytes.fromHexString(event.params.circleId.toHexString());;
+    contributionMade.circleId = event.params.circleId;
     contributionMade.round = event.params.round
     contributionMade.amount = event.params.amount;
     contributionMade.transaction = transaction.id;
@@ -174,7 +174,7 @@ export function handleMemberForfeited(event: MemberForfeitedEvent): void {
     
     const memberForfeited = new MemberForfeited(event.transaction.hash);
     memberForfeited.forfeiter = user.id;
-    memberForfeited.circle = Bytes.fromHexString(event.params.circleId.toHexString());;
+    memberForfeited.circleId = event.params.circleId;
     memberForfeited.round = event.params.round
     memberForfeited.deductionAmount = event.params.deduction;
     memberForfeited.forfeitedUser = event.params.member;
@@ -187,7 +187,7 @@ export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
     const transaction = createTransaction(event);
 
     const visibilityUpdated = new VisibilityUpdated(event.transaction.hash);
-    visibilityUpdated.circle = Bytes.fromHexString(event.params.circleId.toHexString());
+    visibilityUpdated.circleId = event.params.circleId;
     visibilityUpdated.transaction = transaction.id;
 
     visibilityUpdated.save();

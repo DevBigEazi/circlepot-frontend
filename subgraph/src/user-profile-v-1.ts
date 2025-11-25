@@ -1,7 +1,6 @@
 import {
   ProfileCreated as ProfileCreatedEvent,
   PhotoUpdated as PhotoUpdatedEvent,
-  UserProfileV1,
 } from "../generated/UserProfileProxy/UserProfileV1"
 import {
   PhotoUpdated,
