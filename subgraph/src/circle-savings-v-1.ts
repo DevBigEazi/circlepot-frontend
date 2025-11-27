@@ -1,4 +1,3 @@
-import { Bytes } from "@graphprotocol/graph-ts";
 import {
     VisibilityUpdated as VisibilityUpdatedEvent,
     CircleCreated as CircleCreatedEvent,
@@ -47,7 +46,7 @@ export function handleCircleJoined(event: CircleJoinedEvent): void {
     circleJoined.currentMembers = event.params.currentMembers;
     circleJoined.circleState = event.params.state;
     circleJoined.transaction = transaction.id;
-    
+
     circleJoined.save();
 }
 
@@ -104,7 +103,7 @@ export function handleCollateralWithdrawn(event: CollateralWithdrawnEvent): void
 
 export function handleVotingInitiated(event: VotingInitiatedEvent): void {
     const transaction = createTransaction(event);
-    
+
     const votingInitiated = new VotingInitiated(event.transaction.hash);
     votingInitiated.circleId = event.params.circleId;
     votingInitiated.votingStartAt = event.params.votingStartTime;
@@ -117,7 +116,7 @@ export function handleVotingInitiated(event: VotingInitiatedEvent): void {
 export function handleVoteCast(event: VoteCastEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.voter)
-    
+
     const voteCast = new VoteCast(event.transaction.hash);
     voteCast.voter = user.id;
     voteCast.circleId = event.params.circleId;
@@ -130,7 +129,7 @@ export function handleVoteCast(event: VoteCastEvent): void {
 export function handleMemberInvited(event: MemberInvitedEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.creator)
-    
+
     const memberInvited = new MemberInvited(event.transaction.hash);
     memberInvited.inviter = user.id;
     memberInvited.invitee = event.params.invitee;
@@ -143,7 +142,7 @@ export function handleMemberInvited(event: MemberInvitedEvent): void {
 
 export function handleVoteExecuted(event: VoteExecutedEvent): void {
     const transaction = createTransaction(event);
-    
+
     const voteExecuted = new VoteExecuted(event.transaction.hash);
     voteExecuted.circleId = event.params.circleId;
     voteExecuted.circleStarted = event.params.circleStarted;
@@ -157,7 +156,7 @@ export function handleVoteExecuted(event: VoteExecutedEvent): void {
 export function handleContributionMade(event: ContributionMadeEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.member)
-    
+
     const contributionMade = new ContributionMade(event.transaction.hash);
     contributionMade.user = user.id;
     contributionMade.circleId = event.params.circleId;
@@ -171,7 +170,7 @@ export function handleContributionMade(event: ContributionMadeEvent): void {
 export function handleMemberForfeited(event: MemberForfeitedEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.forfeiter)
-    
+
     const memberForfeited = new MemberForfeited(event.transaction.hash);
     memberForfeited.forfeiter = user.id;
     memberForfeited.circleId = event.params.circleId;
