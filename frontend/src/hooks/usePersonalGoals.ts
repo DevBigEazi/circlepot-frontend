@@ -7,15 +7,17 @@ import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { CUSD_ABI } from "../abis/Cusd";
+import { CreateGoalParams, GoalContribution, GoalWithdrawal, PersonalGoal } from "../interfaces/interfaces";
 
 const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
 const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 const userGoalsQuery = gql`
   query GetUserGoals($userId: Bytes!) {
-    personalGoalCreateds(
+    # Query the CURRENT state of goals (mutable entity)
+    personalGoals(
       where: { user: $userId }
-      orderBy: transaction__blockTimestamp
+      orderBy: updatedAt
       orderDirection: desc
     ) {
       id
@@ -28,12 +30,14 @@ const userGoalsQuery = gql`
       goalName
       goalAmount
       currentAmount
+      frequency
+      deadline
       isActive
-      transaction {
-        blockTimestamp
-        transactionHash
-      }
+      createdAt
+      updatedAt
     }
+
+    # Keep the historical events for activity tracking
     goalContributions(
       where: { user: $userId }
       orderBy: transaction__blockTimestamp
@@ -50,6 +54,7 @@ const userGoalsQuery = gql`
         transactionHash
       }
     }
+
     goalWithdrawns(
       where: { user: $userId }
       orderBy: transaction__blockTimestamp
@@ -62,6 +67,7 @@ const userGoalsQuery = gql`
       goalId
       amount
       penalty
+      isActive
       transaction {
         blockTimestamp
         transactionHash
@@ -71,8 +77,8 @@ const userGoalsQuery = gql`
 `;
 
 const singleGoalQuery = gql`
-  query GetSingleGoal($goalId: String!) {
-    personalGoalCreateds(where: { goalId: $goalId }) {
+  query GetSingleGoal($goalId: BigInt!) {
+    personalGoals(where: { goalId: $goalId }) {
       id
       user {
         id
@@ -83,54 +89,14 @@ const singleGoalQuery = gql`
       goalName
       goalAmount
       currentAmount
+      frequency
+      deadline
       isActive
-      transaction {
-        blockTimestamp
-        transactionHash
-      }
+      createdAt
+      updatedAt
     }
   }
 `;
-
-interface PersonalGoal {
-  id: string;
-  goalId: bigint;
-  goalName: string;
-  goalAmount: bigint;
-  currentAmount: bigint;
-  isActive: boolean;
-  createdAt: bigint;
-  user: {
-    id: string;
-    username: string;
-    fullName: string;
-  };
-}
-
-interface GoalContribution {
-  id: string;
-  amount: bigint;
-  goalId: bigint;
-  goalName: string;
-  timestamp: bigint;
-}
-
-interface GoalWithdrawal {
-  id: string;
-  goalId: bigint;
-  goalName: string;
-  amount: bigint;
-  penalty: bigint;
-  timestamp: bigint;
-}
-
-interface CreateGoalParams {
-  name: string;
-  targetAmount: bigint;
-  contributionAmount: bigint;
-  frequency: 0 | 1 | 2; // 0 = Daily, 1 = Weekly, 2 = Monthly
-  deadline: bigint;
-}
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_PERSONAL_SAVINGS_ADDRESS;
 const CUSD_ADDRESS = import.meta.env.VITE_CUSD_ADDRESS;
@@ -187,25 +153,25 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   useEffect(() => {
     if (goalsData) {
       // Process goals
-      const processedGoals = goalsData.personalGoalCreateds.map(
-        (goal: any) => ({
-          id: goal.id,
-          goalId: BigInt(goal.goalId),
-          goalName: goal.goalName,
-          goalAmount: BigInt(goal.goalAmount),
-          currentAmount: BigInt(goal.currentAmount),
-          isActive: goal.isActive,
-          createdAt: BigInt(goal.transaction.blockTimestamp),
-          user: goal.user,
-        })
-      );
+      const processedGoals = goalsData.personalGoals.map((goal: any) => ({
+        id: goal.id,
+        goalId: BigInt(goal.goalId),
+        goalName: goal.goalName,
+        goalAmount: BigInt(goal.goalAmount),
+        currentAmount: BigInt(goal.currentAmount),
+        frequency: goal.frequency,
+        deadline: BigInt(goal.deadline),
+        isActive: goal.isActive,
+        createdAt: BigInt(goal.createdAt),
+        user: goal.user,
+      }));
       setGoals(processedGoals);
 
       // Process contributions
       const processedContributions = goalsData.goalContributions.map(
         (contrib: any) => {
-          // Find the goal name from the goals array
-          const relatedGoal = goalsData.personalGoalCreateds.find(
+          // Find the goal name from the CURRENT goals array
+          const relatedGoal = goalsData.personalGoals.find(
             (g: any) => g.goalId === contrib.goalId
           );
 
@@ -223,8 +189,8 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       // Process withdrawals
       const processedWithdrawals = goalsData.goalWithdrawns.map(
         (withdrawal: any) => {
-          // Find the goal name from the goals array
-          const relatedGoal = goalsData.personalGoalCreateds.find(
+          // Find the goal name from the CURRENT goals array
+          const relatedGoal = goalsData.personalGoals.find(
             (g: any) => g.goalId === withdrawal.goalId
           );
 
@@ -460,19 +426,18 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         SUBGRAPH_HEADERS
       );
 
-      if (
-        result.personalGoalCreateds &&
-        result.personalGoalCreateds.length > 0
-      ) {
-        const goal = result.personalGoalCreateds[0];
+      if (result.personalGoals && result.personalGoals.length > 0) {
+        const goal = result.personalGoals[0];
         return {
           id: goal.id,
           goalId: BigInt(goal.goalId),
           goalName: goal.goalName,
           goalAmount: BigInt(goal.goalAmount),
           currentAmount: BigInt(goal.currentAmount),
+          frequency: goal.frequency,
+          deadline: BigInt(goal.deadline),
           isActive: goal.isActive,
-          createdAt: BigInt(goal.transaction.blockTimestamp),
+          createdAt: BigInt(goal.createdAt),
           user: goal.user,
         };
       }
@@ -486,7 +451,8 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     goals,
     contributions,
     withdrawals,
-    isLoading: isGoalsLoading || isSending,
+    isLoading: isGoalsLoading,
+    isTransacting: isSending,
     error,
     createPersonalGoal,
     contributeToGoal,
