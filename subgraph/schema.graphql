@@ -8,10 +8,10 @@ type Transaction @entity(immutable: true) {
 
 type User @entity(immutable: false) {
   id: Bytes!
-  email: String! # string
-  username: String! # string
+  email: String! @unique # string
+  username: String! @unique # string
   fullName: String! # string
-  accountId: BigInt! # uint256
+  accountId: BigInt! @unique # uint256
   photo: String! # string
   lastPhotoUpdate: BigInt! # uint256
   createdAt: BigInt! # uint256
@@ -21,6 +21,7 @@ type User @entity(immutable: false) {
   totalLatePayments: BigInt! # uint256
   totalCirclesCompleted: BigInt! # uint256
   totalGoalsCompleted: BigInt! # uint256
+  activePersonalGoals: [PersonalGoal!]! @derivedFrom(field: "user")
   personalGoals: [PersonalGoalCreated!]! @derivedFrom(field: "user")
   earlyWithdrawals: [GoalWithdrawn!]! @derivedFrom(field: "user")
   circlesCreated: [CircleCreated!]! @derivedFrom(field: "user")
@@ -45,7 +46,7 @@ type PhotoUpdated @entity(immutable: true) {
 type LatePaymentRecorded @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleStarted!
+  circleId: BigInt! # uint256
   round: BigInt! # uint256
   fee: BigInt! # uint256
   transaction: Transaction!
@@ -54,14 +55,14 @@ type LatePaymentRecorded @entity(immutable: true) {
 type CircleCompleted @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleStarted!
+  circleId: BigInt! # uint256
   transaction: Transaction!
 }
 
 type GoalCompleted @entity(immutable: true) {
   id: Bytes!
   user: User!
-  goal: PersonalGoalCreated!
+  goalId: BigInt! # uint256
   transaction: Transaction!
 }
 
@@ -84,12 +85,26 @@ type ReputationIncreased @entity(immutable: false) {
 type ScoreCategoryChanged @entity(immutable: false) {
   id: Bytes!
   user: User!
-  oldCategory: Int! 
-  newCategory: Int! 
+  oldCategory: Int!
+  newCategory: Int!
   transaction: Transaction!
 }
 
 #Personal Goal Savings
+type PersonalGoal @entity(immutable: false) {
+  id: Bytes! # goalId as Bytes
+  user: User!
+  goalId: BigInt! # uint256
+  goalName: String! # string
+  goalAmount: BigInt! # uint256
+  currentAmount: BigInt! # uint256
+  frequency: Int!
+  deadline: BigInt! # uint256
+  isActive: Boolean! # bool
+  createdAt: BigInt! # uint256
+  updatedAt: BigInt! # uint256
+}
+
 type PersonalGoalCreated @entity(immutable: true) {
   id: Bytes!
   user: User!
@@ -97,6 +112,8 @@ type PersonalGoalCreated @entity(immutable: true) {
   goalName: String! # string
   goalAmount: BigInt! # uint256
   currentAmount: BigInt! # uint256
+  frequency: Int!
+  deadline: BigInt! # uint256
   isActive: Boolean! # bool
   transaction: Transaction!
 }
@@ -105,16 +122,17 @@ type GoalContribution @entity(immutable: true) {
   id: Bytes!
   user: User!
   amount: BigInt! # uint256
-  goal: PersonalGoalCreated!
+  goalId: BigInt! # uint256
   transaction: Transaction!
 }
 
 type GoalWithdrawn @entity(immutable: true) {
   id: Bytes!
   user: User!
-  goal: PersonalGoalCreated!
+  goalId: BigInt! # uint256
   amount: BigInt! # uint256
   penalty: BigInt! # uint256
+  isActive: Boolean! # bool
   transaction: Transaction!
 }
 
@@ -127,17 +145,16 @@ type CircleCreated @entity(immutable: false) {
   circleDescription: String! # string
   circleContributionAmount: BigInt! # uint256
   collateralAmount: BigInt! # uint256
-  circleFrequency: Int! 
+  circleFrequency: Int!
   circleMaxMembers: BigInt! # uint256
-  circleVisibility: Int! 
+  circleVisibility: Int!
   circleCreatedAt: BigInt! # uint256
   transaction: Transaction!
-  circleMembers: [CircleJoined!]! @derivedFrom(field: "circle")
 }
 
 type CircleJoined @entity(immutable: false) {
   id: Bytes!
-  circle: CircleCreated!
+  circleId: BigInt! # uint256
   user: User!
   currentMembers: BigInt! # uint256
   circleState: Int!
@@ -146,7 +163,7 @@ type CircleJoined @entity(immutable: false) {
 
 type CircleStarted @entity(immutable: true) {
   id: Bytes!
-  circle: CircleCreated!
+  circleId: BigInt! # uint256
   circleStartedAt: BigInt! # uint256
   transaction: Transaction!
 }
@@ -154,7 +171,7 @@ type CircleStarted @entity(immutable: true) {
 type ContributionMade @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleStarted!
+  circleId: BigInt! # uint256
   round: BigInt! # uint256
   amount: BigInt! # uint256
   transaction: Transaction!
@@ -163,7 +180,7 @@ type ContributionMade @entity(immutable: true) {
 type PositionAssigned @entity(immutable: false) {
   id: Bytes!
   user: User!
-  circle: CircleCreated!
+  circleId: BigInt! # uint256
   position: BigInt! # uint256
   transaction: Transaction!
 }
@@ -171,7 +188,7 @@ type PositionAssigned @entity(immutable: false) {
 type MemberForfeited @entity(immutable: true) {
   id: Bytes!
   forfeiter: User!
-  circle: CircleStarted!
+  circleId: BigInt! # uint256
   round: BigInt! # uint256
   deductionAmount: BigInt! # uint256
   forfeitedUser: User!
@@ -180,13 +197,13 @@ type MemberForfeited @entity(immutable: true) {
 
 type VisibilityUpdated @entity(immutable: true) {
   id: Bytes!
-  circle: CircleCreated!
+  circleId: BigInt! # uint256
   transaction: Transaction!
 }
 
 type VotingInitiated @entity(immutable: true) {
   id: Bytes!
-  circle: CircleCreated!
+  circleId: BigInt! # uint256
   votingStartAt: BigInt! # uint256
   votingEndAt: BigInt! # uint256
   transaction: Transaction!
@@ -195,15 +212,15 @@ type VotingInitiated @entity(immutable: true) {
 type VoteCast @entity(immutable: true) {
   id: Bytes!
   voter: User!
-  circle: CircleCreated!
-  choice: Int! 
+  circleId: BigInt! # uint256
+  choice: Int!
   transaction: Transaction!
 }
 
 type VoteExecuted @entity(immutable: true) {
   id: Bytes!
-  circle: CircleCreated!
-  circleStarted: Boolean! 
+  circleId: BigInt! # uint256
+  circleStarted: Boolean!
   startVoteTotal: BigInt! # uint256
   withdrawVoteTotal: BigInt! # uint256
   transaction: Transaction!
@@ -212,7 +229,7 @@ type VoteExecuted @entity(immutable: true) {
 type PayoutDistributed @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleStarted!
+  circleId: BigInt! # uint256
   round: BigInt! # uint256
   payoutAmount: BigInt! # uint256
   transaction: Transaction!
@@ -221,17 +238,16 @@ type PayoutDistributed @entity(immutable: true) {
 type CollateralWithdrawn @entity(immutable: true) {
   id: Bytes!
   user: User!
-  circle: CircleCreated!
+  circleId: BigInt! # uint256
   amount: BigInt! # uint256
   transaction: Transaction!
 }
 
 type MemberInvited @entity(immutable: true) {
   id: Bytes!
-  inviter: User! 
-  invitee: User! 
-  circle: CircleCreated!
+  inviter: User!
+  invitee: User!
+  circleId: BigInt! # uint256
   invitedAt: BigInt!
   transaction: Transaction!
 }
-

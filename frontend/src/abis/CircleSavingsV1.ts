@@ -1,4 +1,4 @@
-[
+export const CIRCLE_SAVINGS_ABI = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -1978,4 +1978,4 @@
     "stateMutability": "nonpayable",
     "type": "function"
   }
-]
+] as const;

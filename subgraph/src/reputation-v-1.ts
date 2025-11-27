@@ -26,9 +26,7 @@ export function handleLatePaymentRecorded(
 
   const latePaymentRecorded = new LatePaymentRecorded(event.transaction.hash);
   latePaymentRecorded.user = user.id;
-  latePaymentRecorded.circle = Bytes.fromHexString(
-    event.params.cid.toHexString()
-  );
+  latePaymentRecorded.circleId = event.params.cid;
   latePaymentRecorded.round = event.params.round;
   latePaymentRecorded.fee = event.params.fee;
   latePaymentRecorded.transaction = transaction.id;
@@ -44,7 +42,7 @@ export function handleCircleCompleted(event: CircleCompletedEvent): void {
 
   const circleCompleted = new CircleCompleted(event.transaction.hash);
   circleCompleted.user = user.id;
-  circleCompleted.circle = Bytes.fromHexString(event.params.cid.toHexString());
+  circleCompleted.circleId = event.params.cid;
   circleCompleted.transaction = transaction.id;
 
   user.save();
@@ -109,7 +107,7 @@ export function handleGoalCompleted(event: GoalCompletedEvent): void {
 
   const goalCompleted = new GoalCompleted(event.transaction.hash);
   goalCompleted.user = user.id;
-  goalCompleted.goal = Bytes.fromHexString(event.params.goalId.toHexString());
+  goalCompleted.goalId = event.params.goalId;
   goalCompleted.transaction = transaction.id;
 
   user.save();
