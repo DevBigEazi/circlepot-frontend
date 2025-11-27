@@ -168,19 +168,9 @@ const CreatePersonalGoal: React.FC = () => {
       const targetAmount = parseFloat(goalForm.targetAmount);
       const contribution = parseFloat(goalForm.contribution);
 
-      console.log("📝 Form values (before conversion):", {
-        targetAmount,
-        contribution,
-      });
-
       // Convert amounts to wei (multiply by 10^18 for cUSD)
       const targetAmountWei = BigInt(Math.floor(targetAmount * 1e18));
       const contributionAmountWei = BigInt(Math.floor(contribution * 1e18));
-
-      console.log("🔢 Wei values:", {
-        targetAmountWei: targetAmountWei.toString(),
-        contributionAmountWei: contributionAmountWei.toString(),
-      });
 
       // Convert deadline to Unix timestamp (seconds)
       const deadlineTimestamp = goalForm.deadline
@@ -195,8 +185,6 @@ const CreatePersonalGoal: React.FC = () => {
         deadline: deadlineTimestamp,
       };
 
-      console.log("📤 Sending params to hook:", params);
-
       await createPersonalGoal(params);
 
       confetti({
@@ -209,9 +197,9 @@ const CreatePersonalGoal: React.FC = () => {
       toast.custom(
         () => (
           <div
-            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm"
+            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm mt-20"
             style={{
-              backgroundColor: `${colors.primary}15`,
+              backgroundColor: `${colors.primary}75`,
               borderColor: colors.primary,
               animation: `slideIn 0.3s ease-out`,
             }}
@@ -239,12 +227,11 @@ const CreatePersonalGoal: React.FC = () => {
       }, 500);
     } catch (err) {
       const error = err as Error;
-      console.error("Failed to create goal:", error);
       // Show error message
       toast.custom(
         () => (
           <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
+            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm mt-20"
             style={{
               backgroundColor: "#fee2e2",
               animation: `slideIn 0.3s ease-out`,

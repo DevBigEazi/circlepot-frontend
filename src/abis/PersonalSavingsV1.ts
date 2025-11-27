@@ -189,6 +189,18 @@ export const PERSONAL_SAVING_ABI = [
         name: "currentAmount",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "enum PersonalSavingsV1.Frequency",
+        name: "frequency",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "deadline",
+        type: "uint256",
+      },
       { indexed: false, internalType: "bool", name: "isActive", type: "bool" },
     ],
     name: "PersonalGoalCreated",
