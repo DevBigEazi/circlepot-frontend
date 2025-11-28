@@ -1,3 +1,4 @@
+import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
     VisibilityUpdated as VisibilityUpdatedEvent,
     CircleCreated as CircleCreatedEvent,
@@ -13,13 +14,14 @@ import {
     ContributionMade as ContributionMadeEvent,
     MemberForfeited as MemberForfeitedEvent,
 } from "../generated/CircleSavingsProxy/CircleSavingsV1"
-import { CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, ContributionMade, MemberForfeited, MemberInvited, PayoutDistributed, PositionAssigned, VisibilityUpdated, VoteCast, VoteExecuted, VotingInitiated } from "../generated/schema";
+import { Circle, CircleCreated, CircleJoined, CircleStarted, CollateralWithdrawn, ContributionMade, MemberForfeited, MemberInvited, PayoutDistributed, PositionAssigned, VisibilityUpdated, VoteCast, VoteExecuted, VotingInitiated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils"
 
 export function handleCircleCreated(event: CircleCreatedEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.creator);
 
+    // Create the immutable event record
     const circleCreated = new CircleCreated(event.transaction.hash);
     circleCreated.user = user.id;
     circleCreated.circleId = event.params.circleId;
@@ -33,13 +35,33 @@ export function handleCircleCreated(event: CircleCreatedEvent): void {
     circleCreated.circleCreatedAt = event.params.createdAt;
     circleCreated.transaction = transaction.id;
 
+    // Create the mutable Circle state entity
+    const circleId = changetype<Bytes>(Bytes.fromBigInt(event.params.circleId));
+    const circle = new Circle(circleId);
+    circle.circleId = event.params.circleId;
+    circle.creator = user.id;
+    circle.circleName = event.params.title;
+    circle.circleDescription = event.params.description;
+    circle.contributionAmount = event.params.contributionAmount;
+    circle.collateralAmount = event.params.collateralLocked;
+    circle.frequency = event.params.frequency;
+    circle.maxMembers = event.params.maxMembers;
+    circle.currentMembers = BigInt.fromI32(1); // Circle starts with just the creator
+    circle.visibility = event.params.visibility;
+    circle.state = 0; // 0 = Pending (initial state)
+    circle.createdAt = event.params.createdAt;
+    circle.startedAt = BigInt.fromI32(0); // Not started yet
+    circle.updatedAt = event.block.timestamp;
+
     circleCreated.save();
+    circle.save();
 }
 
 export function handleCircleJoined(event: CircleJoinedEvent): void {
     const transaction = createTransaction(event);
     const user = getOrCreateUser(event.params.member);
 
+    // Create the immutable join event record
     const circleJoined = new CircleJoined(event.transaction.hash);
     circleJoined.circleId = event.params.circleId;
     circleJoined.user = user.id
@@ -47,16 +69,37 @@ export function handleCircleJoined(event: CircleJoinedEvent): void {
     circleJoined.circleState = event.params.state;
     circleJoined.transaction = transaction.id;
 
+    // Update the mutable Circle entity
+    const circleId = changetype<Bytes>(Bytes.fromBigInt(event.params.circleId));
+    const circle = Circle.load(circleId);
+    if (circle) {
+        circle.currentMembers = event.params.currentMembers;
+        circle.state = event.params.state;
+        circle.updatedAt = event.block.timestamp;
+        circle.save();
+    }
+
     circleJoined.save();
 }
 
 export function handleCircleStarted(event: CircleStartedEvent): void {
     const transaction = createTransaction(event);
 
+    // Create immutable event record
     const circleStarted = new CircleStarted(event.transaction.hash);
     circleStarted.circleId = event.params.circleId;
     circleStarted.circleStartedAt = event.params.startedAt;
     circleStarted.transaction = transaction.id;
+
+    // Update the mutable Circle entity
+    const circleId = changetype<Bytes>(Bytes.fromBigInt(event.params.circleId));
+    const circle = Circle.load(circleId);
+    if (circle) {
+        circle.state = event.params.state; // 1 = Active
+        circle.startedAt = event.params.startedAt;
+        circle.updatedAt = event.block.timestamp;
+        circle.save();
+    }
 
     circleStarted.save();
 }
