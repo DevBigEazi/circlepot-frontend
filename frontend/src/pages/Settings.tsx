@@ -27,12 +27,14 @@ import ErrorDisplay from "../components/ErrorDisplay";
 import { useBiometricContext } from "../contexts/BiometricContext";
 import { useBiometric } from "../hooks/useBiometric";
 import ThemeToggle from "../components/ThemeToggle";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
   const navigate = useNavigate();
   const { disconnect } = useDisconnect();
   const wallet = useActiveWallet();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
 
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
@@ -59,7 +61,6 @@ const Settings: React.FC = () => {
     userEmail: "",
     accountId: "",
     profileImage: null as string | null,
-    localCurrency: "USD",
     biometrics: false,
     notifications: true,
     lastProfileUpdate: null as string | null,
@@ -714,13 +715,8 @@ const Settings: React.FC = () => {
                 </div>
               </div>
               <select
-                value={userSettings.localCurrency}
-                onChange={(e) =>
-                  setUserSettings((prev) => ({
-                    ...prev,
-                    localCurrency: e.target.value,
-                  }))
-                }
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value)}
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border focus:outline-none focus:ring-2 text-sm"
                 style={{
                   borderColor: colors.border,
