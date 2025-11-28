@@ -11,7 +11,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      // Cache configuration to prevent rate limiting
       staleTime: 60 * 1000,
+      gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (formerly cacheTime)
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnReconnect: false, // Don't refetch on network reconnect
+      retry: 1, // Only retry once on failure
     },
   },
 });

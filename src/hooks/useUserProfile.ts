@@ -98,6 +98,10 @@ export const useUserProfile = (client: ThirdwebClient) => {
       }
     },
     enabled: !!account?.address,
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (formerly cacheTime)
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch on network reconnect
+    retry: 1, // Only retry once on failure
   });
 
   // Update local state when subgraph data changes
