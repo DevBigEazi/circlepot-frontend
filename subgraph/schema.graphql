@@ -98,6 +98,7 @@ type PersonalGoal @entity(immutable: false) {
   goalName: String! # string
   goalAmount: BigInt! # uint256
   currentAmount: BigInt! # uint256
+  contributionAmount: BigInt! # uint256
   frequency: Int!
   deadline: BigInt! # uint256
   isActive: Boolean! # bool
@@ -112,6 +113,7 @@ type PersonalGoalCreated @entity(immutable: true) {
   goalName: String! # string
   goalAmount: BigInt! # uint256
   currentAmount: BigInt! # uint256
+  contributionAmount: BigInt! # uint256
   frequency: Int!
   deadline: BigInt! # uint256
   isActive: Boolean! # bool
@@ -137,7 +139,27 @@ type GoalWithdrawn @entity(immutable: true) {
 }
 
 #Circle Savings
-type CircleCreated @entity(immutable: false) {
+# Mutable entity tracking current circle state
+type Circle @entity(immutable: false) {
+  id: Bytes! # circleId as Bytes
+  circleId: BigInt! # uint256
+  creator: User!
+  circleName: String! # string
+  circleDescription: String! # string
+  contributionAmount: BigInt! # uint256
+  collateralAmount: BigInt! # uint256
+  frequency: Int!
+  maxMembers: BigInt! # uint256
+  currentMembers: BigInt! # uint256
+  visibility: Int!
+  state: Int! # 0 = Pending, 1 = Active, 2 = Completed, 3 = Withdrawn
+  createdAt: BigInt! # uint256
+  startedAt: BigInt! # uint256 (0 if not started)
+  updatedAt: BigInt! # uint256
+}
+
+# Immutable event for circle creation
+type CircleCreated @entity(immutable: true) {
   id: Bytes!
   user: User!
   circleId: BigInt! # uint256
@@ -152,7 +174,8 @@ type CircleCreated @entity(immutable: false) {
   transaction: Transaction!
 }
 
-type CircleJoined @entity(immutable: false) {
+# Immutable event for each member joining
+type CircleJoined @entity(immutable: true) {
   id: Bytes!
   circleId: BigInt! # uint256
   user: User!

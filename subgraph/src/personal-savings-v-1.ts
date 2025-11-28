@@ -3,7 +3,6 @@ import {
   GoalContribution as GoalContributionEvent,
   GoalWithdrawn as GoalWithdrawnEvent,
   PersonalGoalCreated as PersonalGoalCreatedEvent,
-  PersonalSavingsV1,
 } from "../generated/PersonalSavingsProxy/PersonalSavingsV1";
 import { GoalContribution, GoalWithdrawn, PersonalGoal, PersonalGoalCreated } from "../generated/schema";
 import { createTransaction, getOrCreateUser } from "./utils";
@@ -19,8 +18,9 @@ export function handlePersonalGoalCreated(
   personalGoalCreated.user = user.id;
   personalGoalCreated.goalId = event.params.goalId;
   personalGoalCreated.goalName = event.params.name;
-  personalGoalCreated.goalAmount = event.params.amount;
+  personalGoalCreated.goalAmount = event.params.targetAmount;
   personalGoalCreated.currentAmount = event.params.currentAmount;
+  personalGoalCreated.contributionAmount = event.params.contributionAmount;
   personalGoalCreated.frequency = event.params.frequency;
   personalGoalCreated.deadline = event.params.deadline;
   personalGoalCreated.isActive = event.params.isActive;
@@ -33,8 +33,9 @@ export function handlePersonalGoalCreated(
   personalGoal.user = user.id;
   personalGoal.goalId = event.params.goalId;
   personalGoal.goalName = event.params.name;
-  personalGoal.goalAmount = event.params.amount;
+  personalGoal.goalAmount = event.params.targetAmount;
   personalGoal.currentAmount = event.params.currentAmount;
+  personalGoal.contributionAmount = event.params.contributionAmount;
   personalGoal.frequency = event.params.frequency;
   personalGoal.deadline = event.params.deadline;
   personalGoal.isActive = event.params.isActive;
