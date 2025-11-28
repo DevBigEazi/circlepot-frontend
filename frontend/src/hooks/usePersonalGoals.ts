@@ -8,9 +8,14 @@ import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { CUSD_ABI } from "../abis/Cusd";
 import { CreateGoalParams, GoalContribution, GoalWithdrawal, PersonalGoal } from "../interfaces/interfaces";
+import {
+  SUBGRAPH_URL,
+  SUBGRAPH_HEADERS,
+  PERSONAL_SAVINGS_ADDRESS,
+  CUSD_ADDRESS,
+  CHAIN_ID
+} from "../constants/constants";
 
-const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
-const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 const userGoalsQuery = gql`
   query GetUserGoals($userId: Bytes!) {
@@ -98,11 +103,8 @@ const singleGoalQuery = gql`
   }
 `;
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_PERSONAL_SAVINGS_ADDRESS;
-const CUSD_ADDRESS = import.meta.env.VITE_CUSD_ADDRESS;
-const CHAIN_ID = 11142220; // Celo-Sepolia testnet
-
 export const usePersonalGoals = (client: ThirdwebClient) => {
+
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
     useSendTransaction();
@@ -118,7 +120,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       getContract({
         client,
         chain,
-        address: CONTRACT_ADDRESS,
+        address: PERSONAL_SAVINGS_ADDRESS,
         abi: PERSONAL_SAVING_ABI,
       }),
     [client, chain]
@@ -230,7 +232,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
             abi: CUSD_ABI,
           }),
           method: "approve",
-          params: [CONTRACT_ADDRESS, params.contributionAmount],
+          params: [PERSONAL_SAVINGS_ADDRESS, params.contributionAmount],
         });
 
         return new Promise((resolve, reject) => {
@@ -296,7 +298,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
             abi: CUSD_ABI,
           }),
           method: "approve",
-          params: [CONTRACT_ADDRESS, contributionAmount],
+          params: [PERSONAL_SAVINGS_ADDRESS, contributionAmount],
         });
 
         return new Promise((resolve, reject) => {
