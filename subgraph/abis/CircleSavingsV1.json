@@ -634,6 +634,12 @@
         "internalType": "address",
         "name": "creator",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "newVisibility",
+        "type": "uint8"
       }
     ],
     "name": "VisibilityUpdated",

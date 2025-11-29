@@ -228,9 +228,19 @@ export function handleMemberForfeited(event: MemberForfeitedEvent): void {
 export function handleVisibilityUpdated(event: VisibilityUpdatedEvent): void {
     const transaction = createTransaction(event);
 
+    // Create immutable event record
     const visibilityUpdated = new VisibilityUpdated(event.transaction.hash);
     visibilityUpdated.circleId = event.params.circleId;
     visibilityUpdated.transaction = transaction.id;
+
+    // Update the mutable Circle entity using event data (no contract call!)
+    const circleId = changetype<Bytes>(Bytes.fromBigInt(event.params.circleId));
+    const circle = Circle.load(circleId);
+    if (circle) {
+        circle.visibility = event.params.newVisibility;
+        circle.updatedAt = event.block.timestamp;
+        circle.save();
+    }
 
     visibilityUpdated.save();
 }

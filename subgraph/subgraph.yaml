@@ -95,7 +95,7 @@ dataSources:
     name: CircleSavingsProxy
     network: celo-sepolia
     source:
-      address: "0x8c82AAceD93B10FF9Bac51D67F54b01f54D7E4D6"
+      address: "0xCB6163551fD8b5e68E336Bec200d223eA0734A14"
       abi: CircleSavingsV1
       startBlock: 10770364
     mapping:
@@ -120,7 +120,7 @@ dataSources:
         - name: CircleSavingsV1
           file: ./abis/CircleSavingsV1.json
       eventHandlers:
-        - event: VisibilityUpdated(indexed uint256,indexed address)
+        - event: VisibilityUpdated(indexed uint256,indexed address,uint8)
           handler: handleVisibilityUpdated
         - event: CircleCreated(indexed uint256,string,string,indexed address,indexed uint256,uint8,uint256,uint8,uint256,uint256)
           handler: handleCircleCreated
