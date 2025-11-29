@@ -35,6 +35,7 @@ const userGoalsQuery = gql`
       goalName
       goalAmount
       currentAmount
+      contributionAmount
       frequency
       deadline
       isActive
@@ -94,6 +95,7 @@ const singleGoalQuery = gql`
       goalName
       goalAmount
       currentAmount
+      contributionAmount
       frequency
       deadline
       isActive
@@ -160,6 +162,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         goalId: BigInt(goal.goalId),
         goalName: goal.goalName,
         goalAmount: BigInt(goal.goalAmount),
+        contributionAmount: BigInt(goal.contributionAmount),
         currentAmount: BigInt(goal.currentAmount),
         frequency: goal.frequency,
         deadline: BigInt(goal.deadline),
@@ -435,6 +438,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           goalId: BigInt(goal.goalId),
           goalName: goal.goalName,
           goalAmount: BigInt(goal.goalAmount),
+          contributionAmount: BigInt(goal.contributionAmount),
           currentAmount: BigInt(goal.currentAmount),
           frequency: goal.frequency,
           deadline: BigInt(goal.deadline),

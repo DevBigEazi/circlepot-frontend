@@ -369,7 +369,9 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => onContribute(goal.goalId, goal.goalId)}
+                      onClick={() =>
+                        onContribute(goal.goalId, BigInt(goal.contributionAmount))
+                      }
                       disabled={
                         !isContributeAllowed ||
                         contributingGoalId === goal.goalId
