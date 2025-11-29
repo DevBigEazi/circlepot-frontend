@@ -151,7 +151,7 @@ type Circle @entity(immutable: false) {
   frequency: Int!
   maxMembers: BigInt! # uint256
   currentMembers: BigInt! # uint256
-  visibility: Int!
+  visibility: Int! # 0 = Private(default), 1 = Public
   state: Int! # 0 = Pending, 1 = Active, 2 = Completed, 3 = Withdrawn
   createdAt: BigInt! # uint256
   startedAt: BigInt! # uint256 (0 if not started)
@@ -169,7 +169,7 @@ type CircleCreated @entity(immutable: true) {
   collateralAmount: BigInt! # uint256
   circleFrequency: Int!
   circleMaxMembers: BigInt! # uint256
-  circleVisibility: Int!
+  circleVisibility: Int! # 0 = Private(default), 1 = Public
   circleCreatedAt: BigInt! # uint256
   transaction: Transaction!
 }
