@@ -109,6 +109,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
             );
             const currentFormatted = formatAmount(goal.currentAmount);
             const targetFormatted = formatAmount(goal.goalAmount);
+            const contributionFormatted = formatAmount(goal.contributionAmount)
             const frequencyText = getFrequencyText(goal.frequency);
 
             return (
@@ -133,7 +134,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
                       className="text-sm"
                       style={{ color: colors.textLight }}
                     >
-                      ${currentFormatted}/{frequencyText} • $
+                      ${contributionFormatted}/{frequencyText} • $
                       {currentFormatted} of ${targetFormatted}
                     </p>
                   </div>
