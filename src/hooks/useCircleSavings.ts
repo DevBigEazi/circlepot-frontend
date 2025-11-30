@@ -7,9 +7,14 @@ import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { CUSD_ABI } from "../abis/Cusd";
+import {
+  SUBGRAPH_URL,
+  SUBGRAPH_HEADERS,
+  CIRCLE_SAVINGS_ADDRESS,
+  CUSD_ADDRESS,
+  CHAIN_ID
+} from "../constants/constants";
 
-const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
-const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 // GraphQL Queries
 const userCirclesQuery = gql`
@@ -155,11 +160,8 @@ interface CreateCircleParams {
   visibility: 0 | 1;
 }
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CIRCLE_SAVINGS_ADDRESS;
-const CUSD_ADDRESS = import.meta.env.VITE_CUSD_ADDRESS;
-const CHAIN_ID = 11142220; // Celo-Sepolia testnet
-
 export const useCircleSavings = (client: ThirdwebClient) => {
+
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } = useSendTransaction();
   const [circles, setCircles] = useState<Circle[]>([]);
@@ -175,7 +177,7 @@ export const useCircleSavings = (client: ThirdwebClient) => {
       getContract({
         client,
         chain,
-        address: CONTRACT_ADDRESS,
+        address: CIRCLE_SAVINGS_ADDRESS,
         abi: CIRCLE_SAVINGS_ABI,
       }),
     [client, chain]
@@ -297,14 +299,14 @@ export const useCircleSavings = (client: ThirdwebClient) => {
             abi: CUSD_ABI,
           }),
           method: "approve",
-          params: [CONTRACT_ADDRESS, totalRequired],
+          params: [CIRCLE_SAVINGS_ADDRESS, totalRequired],
         });
 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
               console.log("✅ [CircleSavings] Approval successful, now creating circle...");
-              
+
               setTimeout(() => {
                 const createTransaction = prepareContractCall({
                   contract,
@@ -364,14 +366,14 @@ export const useCircleSavings = (client: ThirdwebClient) => {
             abi: CUSD_ABI,
           }),
           method: "approve",
-          params: [CONTRACT_ADDRESS, collateralAmount],
+          params: [CIRCLE_SAVINGS_ADDRESS, collateralAmount],
         });
 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
               console.log("✅ [CircleSavings] Approval successful, now joining...");
-              
+
               setTimeout(() => {
                 const joinTransaction = prepareContractCall({
                   contract,
@@ -431,14 +433,14 @@ export const useCircleSavings = (client: ThirdwebClient) => {
             abi: CUSD_ABI,
           }),
           method: "approve",
-          params: [CONTRACT_ADDRESS, contributionAmount],
+          params: [CIRCLE_SAVINGS_ADDRESS, contributionAmount],
         });
 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
               console.log("✅ [CircleSavings] Approval successful, now contributing...");
-              
+
               setTimeout(() => {
                 const contributeTransaction = prepareContractCall({
                   contract,

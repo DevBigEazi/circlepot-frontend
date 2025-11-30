@@ -7,7 +7,11 @@ import { useUserProfile } from "../hooks/useUserProfile";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { ActiveGoalsList } from "../components/ActiveGoalsList";
 import { client } from "../thirdwebClient";
-import { formatBalance, formatTimestamp } from "../utils/helpers";
+import {
+  calculateNextContribution,
+  formatBalance,
+  formatTimestamp,
+} from "../utils/helpers";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -35,40 +39,6 @@ const Goals: React.FC = () => {
     );
   }, [goals]);
 
-  // Helper function to calculate next contribution date based on last contribution
-  const calculateNextContribution = (goalId: bigint, frequency: number) => {
-    const goalContributions = contributions.filter((c) => c.goalId === goalId);
-
-    if (goalContributions.length === 0) {
-      return "No contributions yet";
-    }
-
-    const lastContribution = goalContributions.reduce((latest, current) =>
-      current.timestamp > latest.timestamp ? current : latest
-    );
-
-    const lastDate = new Date(Number(lastContribution.timestamp) * 1000);
-    const nextDate = new Date(lastDate);
-
-    switch (frequency) {
-      case 0: // Daily
-        nextDate.setDate(nextDate.getDate() + 1);
-        break;
-      case 1: // Weekly
-        nextDate.setDate(nextDate.getDate() + 7);
-        break;
-      case 2: // Monthly
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        break;
-    }
-
-    return nextDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   // Calculate progress percentage for each goal
   const goalsWithProgress = useMemo(() => {
     return goals.map((goal) => {
@@ -94,7 +64,8 @@ const Goals: React.FC = () => {
         formattedDeadline: formatTimestamp(goal.deadline),
         nextContribution: calculateNextContribution(
           goal.goalId,
-          goal.frequency
+          goal.frequency,
+          contributions
         ),
       };
     });

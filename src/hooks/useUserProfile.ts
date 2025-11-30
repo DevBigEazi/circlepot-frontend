@@ -6,9 +6,13 @@ import { ThirdwebClient } from "thirdweb";
 import { USER_PROFILE_ABI } from "../abis/UserProfileV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
+import {
+  SUBGRAPH_URL,
+  SUBGRAPH_HEADERS,
+  USER_PROFILE_ADDRESS,
+  CHAIN_ID
+} from "../constants/constants";
 
-const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
-const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 const userProfileQuery = gql`
   query GetUserProfile($id: String!) {
@@ -48,10 +52,8 @@ interface UserProfile {
   totalCirclesCompleted: Number;
 }
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_USER_PROFILE_ADDRESS;
-const CHAIN_ID = 11142220; // Celo-Sepolia testnet
-
 export const useUserProfile = (client: ThirdwebClient) => {
+
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
     useSendTransaction();
@@ -66,7 +68,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
       getContract({
         client,
         chain,
-        address: CONTRACT_ADDRESS,
+        address: USER_PROFILE_ADDRESS,
         abi: USER_PROFILE_ABI,
       }),
     [client, chain]
@@ -96,6 +98,10 @@ export const useUserProfile = (client: ThirdwebClient) => {
       }
     },
     enabled: !!account?.address,
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (formerly cacheTime)
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch on network reconnect
+    retry: 1, // Only retry once on failure
   });
 
   // Update local state when subgraph data changes
