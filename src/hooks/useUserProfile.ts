@@ -6,9 +6,13 @@ import { ThirdwebClient } from "thirdweb";
 import { USER_PROFILE_ABI } from "../abis/UserProfileV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
+import {
+  SUBGRAPH_URL,
+  SUBGRAPH_HEADERS,
+  USER_PROFILE_ADDRESS,
+  CHAIN_ID
+} from "../constants/constants";
 
-const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
-const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 const userProfileQuery = gql`
   query GetUserProfile($id: String!) {
@@ -48,10 +52,8 @@ interface UserProfile {
   totalCirclesCompleted: Number;
 }
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_USER_PROFILE_ADDRESS;
-const CHAIN_ID = 11142220; // Celo-Sepolia testnet
-
 export const useUserProfile = (client: ThirdwebClient) => {
+
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
     useSendTransaction();
@@ -66,7 +68,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
       getContract({
         client,
         chain,
-        address: CONTRACT_ADDRESS,
+        address: USER_PROFILE_ADDRESS,
         abi: USER_PROFILE_ABI,
       }),
     [client, chain]
@@ -96,6 +98,10 @@ export const useUserProfile = (client: ThirdwebClient) => {
       }
     },
     enabled: !!account?.address,
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (formerly cacheTime)
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch on network reconnect
+    retry: 1, // Only retry once on failure
   });
 
   // Update local state when subgraph data changes
@@ -275,6 +281,46 @@ export const useUserProfile = (client: ThirdwebClient) => {
   }, []);
 
 
+  // Get profile by wallet address (id field)
+  const getProfileByAddress = useCallback(async (address: string) => {
+    try {
+      const query = gql`
+        query GetUserByAddress($id: String!) {
+          user(id: $id) {
+            id
+            email
+            username
+            fullName
+            accountId
+            photo
+            lastPhotoUpdate
+            createdAt
+            hasProfile
+            repCategory
+            totalReputation
+            totalLatePayments
+            totalGoalsCompleted
+            totalCirclesCompleted
+          }
+        }
+      `;
+
+      console.log("🔍 [UserProfile] Querying by address:", address);
+      const result = await request(
+        SUBGRAPH_URL,
+        query,
+        { id: address.toLowerCase() },
+        SUBGRAPH_HEADERS
+      );
+
+      console.log("📊 [UserProfile] Address query result:", result);
+      return result.user || null;
+    } catch (err) {
+      console.error("❌ [UserProfile] Error getting profile by address:", err);
+      throw err;
+    }
+  }, []);
+
   // Get profile by AccountId
   const getProfileByAccountId = useCallback(async (accountId: string) => {
     try {
@@ -299,6 +345,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
+      console.log("🔍 [UserProfile] Querying by accountId:", accountId);
       const result = await request(
         SUBGRAPH_URL,
         query,
@@ -306,10 +353,11 @@ export const useUserProfile = (client: ThirdwebClient) => {
         SUBGRAPH_HEADERS
       );
 
+      console.log("📊 [UserProfile] AccountId query result:", result);
       // Return first user if found
       return result.users && result.users.length > 0 ? result.users[0] : null;
     } catch (err) {
-      console.error("❌ [UserProfile] Error getting profile by username:", err);
+      console.error("❌ [UserProfile] Error getting profile by accountId:", err);
       throw err;
     }
   }, []);
@@ -338,6 +386,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
+      console.log("🔍 [UserProfile] Querying by email:", email);
       const result = await request(
         SUBGRAPH_URL,
         query,
@@ -345,10 +394,11 @@ export const useUserProfile = (client: ThirdwebClient) => {
         SUBGRAPH_HEADERS
       );
 
+      console.log("📊 [UserProfile] Email query result:", result);
       // Return first user if found
       return result.users && result.users.length > 0 ? result.users[0] : null;
     } catch (err) {
-      console.error("❌ [UserProfile] Error getting profile by username:", err);
+      console.error("❌ [UserProfile] Error getting profile by email:", err);
       throw err;
     }
   }, []);
@@ -356,9 +406,26 @@ export const useUserProfile = (client: ThirdwebClient) => {
   // Get profile by username
   const getProfileByUsername = useCallback(async (username: string) => {
     try {
+      // Try exact match first, then case-insensitive
       const query = gql`
-        query GetUserByUsername($username: String!) {
-          users(where: { username: $username }) {
+        query GetUserByUsername($username: String!, $usernameNoCase: String!) {
+          exactMatch: users(where: { username: $username }, first: 1) {
+            id
+            email
+            username
+            fullName
+            accountId
+            photo
+            lastPhotoUpdate
+            createdAt
+            hasProfile
+            repCategory
+            totalReputation
+            totalLatePayments
+            totalGoalsCompleted
+            totalCirclesCompleted
+          }
+          caseInsensitiveMatch: users(where: { username_contains_nocase: $usernameNoCase }, first: 1) {
             id
             email
             username
@@ -377,15 +444,24 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
+      console.log("🔍 [UserProfile] Querying by username:", username);
       const result = await request(
         SUBGRAPH_URL,
         query,
-        { username: username.toLowerCase() },
+        { username: username, usernameNoCase: username },
         SUBGRAPH_HEADERS
       );
 
-      // Return first user if found
-      return result.users && result.users.length > 0 ? result.users[0] : null;
+      console.log("📊 [UserProfile] Username query result:", result);
+
+      // Return exact match first, then case-insensitive match
+      if (result.exactMatch && result.exactMatch.length > 0) {
+        return result.exactMatch[0];
+      }
+      if (result.caseInsensitiveMatch && result.caseInsensitiveMatch.length > 0) {
+        return result.caseInsensitiveMatch[0];
+      }
+      return null;
     } catch (err) {
       console.error("❌ [UserProfile] Error getting profile by username:", err);
       throw err;
@@ -400,6 +476,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
     createProfile,
     updatePhoto,
     checkUsernameAvailability,
+    getProfileByAddress,
     getProfileByAccountId,
     getProfileByEmail,
     getProfileByUsername,
@@ -407,3 +484,51 @@ export const useUserProfile = (client: ThirdwebClient) => {
     contract,
   };
 };
+
+export const useProfile = (address?: string) => {
+  const {
+    data: userProfile,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["userProfile", address],
+    queryFn: async () => {
+      if (!address) return null;
+      try {
+        const result = await request(
+          SUBGRAPH_URL,
+          userProfileQuery,
+          { id: address.toLowerCase() },
+          SUBGRAPH_HEADERS
+        );
+        return result.user;
+      } catch (err) {
+        console.error("❌ [useProfile] Error fetching profile:", err);
+        throw err;
+      }
+    },
+    enabled: !!address,
+  });
+
+  return {
+    profile: userProfile ? {
+      userAddress: userProfile.id,
+      email: userProfile.email,
+      username: userProfile.username,
+      fullName: userProfile.fullName,
+      accountId: BigInt(userProfile.accountId),
+      photo: userProfile.photo,
+      lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
+      createdAt: BigInt(userProfile.createdAt),
+      hasProfile: userProfile.hasProfile,
+      repCategory: userProfile.repCategory,
+      totalReputation: userProfile.totalReputation,
+      totalLatePayments: userProfile.totalLatePayments,
+      totalGoalsCompleted: userProfile.totalGoalsCompleted,
+      totalCirclesCompleted: userProfile.totalCirclesCompleted,
+    } : null,
+    isLoading,
+    error,
+  };
+};
+

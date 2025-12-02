@@ -1,24 +1,56 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { useActiveAccount, useActiveWallet } from "thirdweb/react";
+import { useActiveAccount } from "thirdweb/react";
 import { useUserProfile } from "../hooks/useUserProfile";
+import { useCircleSavings } from "../hooks/useCircleSavings";
+import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { client } from "../thirdwebClient";
 import { useThemeColors } from "../hooks/useThemeColors";
+import { useCreditScore } from "../hooks/useCreditScore";
 import { Settings, Bell, History } from "lucide-react";
 import { normalizeIpfsUrl } from "../utils/ipfs";
 import NavBar from "../components/NavBar";
+import PersonalGoals from "../components/PersonalGoals";
+import BalanceDisplay from "../components/BalanceDisplay";
+import ActiveCircles from "../components/ActiveCircles";
+import AddFundsModal from "../modals/AddFundsModal";
+import WithdrawModal from "../modals/WithdrawModal";
+import { transformCircles } from "../utils/circleTransformer";
+
+import { useReadContract } from "thirdweb/react";
+import { getContract } from "thirdweb";
+import { defineChain } from "thirdweb/chains";
+import { CUSD_ABI } from "../abis/Cusd";
+import { formatBalance } from "../utils/helpers";
+import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
 
 const Dashboard: React.FC = () => {
   const account = useActiveAccount();
-  const wallet = useActiveWallet();
+  const chain = useMemo(() => defineChain(CHAIN_ID), []);
 
-  const {
-    profile,
-    isLoading: isLoadingProfile,
-    getProfileByAccountId,
-    getProfileByEmail,
-    getProfileByUsername,
-  } = useUserProfile(client);
+  const cusdContract = useMemo(
+    () =>
+      getContract({
+        client,
+        chain,
+        address: CUSD_ADDRESS,
+        abi: CUSD_ABI,
+      }),
+    [chain]
+  );
+
+  const { data: balanceData } = useReadContract({
+    contract: cusdContract,
+    method: "balanceOf",
+    params: [account?.address || "0x0000000000000000000000000000000000000000"],
+  });
+
+  const { profile } = useUserProfile(client);
+
+  // Fetch circles and personal goals data
+  const { circles, joinedCircles } = useCircleSavings(client);
+  const { goals } = usePersonalGoals(client);
+  const { creditScore } = useCreditScore(true);
 
   // Normalize IPFS URL to ensure it's properly formatted
   const profileImageUrl = useMemo(() => {
@@ -30,54 +62,44 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
 
-  // Debug logging
-  useEffect(() => {
-    const debugLog = async () => {
-      console.log("Dashboard - Account state:", account);
-      console.log("Dashboard - Wallet state:", wallet);
+  // Modal states
+  const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
-      try {
-        // Test getProfileByEmail
-        const emailProfile = await getProfileByEmail(
-          "adesholatajudeen1@gmail.com"
-        );
-        console.log("Dashboard - get profileByEmail:", emailProfile);
+  // User balance data
+  const currentBalances = useMemo(
+    () => ({
+      cUSD: balanceData ? formatBalance(balanceData) : 0,
+    }),
+    [balanceData]
+  );
 
-        // Test getProfileByAccountId
-        const accountIdProfile = await getProfileByAccountId("7937839747");
-        console.log("Dashboard - get profileByAccountId:", accountIdProfile);
+  // Calculate total committed in circles
+  const circleCommitted = useMemo(() => {
+    const activeCircles = transformCircles(
+      circles,
+      joinedCircles,
+      account?.address
+    );
 
-        // Test getProfileByUsername
-        const usernameProfile = await getProfileByUsername("bigeazi");
-        console.log("Dashboard - get profileByUsername:", usernameProfile);
-      } catch (err) {
-        console.error("Dashboard - Error fetching profiles:", err);
-      }
+    return activeCircles.reduce((sum, circle) => {
+      const commitment =
+        parseFloat(circle.contribution) * circle.totalPositions;
+      // Add 1% buffer fee to the total commitment
+      return sum + commitment * 1.01;
+    }, 0);
+  }, [circles, joinedCircles, account?.address]);
 
-      // Log current profile state
-      console.log("Dashboard - Profile state:", {
-        hasProfile: !!profile,
-        username: profile?.username,
-        fullName: profile?.fullName,
-        email: profile?.email,
-        accountId: profile?.accountId,
-        lastPhotoUpdate: profile?.lastPhotoUpdate,
-        photo: profile?.photo,
-        photoLength: profile?.photo?.length,
-        isLoading: isLoadingProfile,
-      });
-    };
+  // Calculate total committed in personal savings
+  const personalSavingsCommitted = useMemo(() => {
+    const activeGoals = goals.filter((goal) => goal.isActive);
 
-    debugLog();
-  }, [
-    account,
-    wallet,
-    profile,
-    isLoadingProfile,
-    getProfileByEmail,
-    getProfileByAccountId,
-    getProfileByUsername,
-  ]);
+    return activeGoals.reduce((sum, goal) => {
+      // Convert bigint to number (18 decimals)
+      const currentAmount = Number(goal.currentAmount) / 1e18;
+      return sum + currentAmount;
+    }, 0);
+  }, [goals]);
 
   return (
     <>
@@ -113,10 +135,46 @@ const Dashboard: React.FC = () => {
           </div>
         }
       />
-       <div
-        className="min-h-screen pb-10"
+      <div
+        className="min-h-screen pb-20"
         style={{ backgroundColor: colors.background }}
-      ></div>
+      >
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Left Column - Balance and Overview */}
+            <div className="lg:col-span-2 space-y-6">
+              <BalanceDisplay
+                currentBalances={currentBalances}
+                circleCommitted={circleCommitted}
+                personalSavingsCommitted={personalSavingsCommitted}
+                setShowAddFundsModal={setShowAddFundsModal}
+                setShowWithdrawModal={setShowWithdrawModal}
+                colors={colors}
+                creditScore={creditScore}
+              />
+
+              {/* Personal Goals Section */}
+              <PersonalGoals />
+            </div>
+
+            {/* Right Column - Active Circles and Analytics */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* ActiveCircles */}
+              <ActiveCircles colors={colors} client={client} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <AddFundsModal
+        isOpen={showAddFundsModal}
+        onClose={() => setShowAddFundsModal(false)}
+      />
+      <WithdrawModal
+        isOpen={showWithdrawModal}
+        onClose={() => setShowWithdrawModal(false)}
+      />
     </>
   );
 };

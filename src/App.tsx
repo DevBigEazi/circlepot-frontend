@@ -1,26 +1,31 @@
+import { lazy, Suspense } from "react";
 import AuthModal from "./modals/AuthModal";
 import ProfileCreationModal from "./modals/ProfileCreationModal";
 import { Route, Routes, Navigate } from "react-router";
-import Dashboard from "./pages/Dashboard";
 import { useActiveAccount } from "thirdweb/react";
 import { useUserProfile } from "./hooks/useUserProfile";
 import LoadingSpinner from "./components/LoadingSpinner";
 import AutoConnectWallet from "./components/AutoConnectWallet";
-import Settings from "./pages/Settings";
-import Notifications from "./pages/Notifications";
-import TransactionsHistory from "./pages/TransactionsHistory";
-import Goals from "./pages/Goals";
-import CreateCircle from "./pages/CreateCircle";
-import Analytics from "./pages/Analytics";
-import CreatePersonalGoal from "./pages/CreatePersonalGoal";
-import Create from "./pages/Create";
-import Browse from "./pages/Browse";
-import Erorr404 from "./pages/404";
-import Layout from "./layouts/Layout";
 import { BiometricProvider } from "./contexts/BiometricContext";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { Toaster } from "sonner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import SkeletonPage from "./components/SkeletonPage";
 
+// Lazy load page components for code-splitting
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const TransactionsHistory = lazy(() => import("./pages/TransactionsHistory"));
+const Goals = lazy(() => import("./pages/Goals"));
+const CreateCircle = lazy(() => import("./pages/CreateCircle"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const CreatePersonalGoal = lazy(() => import("./pages/CreatePersonalGoal"));
+const Create = lazy(() => import("./pages/Create"));
+const Browse = lazy(() => import("./pages/Browse"));
+const JoinCircle = lazy(() => import("./pages/JoinCircle"));
+const Erorr404 = lazy(() => import("./pages/404"));
+const Layout = lazy(() => import("./layouts/Layout"));
 
 interface AppProps {
   client: any; // thirdweb client
@@ -61,73 +66,96 @@ function App({ client }: AppProps) {
   return (
     <main className="min-h-screen">
       <Toaster position="top-center" />
-      <BiometricProvider userId={profile?.accountId ? String(profile.accountId) : ""}>
+      <CurrencyProvider>
+        <BiometricProvider
+          userId={profile?.accountId ? String(profile.accountId) : ""}
+        >
+          {/* Enable auto-reconnection of wallet on page load */}
+          <AutoConnectWallet />
 
-      {/* Enable auto-reconnection of wallet on page load */}
-      <AutoConnectWallet />
+          {/* Loading state while checking profile or initializing */}
+          {account && (isLoading || hasProfile === null) && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-surface rounded-2xl p-8 shadow-2xl">
+                <LoadingSpinner size="lg" text="Loading your profile..." />
+              </div>
+            </div>
+          )}
 
-      {/* Loading state while checking profile or initializing */}
-      {account && (isLoading || hasProfile === null) && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-surface rounded-2xl p-8 shadow-2xl">
-            <LoadingSpinner size="lg" text="Loading your profile..." />
-          </div>
-        </div>
-      )}
+          {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
+          {showDashboard && !isLoading && !isInvalidDashboardId() && (
+            <Suspense fallback={<SkeletonPage />}>
+              <Routes>
+                <Route element={<Layout />}>
+                  {/* Redirect root to dashboard with user ID */}
+                  <Route
+                    index
+                    element={
+                      <Navigate
+                        to={`/dashboard/${profile?.accountId}`}
+                        replace
+                      />
+                    }
+                  />
+                  <Route path="/dashboard/:userId" element={<Dashboard />} />
+                  <Route path="/create" element={<Create />} />
+                  <Route
+                    path="/create/personal-goal"
+                    element={<CreatePersonalGoal />}
+                  />
+                  <Route path="/create/circle" element={<CreateCircle />} />
+                  <Route
+                    path="/circles/join/:circleId"
+                    element={<JoinCircle />}
+                  />
+                  <Route path="/browse" element={<Browse />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/goals" element={<Goals />} />
+                  <Route
+                    path="/transactions-history"
+                    element={<TransactionsHistory />}
+                  />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
 
-      {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
-      {showDashboard && !isLoading && !isInvalidDashboardId() && (
-        <Routes>
-          <Route element={<Layout />}>
-            {/* Redirect root to dashboard with user ID */}
-            <Route
-              index
-              element={<Navigate to={`/dashboard/${profile?.accountId}`} replace />}
+                {/* Not Found - outside Layout so no bottom nav */}
+                <Route path="*" element={<Erorr404 />} />
+              </Routes>
+            </Suspense>
+          )}
+
+          {/* Show 404 without Layout for invalid dashboard IDs */}
+          {showDashboard && isInvalidDashboardId() && (
+            <Suspense fallback={<SkeletonPage />}>
+              <Erorr404 />
+            </Suspense>
+          )}
+
+          {/* Landing page + Auth Modal for unauthenticated users */}
+          {showAuthModal && (
+            <>
+              {/* Landing page background */}
+              <Suspense fallback={<SkeletonPage />}>
+                <Dashboard />
+              </Suspense>
+              {/* Auth modal overlay */}
+              <AuthModal />
+            </>
+          )}
+
+          {/* Profile Creation Modal - shows after auth but before profile creation */}
+          {showProfileModal && (
+            <ProfileCreationModal
+              client={client}
+              onProfileCreated={handleProfileCreated}
             />
-            <Route path="/dashboard/:userId" element={<Dashboard />} />
-            <Route path="/create" element={<Create />} />
-            <Route path="/create/personal-goal" element={<CreatePersonalGoal />} />
-            <Route path="/create/circle" element={<CreateCircle />} />
-            <Route path="/browse" element={<Browse />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route
-              path="/transactions-history"
-              element={<TransactionsHistory />}
-            />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
+          )}
 
-          {/* Not Found - outside Layout so no bottom nav */}
-          <Route path="*" element={<Erorr404 />} />
-        </Routes>
-      )}
-
-      {/* Show 404 without Layout for invalid dashboard IDs */}
-      {showDashboard && isInvalidDashboardId() && <Erorr404 />}
-
-      {/* Landing page + Auth Modal for unauthenticated users */}
-      {showAuthModal && (
-        <>
-          {/* Landing page background */}
-          <Dashboard />
-          {/* Auth modal overlay */}
-          <AuthModal />
-        </>
-      )}
-
-      {/* Profile Creation Modal - shows after auth but before profile creation */}
-      {showProfileModal && (
-        <ProfileCreationModal
-          client={client}
-          onProfileCreated={handleProfileCreated}
-        />
-      )}
-
-      {/* PWA Install Prompt - Global, non-intrusive */}
-      <PWAInstallPrompt />
-      </BiometricProvider>
+          {/* PWA Install Prompt - Global, non-intrusive */}
+          <PWAInstallPrompt />
+        </BiometricProvider>
+      </CurrencyProvider>
     </main>
   );
 }
