@@ -642,6 +642,7 @@ const Settings: React.FC = () => {
             </div>
 
             {/* Appearance */}
+
             <div
               className="rounded-2xl p-4 sm:p-6 shadow-sm border"
               style={{
