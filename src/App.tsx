@@ -23,6 +23,7 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const CreatePersonalGoal = lazy(() => import("./pages/CreatePersonalGoal"));
 const Create = lazy(() => import("./pages/Create"));
 const Browse = lazy(() => import("./pages/Browse"));
+const JoinCircle = lazy(() => import("./pages/JoinCircle"));
 const Erorr404 = lazy(() => import("./pages/404"));
 const Layout = lazy(() => import("./layouts/Layout"));
 
@@ -103,6 +104,10 @@ function App({ client }: AppProps) {
                     element={<CreatePersonalGoal />}
                   />
                   <Route path="/create/circle" element={<CreateCircle />} />
+                  <Route
+                    path="/circles/join/:circleId"
+                    element={<JoinCircle />}
+                  />
                   <Route path="/browse" element={<Browse />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/goals" element={<Goals />} />
