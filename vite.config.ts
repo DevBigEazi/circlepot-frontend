@@ -53,10 +53,11 @@ export default defineConfig({
     },
 
     workbox: {
-      globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+      globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
       cleanupOutdatedCaches: true,
       clientsClaim: true,
       maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
+      navigateFallbackDenylist: [/^\/manifest\.webmanifest$/, /^\/sw\.js$/, /^\/registerSW\.js$/],
     },
 
     devOptions: {

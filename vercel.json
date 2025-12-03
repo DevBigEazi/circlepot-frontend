@@ -13,12 +13,61 @@
     ],
     "routes": [
       {
+        "src": "/manifest.webmanifest",
+        "headers": {
+          "Content-Type": "application/manifest+json",
+          "Cache-Control": "public, max-age=0, must-revalidate"
+        },
+        "dest": "/manifest.webmanifest"
+      },
+      {
+        "src": "/sw.js",
+        "headers": {
+          "Content-Type": "application/javascript",
+          "Cache-Control": "public, max-age=0, must-revalidate",
+          "Service-Worker-Allowed": "/"
+        },
+        "dest": "/sw.js"
+      },
+      {
+        "src": "/registerSW.js",
+        "headers": {
+          "Content-Type": "application/javascript",
+          "Cache-Control": "public, max-age=0, must-revalidate"
+        },
+        "dest": "/registerSW.js"
+      },
+      {
+        "src": "/workbox-(.+).js",
+        "headers": {
+          "Content-Type": "application/javascript",
+          "Cache-Control": "public, max-age=31536000, immutable"
+        },
+        "dest": "/workbox-$1.js"
+      },
+      {
+        "src": "/(pwa-.*\\.png|apple-touch-icon.*\\.png|maskable-icon.*\\.png)",
+        "headers": {
+          "Content-Type": "image/png",
+          "Cache-Control": "public, max-age=31536000, immutable"
+        },
+        "dest": "/$1"
+      },
+      {
         "src": "/assets/(.*)",
         "dest": "/assets/$1"
       },
       {
         "src": "/favicon.ico",
         "dest": "/favicon.ico"
+      },
+      {
+        "src": "/favicon.svg",
+        "dest": "/favicon.svg"
+      },
+      {
+        "src": "/logo.jpg",
+        "dest": "/logo.jpg"
       },
       {
         "handle": "filesystem"
