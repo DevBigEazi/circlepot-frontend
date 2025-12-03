@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss(), VitePWA({
     registerType: 'autoUpdate',
-    injectRegister: false,
+    injectRegister: 'auto',
 
     pwaAssets: {
       disabled: false,
@@ -15,10 +15,41 @@ export default defineConfig({
     },
 
     manifest: {
-      name: 'CirclePot',
-      short_name: 'CirclePot',
+      name: 'Circlepot',
+      short_name: 'Circlepot',
       description: 'Helping millions of people around the world save and grow together through trusted digital savings circles that work just like the ones they know — only easier and safer.',
       theme_color: '#ffffff',
+      background_color: '#ffffff',
+      display: 'standalone',
+      scope: '/',
+      start_url: '/',
+      orientation: 'portrait-primary',
+      categories: ['finance', 'social', 'productivity'],
+      icons: [
+        {
+          src: 'pwa-64x64.png',
+          sizes: '64x64',
+          type: 'image/png'
+        },
+        {
+          src: 'pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any'
+        },
+        {
+          src: 'pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any'
+        },
+        {
+          src: 'maskable-icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
+        }
+      ],
     },
 
     workbox: {
