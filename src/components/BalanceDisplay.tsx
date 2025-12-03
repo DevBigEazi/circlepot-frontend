@@ -168,7 +168,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
             </div>
           </div>
           <h3
-            className="text-3xl font-bold mb-1"
+            className="text-xl sm:text-3xl font-bold mb-1"
             style={{ color: colors.text }}
           >
             {showBalance ? `$${totalBalance.toLocaleString()}` : "•••••"}
@@ -237,7 +237,10 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
           </div>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-lg" style={{ color: colors.text }}>
+          <div
+            className="font-semibold text-base sm:text-lg"
+            style={{ color: colors.text }}
+          >
             {showBalance ? currentBalances.cUSD.toLocaleString() : "•••"}
           </div>
           <div className="text-sm" style={{ color: colors.primary }}>
@@ -254,14 +257,14 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
       <div className="flex gap-3">
         <button
           onClick={() => setShowAddFundsModal(true)}
-          className="flex-1 py-3 rounded-xl font-semibold transition shadow-sm hover:shadow-md text-white"
+          className="flex-1 text-base sm:text-lg py-3 rounded-xl font-semibold transition shadow-sm hover:shadow-md text-white"
           style={{ background: colors.gradient }}
         >
           Add Funds
         </button>
         <button
           onClick={() => setShowWithdrawModal(true)}
-          className="flex-1 py-3 rounded-xl font-semibold transition border hover:opacity-80"
+          className="flex-1 text-base sm:text-lg py-3 rounded-xl font-semibold transition border hover:opacity-80"
           style={{ borderColor: colors.border, color: colors.text }}
         >
           Withdraw
