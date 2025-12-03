@@ -60,7 +60,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
     >
       <div className="flex justify-between items-center mb-6">
         <h3
-          className="font-bold text-xl flex items-center gap-3"
+          className="font-bold text-base sm:text-lg flex items-center gap-3"
           style={{ color: colors.text }}
         >
           <div
@@ -87,10 +87,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
             className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto"
             style={{ borderColor: colors.primary }}
           ></div>
-          <p
-            className="text-sm mt-3"
-            style={{ color: colors.textLight }}
-          >
+          <p className="text-sm mt-3" style={{ color: colors.textLight }}>
             Loading goals...
           </p>
         </div>
@@ -109,7 +106,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
             );
             const currentFormatted = formatAmount(goal.currentAmount);
             const targetFormatted = formatAmount(goal.goalAmount);
-            const contributionFormatted = formatAmount(goal.contributionAmount)
+            const contributionFormatted = formatAmount(goal.contributionAmount);
             const frequencyText = getFrequencyText(goal.frequency);
 
             return (
@@ -125,22 +122,19 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4
-                      className="font-bold text-lg mb-1"
+                      className="font-bold text-sm sm:text-base mb-1"
                       style={{ color: colors.text }}
                     >
                       {goal.goalName}
                     </h4>
-                    <p
-                      className="text-sm"
-                      style={{ color: colors.textLight }}
-                    >
+                    <p className="text-sm" style={{ color: colors.textLight }}>
                       ${contributionFormatted}/{frequencyText} • $
                       {currentFormatted} of ${targetFormatted}
                     </p>
                   </div>
                   <div className="text-right">
                     <div
-                      className="text-2xl font-bold"
+                      className="text-sm sm:text-base font-bold"
                       style={{ color: colors.primary }}
                     >
                       {progress}%
@@ -178,10 +172,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
           >
             No goals yet
           </p>
-          <p
-            className="text-sm mb-5"
-            style={{ color: colors.textLight }}
-          >
+          <p className="text-sm mb-5" style={{ color: colors.textLight }}>
             Create your first savings goal!
           </p>
           <button
