@@ -11,6 +11,8 @@ interface BalanceDisplayProps {
     cUSD: number;
   };
   circleCommitted?: number;
+  circleCollateral?: number;
+  circleContributions?: number;
   personalSavingsCommitted?: number;
   setShowAddFundsModal: (show: boolean) => void;
   setShowWithdrawModal: (show: boolean) => void;
@@ -29,6 +31,8 @@ interface BalanceDisplayProps {
 const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   currentBalances,
   circleCommitted = 0,
+  circleCollateral = 0,
+  circleContributions = 0,
   personalSavingsCommitted = 0,
   setShowAddFundsModal,
   setShowWithdrawModal,
@@ -113,14 +117,29 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
                     </div>
                     <div className="flex justify-between items-center">
                       <span style={{ color: colors.textLight }}>
-                        Circle Commitments:
+                        Circle Collateral:
                       </span>
                       <span
                         className="font-medium"
                         style={{ color: colors.text }}
                       >
                         $
-                        {circleCommitted.toLocaleString(undefined, {
+                        {(circleCollateral || 0).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span style={{ color: colors.textLight }}>
+                        Circle Contributions:
+                      </span>
+                      <span
+                        className="font-medium"
+                        style={{ color: colors.text }}
+                      >
+                        $
+                        {(circleContributions || 0).toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
