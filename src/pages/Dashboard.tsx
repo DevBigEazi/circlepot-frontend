@@ -48,7 +48,16 @@ const Dashboard: React.FC = () => {
   const { profile } = useUserProfile(client);
 
   // Fetch circles and personal goals data
-  const { circles, joinedCircles } = useCircleSavings(client);
+  const {
+    circles,
+    joinedCircles,
+    contributions,
+    payouts,
+    votingEvents,
+    votes,
+    voteResults,
+    positions,
+  } = useCircleSavings(client);
   const { goals } = usePersonalGoals(client);
   const { creditScore } = useCreditScore(true);
 
@@ -74,21 +83,56 @@ const Dashboard: React.FC = () => {
     [balanceData]
   );
 
-  // Calculate total committed in circles
-  const circleCommitted = useMemo(() => {
+  // Calculate total committed in circles with breakdown
+  const {
+    total: circleCommitted,
+    collateral: circleCollateral,
+    contributions: circleContributions,
+  } = useMemo(() => {
     const activeCircles = transformCircles(
       circles,
       joinedCircles,
-      account?.address
+      account?.address,
+      votingEvents,
+      votes,
+      voteResults,
+      positions,
+      contributions,
+      payouts
     );
 
-    return activeCircles.reduce((sum, circle) => {
-      const commitment =
-        parseFloat(circle.contribution) * circle.totalPositions;
-      // Add 1% buffer fee to the total commitment
-      return sum + commitment * 1.01;
-    }, 0);
-  }, [circles, joinedCircles, account?.address]);
+    return activeCircles.reduce(
+      (acc, circle) => {
+        // Use the actual collateral amount that the user deposited
+        // This is contribution * maxMembers * 1.01 (includes 1% buffer)
+        const collateralAmount = circle.rawCircle?.collateralAmount
+          ? Number(circle.rawCircle.collateralAmount) / 1e18
+          : 0;
+
+        // Add the total amount contributed by the user to this circle
+        const contributedAmount = circle.userTotalContributed
+          ? Number(circle.userTotalContributed) / 1e18
+          : 0;
+
+        return {
+          total: acc.total + collateralAmount + contributedAmount,
+          collateral: acc.collateral + collateralAmount,
+          contributions: acc.contributions + contributedAmount,
+        };
+      },
+      { total: 0, collateral: 0, contributions: 0 }
+    );
+  }, [
+    circles,
+    joinedCircles,
+    account?.address,
+    votingEvents,
+    votes,
+    voteResults,
+    positions,
+    contributions,
+    payouts,
+  ]);
 
   // Calculate total committed in personal savings
   const personalSavingsCommitted = useMemo(() => {
@@ -146,6 +190,8 @@ const Dashboard: React.FC = () => {
               <BalanceDisplay
                 currentBalances={currentBalances}
                 circleCommitted={circleCommitted}
+                circleCollateral={circleCollateral}
+                circleContributions={circleContributions}
                 personalSavingsCommitted={personalSavingsCommitted}
                 setShowAddFundsModal={setShowAddFundsModal}
                 setShowWithdrawModal={setShowWithdrawModal}

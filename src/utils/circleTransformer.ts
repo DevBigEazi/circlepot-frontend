@@ -48,16 +48,21 @@ export const transformCircleToActiveCircle = (
 
     // Check if user has contributed to the current round
     let hasContributed = false;
-    if (userAddress && circle.state === 3) { // ACTIVE
-        const currentRound = circle.currentRound || 1n;
-        hasContributed = contributions.some(c =>
-            c.circleId === circle.circleId &&
-            c.round === currentRound &&
-            // Check if contribution is from this user (contributions array is already filtered by user in useCircleSavings)
-            // But wait, useCircleSavings passes `contributions` which are ALL contributions for the user.
-            // So we just need to check circleId and round.
-            true
-        );
+    let userTotalContributed = 0n;
+
+    if (userAddress) {
+        // Calculate total contributed by user for this circle
+        userTotalContributed = contributions
+            .filter(c => c.circleId === circle.circleId)
+            .reduce((sum, c) => sum + c.amount, 0n);
+
+        if (circle.state === 3) { // ACTIVE
+            const currentRound = circle.currentRound || 1n;
+            hasContributed = contributions.some(c =>
+                c.circleId === circle.circleId &&
+                c.round === currentRound
+            );
+        }
     }
 
     return {
@@ -83,6 +88,7 @@ export const transformCircleToActiveCircle = (
         positions: circlePositions,
         payouts: circlePayouts,
         hasContributed: hasContributed,
+        userTotalContributed: userTotalContributed,
         rawCircle: {
             ...circle,
             circleId: circle.circleId,

@@ -102,6 +102,7 @@ export interface ActiveCircle {
   positions?: any[];
   payouts?: any[];
   hasContributed?: boolean;
+  userTotalContributed?: bigint;
 }
 
 export interface Circle {

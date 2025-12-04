@@ -10,8 +10,10 @@ import {
   Share2,
   Check,
   UserPlus,
+  AlertCircle,
 } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
+import { toast } from "sonner";
 
 interface CircleActionsProps {
   circle: ActiveCircle;
@@ -80,12 +82,55 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   // For now, we'll assume the button is enabled if the backend allows it (we can't easily check grace period on frontend without round deadline).
   // However, `forfeitMember` is only for the NEXT recipient.
 
-  const handleAction = async (action: () => Promise<any>) => {
+  const handleAction = async (
+    action: () => Promise<any>,
+    actionName: string
+  ) => {
     try {
       setIsLoading(true);
       await action();
-    } catch (error) {
+      toast.custom(
+        () => (
+          <div
+            className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
+            style={{
+              backgroundColor: "#dcfce7",
+              animation: `slideIn 0.3s ease-out`,
+            }}
+          >
+            <AlertCircle size={20} className="text-green-600 flex-shrink-0" />
+            <span className="text-sm font-semibold text-green-600">
+              {actionName} successful!
+            </span>
+          </div>
+        ),
+        {
+          duration: 4000,
+          position: "top-center",
+        }
+      );
+    } catch (error: any) {
       console.error("Action failed:", error);
+      toast.custom(
+        () => (
+          <div
+            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
+            style={{
+              backgroundColor: "#fee2e2",
+              animation: `slideIn 0.3s ease-out`,
+            }}
+          >
+            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <span className="text-sm font-semibold text-red-600">
+              {error?.message || `${actionName} failed`}
+            </span>
+          </div>
+        ),
+        {
+          duration: 4000,
+          position: "top-center",
+        }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -178,7 +223,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         if (isCreator) {
           return (
             <button
-              onClick={() => handleAction(() => onStartCircle(circleId))}
+              onClick={() =>
+                handleAction(() => onStartCircle(circleId), "Start circle")
+              }
               disabled={isLoading}
               className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
               style={{ background: colors.gradient }}
@@ -196,7 +243,12 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         } else if (isMember) {
           return (
             <button
-              onClick={() => handleAction(() => onInitiateVoting(circleId))}
+              onClick={() =>
+                handleAction(
+                  () => onInitiateVoting(circleId),
+                  "Initiate voting"
+                )
+              }
               disabled={isLoading}
               className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-yellow-500 hover:bg-yellow-600"
             >
@@ -216,7 +268,12 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         if (isMember) {
           return (
             <button
-              onClick={() => handleAction(() => onWithdrawCollateral(circleId))}
+              onClick={() =>
+                handleAction(
+                  () => onWithdrawCollateral(circleId),
+                  "Withdraw collateral"
+                )
+              }
               disabled={isLoading}
               className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-red-500 hover:bg-red-600"
             >
@@ -255,7 +312,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     if (votingEnded) {
       return (
         <button
-          onClick={() => handleAction(() => onExecuteVote(circleId))}
+          onClick={() =>
+            handleAction(() => onExecuteVote(circleId), "Execute vote")
+          }
           disabled={isLoading}
           className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
           style={{ background: colors.gradient }}
@@ -281,7 +340,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       <div className="flex flex-col sm:flex-row gap-2 flex-1">
         <div className="flex gap-2 flex-1">
           <button
-            onClick={() => handleAction(() => onCastVote(circleId, 1))} // 1 = START
+            onClick={() =>
+              handleAction(() => onCastVote(circleId, 1), "Vote to start")
+            } // 1 = START
             disabled={isLoading}
             className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-green-500 hover:bg-green-600"
           >
@@ -289,7 +350,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             <span className="hidden xs:inline">Vote </span>Start
           </button>
           <button
-            onClick={() => handleAction(() => onCastVote(circleId, 2))} // 2 = WITHDRAW
+            onClick={() =>
+              handleAction(() => onCastVote(circleId, 2), "Vote to withdraw")
+            } // 2 = WITHDRAW
             disabled={isLoading}
             className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-red-500 hover:bg-red-600"
           >
@@ -332,7 +395,10 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         {!hasContributed ? (
           <button
             onClick={() =>
-              handleAction(() => onContribute(circleId, contributionAmount))
+              handleAction(
+                () => onContribute(circleId, contributionAmount),
+                "Contribution"
+              )
             }
             disabled={isLoading}
             className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
@@ -349,7 +415,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           </button>
         ) : canForfeit ? (
           <button
-            onClick={() => handleAction(() => onForfeitMember(circleId))}
+            onClick={() =>
+              handleAction(() => onForfeitMember(circleId), "Forfeit member")
+            }
             disabled={isLoading}
             className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
             title="Forfeit late members (Available after grace period if you haven't received payout)"

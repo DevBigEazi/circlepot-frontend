@@ -107,10 +107,18 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
   const totalBalance = useMemo(() => {
     return filteredCircles
       .reduce((sum, circle) => {
-        const commitment =
-          parseFloat(circle.contribution) * circle.totalPositions;
-        // Add 1% buffer fee to the total commitment
-        return sum + commitment * 1.01;
+        // Use the actual collateral amount that the user deposited
+        // This is contribution * maxMembers * 1.01 (includes 1% buffer)
+        const collateralAmount = circle.rawCircle?.collateralAmount
+          ? Number(circle.rawCircle.collateralAmount) / 1e18
+          : 0;
+
+        // Add the total amount contributed by the user to this circle
+        const contributedAmount = circle.userTotalContributed
+          ? Number(circle.userTotalContributed) / 1e18
+          : 0;
+
+        return sum + collateralAmount + contributedAmount;
       }, 0)
       .toFixed(2);
   }, [filteredCircles]);
