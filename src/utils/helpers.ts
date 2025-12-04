@@ -2,56 +2,56 @@ import { ActiveCircle } from "../interfaces/interfaces";
 
 // Convert wei to human readable format (assuming 18 decimals)
 export const formatBalance = (value: bigint | number) => {
-  const num = typeof value === 'bigint' ? Number(value) : value
-  return num / 1e18
+    const num = typeof value === 'bigint' ? Number(value) : value
+    return num / 1e18
 }
 
 // Helper function to format blockchain timestamp to readable date
 export const formatTimestamp = (timestamp: bigint) => {
-  const date = new Date(Number(timestamp) * 1000);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+    const date = new Date(Number(timestamp) * 1000);
+    return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
 };
 
 // Helper function to calculate next contribution date based on last contribution
 export const calculateNextContribution = (
-  goalId: bigint,
-  frequency: number,
-  contributions: Array<{ goalId: bigint; timestamp: bigint }>
+    goalId: bigint,
+    frequency: number,
+    contributions: Array<{ goalId: bigint; timestamp: bigint }>
 ) => {
-  const goalContributions = contributions.filter((c) => c.goalId === goalId);
+    const goalContributions = contributions.filter((c) => c.goalId === goalId);
 
-  if (goalContributions.length === 0) {
-    return "No contributions yet";
-  }
+    if (goalContributions.length === 0) {
+        return "No contributions yet";
+    }
 
-  const lastContribution = goalContributions.reduce((latest, current) =>
-    current.timestamp > latest.timestamp ? current : latest
-  );
+    const lastContribution = goalContributions.reduce((latest, current) =>
+        current.timestamp > latest.timestamp ? current : latest
+    );
 
-  const lastDate = new Date(Number(lastContribution.timestamp) * 1000);
-  const nextDate = new Date(lastDate);
+    const lastDate = new Date(Number(lastContribution.timestamp) * 1000);
+    const nextDate = new Date(lastDate);
 
-  switch (frequency) {
-    case 0: // Daily
-      nextDate.setDate(nextDate.getDate() + 1);
-      break;
-    case 1: // Weekly
-      nextDate.setDate(nextDate.getDate() + 7);
-      break;
-    case 2: // Monthly
-      nextDate.setMonth(nextDate.getMonth() + 1);
-      break;
-  }
+    switch (frequency) {
+        case 0: // Daily
+            nextDate.setDate(nextDate.getDate() + 1);
+            break;
+        case 1: // Weekly
+            nextDate.setDate(nextDate.getDate() + 7);
+            break;
+        case 2: // Monthly
+            nextDate.setMonth(nextDate.getMonth() + 1);
+            break;
+    }
 
-  return nextDate.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+    return nextDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
 };
 
 // Helper to format BigInt to readable number
@@ -144,3 +144,40 @@ export const calculateCollateral = (
     return totalCommitment + lateBuffer;
 };
 
+// Calculate contribution deadline for current round
+// Includes grace period as per smart contract: 12 hours for daily, 48 hours for weekly/monthly
+export const calculateContributionDeadline = (
+    startedAt: bigint,
+    currentRound: bigint,
+    frequency: number
+): bigint => {
+    if (startedAt === 0n || currentRound === 0n) {
+        return 0n;
+    }
+
+    const startDate = new Date(Number(startedAt) * 1000);
+    const deadlineDate = new Date(startDate);
+
+    // Calculate deadline based on current round and frequency
+    const roundNumber = Number(currentRound);
+
+    switch (frequency) {
+        case 0: // Daily
+            deadlineDate.setDate(deadlineDate.getDate() + roundNumber);
+            break;
+        case 1: // Weekly
+            deadlineDate.setDate(deadlineDate.getDate() + (roundNumber * 7));
+            break;
+        case 2: // Monthly
+            deadlineDate.setMonth(deadlineDate.getMonth() + roundNumber);
+            break;
+    }
+
+    // Add grace period as per smart contract
+    // Daily: 12 hours, Weekly/Monthly: 48 hours
+    const gracePeriodHours = frequency === 0 ? 12 : 48;
+    deadlineDate.setHours(deadlineDate.getHours() + gracePeriodHours);
+
+    // Return as Unix timestamp (seconds)
+    return BigInt(Math.floor(deadlineDate.getTime() / 1000));
+};

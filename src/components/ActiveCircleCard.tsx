@@ -2,6 +2,7 @@ import React from "react";
 import { Eye, MessageCircle } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import CircleActions from "./CircleActions";
+import CountdownTimer from "./CountdownTimer";
 
 interface ActiveCircleCardProps {
   circle: ActiveCircle;
@@ -82,6 +83,48 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
         </span>
       </div>
 
+      {/* Round and Contribution Deadline - Only for Active Circles */}
+      {circle.status === "active" && (
+        <div
+          className="mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg border"
+          style={{
+            backgroundColor: colors.accentBg,
+            borderColor: colors.border,
+          }}
+        >
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <div
+                className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                style={{ color: colors.textLight }}
+              >
+                Current Round
+              </div>
+              <div
+                className="text-lg sm:text-xl font-bold"
+                style={{ color: colors.primary }}
+              >
+                Round {circle.currentRound.toString()}
+              </div>
+            </div>
+            <div className="text-right">
+              <div
+                className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                style={{ color: colors.textLight }}
+              >
+                Contribution Deadline
+              </div>
+              <div style={{ color: colors.text }}>
+                <CountdownTimer
+                  deadline={circle.contributionDeadline}
+                  colors={colors}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Circle Stats */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
         <div>
@@ -99,8 +142,9 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
           </div>
         </div>
         <div>
+          {/* Next Payout */}
           <div
-            className="text-base sm:text-lg font-semibold"
+            className="text-xs sm:text-sm font-semibold"
             style={{ color: colors.text }}
           >
             {circle.nextPayout}
@@ -109,7 +153,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
             className="text-[10px] sm:text-xs"
             style={{ color: colors.textLight }}
           >
-            Est. Payout Date
+            Est. Next Payout Date
           </div>
         </div>
       </div>

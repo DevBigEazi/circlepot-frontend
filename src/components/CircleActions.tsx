@@ -307,6 +307,26 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     const currentRound = Number(circle.rawCircle.currentRound || 1);
     const isNextRecipient = circle.currentPosition === currentRound;
 
+    const contributionDeadlineWithGrace = circle.contributionDeadline;
+    const deadlineElapsed = now > Number(contributionDeadlineWithGrace);
+
+    // Check if user has received payout for the current round
+    const hasReceivedPayout =
+      circle.payouts?.some(
+        (payout: any) => Number(payout.round) === currentRound
+      ) || false;
+
+    // Show forfeit button only if:
+    // 1. User is the next recipient
+    // 2. Contribution deadline (WITH grace period) has elapsed
+    // 3. User has already contributed
+    // 4. User has NOT received payout for this round
+    const canForfeit =
+      isNextRecipient &&
+      deadlineElapsed &&
+      hasContributed &&
+      !hasReceivedPayout;
+
     return (
       <div className="flex gap-2 flex-1">
         {!hasContributed ? (
@@ -327,26 +347,24 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               </>
             )}
           </button>
+        ) : canForfeit ? (
+          <button
+            onClick={() => handleAction(() => onForfeitMember(circleId))}
+            disabled={isLoading}
+            className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
+            title="Forfeit late members (Available after grace period if you haven't received payout)"
+          >
+            <UserX className="w-4 h-4" />
+            <span className="inline">Forfeit</span>
+          </button>
         ) : (
           <div
-            className="flex-1 py-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-2"
+            className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1"
             style={{ borderColor: colors.border, color: colors.textLight }}
           >
             <CheckCircle className="w-4 h-4 text-green-500" />
             <span>Contributed</span>
           </div>
-        )}
-
-        {isNextRecipient && (
-          <button
-            onClick={() => handleAction(() => onForfeitMember(circleId))}
-            disabled={isLoading}
-            className="px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition border hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
-            title="Forfeit late members (Only available to current round recipient after grace period)"
-          >
-            <span className="hidden sm:inline">Forfeit</span>
-            <UserX className="w-4 h-4 sm:hidden" />
-          </button>
         )}
       </div>
     );

@@ -25,6 +25,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     voteResults,
     positions,
     contributions,
+    payouts,
     isLoading,
     startCircle,
     initiateVoting,
@@ -53,7 +54,8 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
       votes,
       voteResults,
       positions,
-      contributions
+      contributions,
+      payouts
     );
   }, [
     circles,
@@ -64,6 +66,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     voteResults,
     positions,
     contributions,
+    payouts,
   ]);
 
   // Filter circles:

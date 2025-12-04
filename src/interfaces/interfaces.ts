@@ -94,10 +94,13 @@ export interface ActiveCircle {
   membersList: any[];
   rawCircle: any;
   frequency: number; // 0: Daily, 1: Weekly, 2: Monthly
+  currentRound: bigint;
+  contributionDeadline: bigint; // Unix timestamp for when contributions are due
   votingEvents?: any[];
   votes?: any[];
   voteResults?: any[];
   positions?: any[];
+  payouts?: any[];
   hasContributed?: boolean;
 }
 
