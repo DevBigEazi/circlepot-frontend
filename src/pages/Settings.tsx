@@ -28,6 +28,7 @@ import { useBiometricContext } from "../contexts/BiometricContext";
 import { useBiometric } from "../hooks/useBiometric";
 import ThemeToggle from "../components/ThemeToggle";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { useNotifications } from "../contexts/NotificationsContext";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -35,6 +36,7 @@ const Settings: React.FC = () => {
   const { disconnect } = useDisconnect();
   const wallet = useActiveWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
+  const { notificationsEnabled, toggleNotifications } = useNotifications();
 
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
@@ -62,7 +64,6 @@ const Settings: React.FC = () => {
     accountId: "",
     profileImage: null as string | null,
     biometrics: false,
-    notifications: true,
     lastProfileUpdate: null as string | null,
   });
 
@@ -840,18 +841,13 @@ const Settings: React.FC = () => {
                   <input
                     type="checkbox"
                     className="sr-only peer"
-                    checked={userSettings.notifications}
-                    onChange={(e) =>
-                      setUserSettings((prev) => ({
-                        ...prev,
-                        notifications: e.target.checked,
-                      }))
-                    }
+                    checked={notificationsEnabled}
+                    onChange={(e) => toggleNotifications(e.target.checked)}
                   />
                   <div
                     className="w-11 h-6 rounded-full peer"
                     style={{
-                      backgroundColor: userSettings.notifications
+                      backgroundColor: notificationsEnabled
                         ? colors.primary
                         : colors.border,
                     }}
