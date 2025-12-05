@@ -187,6 +187,18 @@ const TransactionsHistory: React.FC = () => {
             </div>
           )}
 
+          {/* Summary */}
+          {!isLoading && transactions.length > 0 && (
+              <div className="flex mb-2 justify-between items-center text-sm">
+                <span style={{ color: colors.textLight }}>
+                  Total Transactions:
+                </span>
+                <span style={{ color: colors.text }} className="font-semibold">
+                  {transactions.length}
+                </span>
+              </div>
+          )}
+
           {/* Transactions List */}
           {!isLoading && transactions.length > 0 && (
             <div className="space-y-4">
@@ -346,26 +358,6 @@ const TransactionsHistory: React.FC = () => {
                 Your transaction history will appear here once you start using
                 CirclePot
               </p>
-            </div>
-          )}
-
-          {/* Summary */}
-          {!isLoading && transactions.length > 0 && (
-            <div
-              className="mt-8 p-4 rounded-xl border"
-              style={{
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              }}
-            >
-              <div className="flex justify-between items-center text-sm">
-                <span style={{ color: colors.textLight }}>
-                  Total Transactions:
-                </span>
-                <span style={{ color: colors.text }} className="font-semibold">
-                  {transactions.length}
-                </span>
-              </div>
             </div>
           )}
         </div>
