@@ -243,7 +243,7 @@ const getCategoryColor = (category: number): string => {
     }
 };
 
-export const useCreditScore = (enablePolling: boolean = false) => {
+export const useCreditScore = () => {
     const account = useActiveAccount();
     const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
     const [reputationIncreases, setReputationIncreases] = useState<ReputationIncrease[]>([]);
@@ -280,12 +280,6 @@ export const useCreditScore = (enablePolling: boolean = false) => {
             }
         },
         enabled: !!account?.address,
-        refetchInterval: enablePolling ? 10000 : 0, // Poll every 10 seconds if enabled
-        gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-        refetchOnWindowFocus: true,
-        refetchOnReconnect: true,
-        refetchOnMount: true,
-        retry: 1,
     });
 
     // Update local state when subgraph data changes

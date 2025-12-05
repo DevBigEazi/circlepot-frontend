@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
     positions,
   } = useCircleSavings(client);
   const { goals } = usePersonalGoals(client);
-  const { creditScore } = useCreditScore(true);
+  const { creditScore } = useCreditScore();
 
   // Normalize IPFS URL to ensure it's properly formatted
   const profileImageUrl = useMemo(() => {
