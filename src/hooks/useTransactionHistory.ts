@@ -188,7 +188,7 @@ export interface Transaction {
     currency: string;
     timestamp: bigint;
     transactionHash: string;
-    status: 'completed';
+    status: 'success';
     fee?: bigint;
     note?: string;
     // Additional metadata
@@ -445,7 +445,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: event.timestamp, // This is now BigInt from queryFn
                 transactionHash: event.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n, // We don't have gas fee info easily here
                 from: from,
                 to: to,
@@ -468,7 +468,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(contrib.transaction.blockTimestamp),
                 transactionHash: contrib.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n,
                 circleName: transactionsData.circleNamesMap.get(contrib.circleId) || 'Unknown Circle',
                 circleId: BigInt(contrib.circleId),
@@ -486,7 +486,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(payout.transaction.blockTimestamp),
                 transactionHash: payout.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n,
                 circleName: transactionsData.circleNamesMap.get(payout.circleId) || 'Unknown Circle',
                 circleId: BigInt(payout.circleId),
@@ -504,7 +504,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(contrib.transaction.blockTimestamp),
                 transactionHash: contrib.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n,
                 goalName: transactionsData.goalNamesMap.get(contrib.goalId) || 'Unknown Goal',
                 goalId: BigInt(contrib.goalId),
@@ -521,7 +521,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(withdrawal.transaction.blockTimestamp),
                 transactionHash: withdrawal.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n,
                 penalty: BigInt(withdrawal.penalty),
                 goalName: transactionsData.goalNamesMap.get(withdrawal.goalId) || 'Unknown Goal',
@@ -540,7 +540,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(completion.transaction.blockTimestamp),
                 transactionHash: completion.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n,
                 goalName: transactionsData.goalNamesMap.get(completion.goalId) || 'Unknown Goal',
                 goalId: BigInt(completion.goalId),
@@ -557,7 +557,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(late.transaction.blockTimestamp),
                 transactionHash: late.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: BigInt(late.fee),
                 circleName: transactionsData.circleNamesMap.get(late.circleId) || 'Unknown Circle',
                 circleId: BigInt(late.circleId),
@@ -575,7 +575,7 @@ export const useTransactionHistory = () => {
                 currency: 'cUSD',
                 timestamp: BigInt(cw.transaction.blockTimestamp),
                 transactionHash: cw.transaction.transactionHash,
-                status: 'completed',
+                status: 'success',
                 fee: 0n,
                 circleName: transactionsData.circleNamesMap.get(cw.circleId) || 'Unknown Circle',
                 circleId: BigInt(cw.circleId),
