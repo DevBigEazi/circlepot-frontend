@@ -4,6 +4,8 @@ import { useActiveAccount } from "thirdweb/react";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
+import { useNotificationSync } from "../hooks/useNotificationSync";
+import { useNotifications } from "../contexts/NotificationsContext";
 import { client } from "../thirdwebClient";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useCreditScore } from "../hooks/useCreditScore";
@@ -60,6 +62,37 @@ const Dashboard: React.FC = () => {
   } = useCircleSavings(client);
   const { goals } = usePersonalGoals(client);
   const { creditScore } = useCreditScore();
+  const { unreadCount } = useNotifications();
+
+  // Transform circles for notification sync
+  const transformedCircles = useMemo(
+    () =>
+      transformCircles(
+        circles,
+        joinedCircles,
+        account?.address,
+        votingEvents,
+        votes,
+        voteResults,
+        positions,
+        contributions,
+        payouts
+      ),
+    [
+      circles,
+      joinedCircles,
+      account?.address,
+      votingEvents,
+      votes,
+      voteResults,
+      positions,
+      contributions,
+      payouts,
+    ]
+  );
+
+  // Sync notifications with app events
+  useNotificationSync(transformedCircles, goals, []);
 
   // Normalize IPFS URL to ensure it's properly formatted
   const profileImageUrl = useMemo(() => {
@@ -167,7 +200,11 @@ const Dashboard: React.FC = () => {
               style={{ color: colors.text }}
             >
               <Bell size={18} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
             <button
               onClick={() => navigate("/settings")}
