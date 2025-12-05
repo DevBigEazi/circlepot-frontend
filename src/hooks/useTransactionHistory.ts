@@ -410,13 +410,7 @@ export const useTransactionHistory = () => {
                 throw err;
             }
         },
-        enabled: !!account?.address,
-        refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
-        gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-        refetchOnWindowFocus: true,
-        refetchOnReconnect: true,
-        refetchOnMount: true,
-        retry: 1,
+        enabled: !!account?.address
     });
 
     // Transform data into unified transaction list
