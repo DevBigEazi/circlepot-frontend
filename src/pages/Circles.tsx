@@ -6,7 +6,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
 import { normalizeIpfsUrl } from "../utils/ipfs";
 
-const Analytics: React.FC = () => {
+const Circles: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
 
@@ -33,10 +33,10 @@ const Analytics: React.FC = () => {
         className="min-h-screen pb-20"
         style={{ backgroundColor: colors.background }}
       >
-        
+        <h2>Circles</h2>
       </div>
     </>
   );
 };
 
-export default Analytics;
+export default Circles;
