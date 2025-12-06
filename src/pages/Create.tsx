@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router';
-import { Target, Users, Search, FolderOpen, PieChart } from 'lucide-react';
+import { Target, Users, Search, FolderOpen } from 'lucide-react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { client } from '../thirdwebClient';
@@ -223,17 +223,17 @@ const Create: React.FC = () => {
 
 
            <button
-             onClick={() => navigate('/analytics')}
+             onClick={() => navigate('/circles')}
              className="p-4 rounded-xl border flex items-center gap-3 hover:opacity-80 transition"
              style={{ backgroundColor: colors.surface, borderColor: colors.border }}
            >
-             <PieChart size={20} style={{ color: colors.primary }} />
+             <Users size={20} style={{ color: colors.primary }} />
              <div className="text-left">
                <div className="text-sm font-medium" style={{ color: colors.text }}>
-                 Analytics
+                 Active Circles
                </div>
                <div className="text-xs" style={{ color: colors.textLight }}>
-                 View insights
+                 View your circle savings
                </div>
              </div>
            </button>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, Search, Plus, PieChart } from "lucide-react";
+import { Users, Search, Plus, Home } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { Link, useLocation } from "react-router";
 
@@ -8,10 +8,10 @@ const BottomNav: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { id: "dashboard", icon: Users, label: "Circles", route: "/" },
+    { id: "dashboard", icon: Home, label: "Home", route: "/" },
     { id: "browse", icon: Search, label: "Browse", route: "/browse" },
     { id: "create", icon: Plus, label: "Create", route: "/create" },
-    { id: "analytics", icon: PieChart, label: "Analytics", route: "/analytics" },
+    { id: "circles", icon: Users, label: "Circles", route: "/circles" },
   ];
 
   const isActive = (route: string) => {

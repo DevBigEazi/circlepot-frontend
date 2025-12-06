@@ -20,7 +20,7 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const TransactionsHistory = lazy(() => import("./pages/TransactionsHistory"));
 const Goals = lazy(() => import("./pages/Goals"));
 const CreateCircle = lazy(() => import("./pages/CreateCircle"));
-const Analytics = lazy(() => import("./pages/Analytics"));
+const Circles = lazy(() => import("./pages/Circles"));
 const CreatePersonalGoal = lazy(() => import("./pages/CreatePersonalGoal"));
 const Create = lazy(() => import("./pages/Create"));
 const Browse = lazy(() => import("./pages/Browse"));
@@ -111,7 +111,7 @@ function App({ client }: AppProps) {
                       element={<JoinCircle />}
                     />
                     <Route path="/browse" element={<Browse />} />
-                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/circles" element={<Circles />} />
                     <Route path="/goals" element={<Goals />} />
                     <Route
                       path="/transactions-history"
