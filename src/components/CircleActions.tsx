@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { toast } from "sonner";
+import VoteModal from "../modals/VoteModal";
 
 interface CircleActionsProps {
   circle: ActiveCircle;
@@ -43,6 +44,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   const account = useActiveAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
 
   if (!account || !circle.rawCircle) return null;
 
@@ -194,6 +196,59 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       );
     }
 
+    // Check if there is an active voting session that the subgraph state might have missed
+    // or if we simply want to treat a certain condition as voting.
+    const latestVotingEvt = circle.votingEvents?.[0];
+    const isEffectiveVoting =
+      latestVotingEvt && now <= Number(latestVotingEvt.votingEndAt);
+
+    // If we are effectively in voting mode, Return the voting UI
+    if (isEffectiveVoting) {
+      // Check if user has voted
+      const userVote = circle.votes?.find(
+        (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
+      );
+      const hasVoted = !!userVote;
+
+      if (hasVoted) {
+        return (
+          <div
+            className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-2"
+            style={{ borderColor: colors.border, color: colors.textLight }}
+          >
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <span>Voted: {userVote.choice === 1 ? "Start" : "Withdraw"}</span>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex flex-col sm:flex-row gap-2 flex-1">
+          <button
+            onClick={() => setIsVoteModalOpen(true)}
+            disabled={isLoading}
+            className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+            style={{ background: colors.primary }}
+          >
+            <Vote className="w-4 h-4" />
+            <span>Vote</span>
+          </button>
+
+          <VoteModal
+            isOpen={isVoteModalOpen}
+            onClose={() => setIsVoteModalOpen(false)}
+            isLoading={isLoading}
+            onVoteStart={() =>
+              handleAction(() => onCastVote(circleId, 1), "Vote to start")
+            }
+            onVoteWithdraw={() =>
+              handleAction(() => onCastVote(circleId, 2), "Vote to withdraw")
+            }
+          />
+        </div>
+      );
+    }
+
     // For public circles, show share button if circle is not full and user can share
     if (!circleFull && canShareInvite) {
       return (
@@ -338,28 +393,27 @@ const CircleActions: React.FC<CircleActionsProps> = ({
 
     return (
       <div className="flex flex-col sm:flex-row gap-2 flex-1">
-        <div className="flex gap-2 flex-1">
-          <button
-            onClick={() =>
-              handleAction(() => onCastVote(circleId, 1), "Vote to start")
-            } // 1 = START
-            disabled={isLoading}
-            className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-green-500 hover:bg-green-600"
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span className="hidden xs:inline">Vote </span>Start
-          </button>
-          <button
-            onClick={() =>
-              handleAction(() => onCastVote(circleId, 2), "Vote to withdraw")
-            } // 2 = WITHDRAW
-            disabled={isLoading}
-            className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-red-500 hover:bg-red-600"
-          >
-            <UserX className="w-4 h-4" />
-            <span className="hidden xs:inline">Vote </span>Withdraw
-          </button>
-        </div>
+        <button
+          onClick={() => setIsVoteModalOpen(true)}
+          disabled={isLoading}
+          className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+          style={{ background: colors.gradient }}
+        >
+          <Vote className="w-4 h-4" />
+          <span>Vote</span>
+        </button>
+
+        <VoteModal
+          isOpen={isVoteModalOpen}
+          onClose={() => setIsVoteModalOpen(false)}
+          isLoading={isLoading}
+          onVoteStart={() =>
+            handleAction(() => onCastVote(circleId, 1), "Vote to start")
+          }
+          onVoteWithdraw={() =>
+            handleAction(() => onCastVote(circleId, 2), "Vote to withdraw")
+          }
+        />
       </div>
     );
   }
