@@ -21,6 +21,7 @@ const allCirclesQuery = gql`
       frequency
       maxMembers
       currentMembers
+      currentRound
       visibility
       state
       createdAt
@@ -44,94 +45,77 @@ const allCirclesQuery = gql`
         transactionHash
       }
     }
-    
-    # Get payouts to calculate currentRound
-    payoutDistributeds(orderBy: round, orderDirection: desc, first: 1000) {
-      circleId
-      round
-    }
   }
 `;
 
 export const useBrowseCircles = (enablePolling: boolean = true) => {
-    const {
-        data: circlesData,
-        isLoading,
-        refetch,
-        error
-    } = useQuery({
-        queryKey: ["browseCircles"],
-        async queryFn() {
-            try {
-                console.log("🔄 [BrowseCircles] Fetching all circles...");
-                const result: any = await request(
-                    SUBGRAPH_URL,
-                    allCirclesQuery,
-                    {},
-                    SUBGRAPH_HEADERS
-                );
+  const {
+    data: circlesData,
+    isLoading,
+    refetch,
+    error
+  } = useQuery({
+    queryKey: ["browseCircles"],
+    async queryFn() {
+      try {
+        console.log("🔄 [BrowseCircles] Fetching all circles...");
+        const result: any = await request(
+          SUBGRAPH_URL,
+          allCirclesQuery,
+          {},
+          SUBGRAPH_HEADERS
+        );
 
-                // Calculate currentRound for each circle
-                const payouts = result.payoutDistributeds || [];
-                const roundMap = new Map<string, bigint>();
-                payouts.forEach((p: any) => {
-                    const cid = p.circleId.toString();
-                    const r = BigInt(p.round);
-                    if (!roundMap.has(cid) || r > roundMap.get(cid)!) {
-                        roundMap.set(cid, r);
-                    }
-                });
+        // Process circles
+        const circles: Circle[] = result.circles.map((circle: any) => ({
+          id: circle.id,
+          circleId: BigInt(circle.circleId),
+          circleName: circle.circleName,
+          circleDescription: circle.circleDescription,
+          contributionAmount: BigInt(circle.contributionAmount),
+          collateralAmount: BigInt(circle.collateralAmount),
+          frequency: circle.frequency,
+          maxMembers: BigInt(circle.maxMembers),
+          currentMembers: BigInt(circle.currentMembers),
+          currentRound: BigInt(circle.currentRound || 0),
+          visibility: circle.visibility,
+          state: circle.state,
+          createdAt: BigInt(circle.createdAt),
+          startedAt: BigInt(circle.startedAt),
+          creator: circle.creator,
+        }));
 
-                // Process circles
-                const circles: Circle[] = result.circles.map((circle: any) => ({
-                    id: circle.id,
-                    circleId: BigInt(circle.circleId),
-                    circleName: circle.circleName,
-                    circleDescription: circle.circleDescription,
-                    contributionAmount: BigInt(circle.contributionAmount),
-                    collateralAmount: BigInt(circle.collateralAmount),
-                    frequency: circle.frequency,
-                    maxMembers: BigInt(circle.maxMembers),
-                    currentMembers: BigInt(circle.currentMembers),
-                    currentRound: (roundMap.get(circle.circleId) || 0n) + 1n,
-                    visibility: circle.visibility,
-                    state: circle.state,
-                    createdAt: BigInt(circle.createdAt),
-                    startedAt: BigInt(circle.startedAt),
-                    creator: circle.creator,
-                }));
+        // Process members
+        const members = result.circleJoineds.map((joined: any) => ({
+          id: joined.user.id,
+          circleId: BigInt(joined.circleId),
+          currentMembers: BigInt(joined.currentMembers),
+          circleState: joined.circleState,
+          timestamp: BigInt(joined.transaction.blockTimestamp),
+          user: joined.user,
+        }));
 
-                // Process members
-                const members = result.circleJoineds.map((joined: any) => ({
-                    id: joined.user.id,
-                    circleId: BigInt(joined.circleId),
-                    currentMembers: BigInt(joined.currentMembers),
-                    circleState: joined.circleState,
-                    timestamp: BigInt(joined.transaction.blockTimestamp),
-                    user: joined.user,
-                }));
+        console.log(`✅ [BrowseCircles] Fetched ${circles.length} circles`);
 
-                console.log(`✅ [BrowseCircles] Fetched ${circles.length} circles`);
+        return { circles, members };
+      } catch (err) {
+        console.error("❌ [BrowseCircles] Error fetching circles:", err);
+        throw err;
+      }
+    },
+    refetchInterval: enablePolling ? 10000 : 0, // Poll every 10 seconds if enabled
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
+    retry: 1,
+  });
 
-                return { circles, members };
-            } catch (err) {
-                console.error("❌ [BrowseCircles] Error fetching circles:", err);
-                throw err;
-            }
-        },
-        refetchInterval: enablePolling ? 10000 : 0, // Poll every 10 seconds if enabled
-        gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-        refetchOnWindowFocus: true,
-        refetchOnReconnect: true,
-        refetchOnMount: true,
-        retry: 1,
-    });
-
-    return {
-        circles: circlesData?.circles || [],
-        members: circlesData?.members || [],
-        isLoading,
-        error,
-        refetch,
-    };
+  return {
+    circles: circlesData?.circles || [],
+    members: circlesData?.members || [],
+    isLoading,
+    error,
+    refetch,
+  };
 };

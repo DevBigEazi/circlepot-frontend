@@ -212,6 +212,7 @@ const circlesByIdsQuery = gql`
       }
       circleName
       circleDescription
+      currentRound
       contributionAmount
       collateralAmount
       frequency
@@ -318,6 +319,7 @@ const singleCircleQuery = gql`
       }
       circleName
       circleDescription
+      currentRound
       contributionAmount
       collateralAmount
       frequency
@@ -483,21 +485,7 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
           joinedCirclesMembers = circlesResult.circleJoineds;
           joinedCirclesVotingEvents = circlesResult.votingInitiateds;
           joinedCirclesVoteResults = circlesResult.voteExecuteds;
-          // Calculate currentRound for each circle
-          const payouts = circlesResult.payoutDistributeds || [];
-          const roundMap = new Map<string, bigint>();
-          payouts.forEach((p: any) => {
-            const cid = p.circleId.toString();
-            const r = BigInt(p.round);
-            if (!roundMap.has(cid) || r > roundMap.get(cid)!) {
-              roundMap.set(cid, r);
-            }
-          });
-
-          joinedCirclesDetails = circlesResult.circles.map((c: any) => ({
-            ...c,
-            currentRound: (roundMap.get(c.circleId) || 0n) + 1n
-          }));
+          // No need to calculate currentRound - subgraph now tracks it directly
         }
 
         return {
@@ -629,6 +617,7 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         circleId: BigInt(payout.circleId),
         round: BigInt(payout.round),
         payoutAmount: BigInt(payout.payoutAmount),
+        user: payout.user, // Include user info for payout received indicator
         timestamp: BigInt(payout.transaction.blockTimestamp),
       }));
       setPayouts(processedPayouts);

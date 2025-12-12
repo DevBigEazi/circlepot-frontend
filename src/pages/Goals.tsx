@@ -75,19 +75,31 @@ const Goals: React.FC = () => {
 
   // Merge completed and early withdrawn goals into history
   const goalsHistory = useMemo(() => {
-    const completed = goalsWithProgress
-      .filter((g) => !g.isActive && g.currentAmount >= g.goalAmount)
-      .map((goal) => ({ ...goal, status: "completed" as const }));
+    const inactiveGoals = goalsWithProgress.filter((g) => !g.isActive);
 
-    const earlyWithdrawn = goalsWithProgress
-      .filter((g) => !g.isActive && g.currentAmount < g.goalAmount)
-      .map((goal) => ({ ...goal, status: "earlyWithdrawn" as const }));
+    const categorized = inactiveGoals.map((goal) => {
+      // For inactive goals, check total contributions to determine if completed
+      const totalContributed = contributions
+        .filter((c) => c.goalId === goal.goalId)
+        .reduce((sum, c) => sum + formatBalance(c.amount), 0);
 
-    // Merge and sort by most recent first (using createdAt as timestamp)
-    return [...completed, ...earlyWithdrawn].sort(
+      // A goal is completed if total contributions reached the target
+      const isCompleted = totalContributed >= goal.targetAmount;
+
+      return {
+        ...goal,
+        savedAmount: totalContributed, // Use total contributed for display
+        status: isCompleted
+          ? ("completed" as const)
+          : ("earlyWithdrawn" as const),
+      };
+    });
+
+    // Sort by most recent first (using createdAt as timestamp)
+    return categorized.sort(
       (a, b) => Number(b.createdAt) - Number(a.createdAt)
     );
-  }, [goalsWithProgress]);
+  }, [goalsWithProgress, contributions]);
 
   // Handle contribute to goal
   const handleContribute = async (

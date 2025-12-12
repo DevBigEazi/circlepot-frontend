@@ -49,7 +49,7 @@ export const transformCircleToActiveCircle = (
     }
 
     const payoutAmount = formatBigInt(payoutAmountBigInt);
-    const nextPayout = calculateNextPayout(circle.startedAt, circle.frequency);
+    const nextPayout = calculateNextPayout(circle.startedAt, circle.frequency, circle.currentRound || 1n);
     const collateral = calculateCollateral(
         circle.contributionAmount,
         circle.maxMembers // Collateral is always based on maxMembers (what you committed to)

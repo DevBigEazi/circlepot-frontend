@@ -189,22 +189,22 @@ const TransactionsHistory: React.FC = () => {
 
           {/* Summary */}
           {!isLoading && transactions.length > 0 && (
-              <div className="flex mb-2 justify-between items-center text-sm">
-                <span style={{ color: colors.textLight }}>
-                  Total Transactions:
-                </span>
-                <span style={{ color: colors.text }} className="font-semibold">
-                  {transactions.length}
-                </span>
-              </div>
+            <div className="flex mb-2 justify-between items-center text-sm">
+              <span style={{ color: colors.textLight }}>
+                Total Transactions:
+              </span>
+              <span style={{ color: colors.text }} className="font-semibold">
+                {transactions.length}
+              </span>
+            </div>
           )}
 
           {/* Transactions List */}
           {!isLoading && transactions.length > 0 && (
             <div className="space-y-4">
-              {transactions.map((transaction) => (
+              {transactions.map((transaction, index) => (
                 <div
-                  key={transaction.id}
+                  key={`${transaction.transactionHash}-${transaction.type}-${index}`}
                   className="p-4 rounded-xl border hover:shadow-md transition-shadow"
                   style={{
                     backgroundColor: colors.surface,
