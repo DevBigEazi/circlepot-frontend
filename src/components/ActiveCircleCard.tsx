@@ -1,5 +1,6 @@
 import React from "react";
 import { Eye, MessageCircle } from "lucide-react";
+import { useActiveAccount } from "thirdweb/react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import CircleActions from "./CircleActions";
 import CountdownTimer from "./CountdownTimer";
@@ -33,6 +34,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
   onForfeitMember,
   onInviteMembers,
 }) => {
+  const account = useActiveAccount();
   return (
     <div
       className="p-3 sm:p-4 rounded-xl border"
@@ -106,6 +108,36 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
               >
                 Round {circle.currentRound.toString()}
               </div>
+              {/* Show payout status ONLY if current user received payout in previous round */}
+              {(() => {
+                const currentRound = circle.currentRound;
+                const previousRound =
+                  currentRound > 1n ? currentRound - 1n : 0n;
+
+                if (!account?.address || previousRound === 0n) return null;
+
+                // Check if the CURRENT USER received the payout in the previous round
+                // Convert both to numbers for comparison since subgraph might return strings
+                const userPayout = circle.payouts?.find((p: any) => {
+                  const payoutRound =
+                    typeof p.round === "bigint"
+                      ? p.round
+                      : BigInt(p.round || 0);
+                  const isMatchingRound = payoutRound === previousRound;
+                  const isMatchingUser =
+                    p.user?.id?.toLowerCase() === account.address.toLowerCase();
+
+                  return isMatchingRound && isMatchingUser;
+                });
+
+                // Only show "Payout Received" if current user got the payout
+                return userPayout ? (
+                  <div className="mt-1 text-[10px] sm:text-xs font-semibold text-green-600 flex items-center gap-1">
+                    <span>✓</span>
+                    <span>Payout Received</span>
+                  </div>
+                ) : null;
+              })()}
             </div>
             <div className="text-right">
               <div

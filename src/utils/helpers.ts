@@ -103,10 +103,11 @@ export const getStateText = (state: number): ActiveCircle['status'] => {
     }
 };
 
-// Calculate next payout date
+// Calculate next payout date based on current round
 export const calculateNextPayout = (
     startedAt: bigint,
-    frequency: number
+    frequency: number,
+    currentRound: bigint = 1n
 ): string => {
     if (startedAt === 0n) {
         return "Pending Start";
@@ -115,15 +116,18 @@ export const calculateNextPayout = (
     const startDate = new Date(Number(startedAt) * 1000);
     const nextDate = new Date(startDate);
 
+    // Calculate date for the NEXT round (currentRound + 1)
+    const nextRoundNumber = Number(currentRound);
+
     switch (frequency) {
         case 0: // Daily
-            nextDate.setDate(nextDate.getDate() + 1);
+            nextDate.setDate(nextDate.getDate() + nextRoundNumber);
             break;
         case 1: // Weekly
-            nextDate.setDate(nextDate.getDate() + 7);
+            nextDate.setDate(nextDate.getDate() + (nextRoundNumber * 7));
             break;
         case 2: // Monthly
-            nextDate.setMonth(nextDate.getMonth() + 1);
+            nextDate.setMonth(nextDate.getMonth() + nextRoundNumber);
             break;
     }
 
@@ -145,7 +149,9 @@ export const calculateCollateral = (
 };
 
 // Calculate contribution deadline for current round
-// Includes grace period as per smart contract: 12 hours for daily, 48 hours for weekly/monthly
+// Returns the grace deadline (base deadline + grace period)
+// Members can contribute without penalty until this time
+// After this: contributions are deducted from collateral with 1% late fee
 export const calculateContributionDeadline = (
     startedAt: bigint,
     currentRound: bigint,
@@ -158,7 +164,7 @@ export const calculateContributionDeadline = (
     const startDate = new Date(Number(startedAt) * 1000);
     const deadlineDate = new Date(startDate);
 
-    // Calculate deadline based on current round and frequency
+    // Calculate base deadline based on current round and frequency
     const roundNumber = Number(currentRound);
 
     switch (frequency) {
@@ -173,7 +179,8 @@ export const calculateContributionDeadline = (
             break;
     }
 
-    // Add grace period as per smart contract
+    // Add grace period - this is when members can still contribute from wallet
+    // After grace period: contributions are deducted from collateral with penalty
     // Daily: 12 hours, Weekly/Monthly: 48 hours
     const gracePeriodHours = frequency === 0 ? 12 : 48;
     deadlineDate.setHours(deadlineDate.getHours() + gracePeriodHours);
