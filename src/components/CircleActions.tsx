@@ -199,11 +199,36 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     // Check if there is an active voting session that the subgraph state might have missed
     // or if we simply want to treat a certain condition as voting.
     const latestVotingEvt = circle.votingEvents?.[0];
-    const isEffectiveVoting =
+    const votingHasEnded =
+      latestVotingEvt && now > Number(latestVotingEvt.votingEndAt);
+    const votingIsActive =
       latestVotingEvt && now <= Number(latestVotingEvt.votingEndAt);
 
+    // Check if vote has been executed by looking for voteResults
+    const latestVoteResult = circle.voteResults?.[0];
+    const voteHasBeenExecuted =
+      latestVoteResult &&
+      latestVotingEvt &&
+      latestVoteResult.circleId === latestVotingEvt.circleId;
+
+    // If voting has ended but not executed, show Execute Vote button
+    if (votingHasEnded && !voteHasBeenExecuted) {
+      return (
+        <button
+          onClick={() =>
+            handleAction(() => onExecuteVote(circleId), "Execute vote")
+          }
+          disabled={isLoading}
+          className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+          style={{ background: colors.gradient }}
+        >
+          {isLoading ? "Processing..." : "Execute Vote Results"}
+        </button>
+      );
+    }
+
     // If we are effectively in voting mode, Return the voting UI
-    if (isEffectiveVoting) {
+    if (votingIsActive) {
       // Check if user has voted
       const userVote = circle.votes?.find(
         (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
