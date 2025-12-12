@@ -30,13 +30,29 @@ export const transformCircleToActiveCircle = (
         : 0;
 
     const contributionFormatted = formatBigInt(circle.contributionAmount);
-    const payoutAmount = formatBigInt(
-        circle.contributionAmount * circle.maxMembers
-    );
+
+    // For active/completed circles, use currentMembers (actual participants)
+    // For created/pending/voting circles, use maxMembers (proposed maximum)
+    const isStarted = circle.state >= 3; // ACTIVE (3) or COMPLETED (4)
+    const effectiveMembers = isStarted ? circle.currentMembers : circle.maxMembers;
+
+    // Calculate payout amount
+    // Creator gets full payout, non-creators pay 0.2% platform fee (20 basis points)
+    const totalPot = circle.contributionAmount * effectiveMembers;
+    const isCreator = userAddress && circle.creator?.id?.toLowerCase() === userAddress.toLowerCase();
+
+    let payoutAmountBigInt = totalPot;
+    if (!isCreator) {
+        // Apply platform fee: 20 basis points = 0.2%
+        const platformFee = (totalPot * 20n) / 10000n;
+        payoutAmountBigInt = totalPot - platformFee;
+    }
+
+    const payoutAmount = formatBigInt(payoutAmountBigInt);
     const nextPayout = calculateNextPayout(circle.startedAt, circle.frequency);
     const collateral = calculateCollateral(
         circle.contributionAmount,
-        circle.maxMembers
+        circle.maxMembers // Collateral is always based on maxMembers (what you committed to)
     );
 
     // Filter events for this circle
@@ -70,7 +86,7 @@ export const transformCircleToActiveCircle = (
         name: circle.circleName,
         contribution: contributionFormatted,
         frequency: circle.frequency,
-        totalPositions: Number(circle.maxMembers),
+        totalPositions: Number(effectiveMembers), // Use effectiveMembers here
         currentPosition: userPosition > 0 ? userPosition : 1,
         payoutAmount: payoutAmount,
         nextPayout: nextPayout,
