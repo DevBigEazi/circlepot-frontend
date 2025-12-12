@@ -165,11 +165,23 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
   };
 
   const circleState = getCircleState(circle.status || "created");
+
+  // Collateral Locked: Based on maxMembers (what was originally proposed and locked)
+  const maxMembers = Number(
+    circle.rawCircle?.maxMembers || circle.totalPositions
+  );
+  const collateralLocked = calculateCollateral(circle.contribution, maxMembers);
+
+  // Collateral Required: Based on currentMembers (what's actually needed for the circle)
+  const currentMembers = Number(
+    circle.rawCircle?.currentMembers || circle.totalPositions
+  );
   const collateralRequired = calculateCollateral(
     circle.contribution,
-    circle.totalPositions
+    currentMembers
   );
-  const minMembersToStart = getMinMembersToStart(circle.totalPositions);
+
+  const minMembersToStart = getMinMembersToStart(maxMembers);
   const ultimatumPeriod = getUltimatumPeriod(circle.frequency);
 
   // Determine circle type (public/private)
@@ -265,6 +277,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
             <CircleOverviewTab
               circle={circle}
               colors={colors}
+              collateralLocked={collateralLocked}
               collateralRequired={collateralRequired}
               minMembersToStart={minMembersToStart}
               ultimatumPeriod={ultimatumPeriod}

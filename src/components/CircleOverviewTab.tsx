@@ -13,6 +13,7 @@ import { getFrequencyText } from "../utils/helpers";
 interface CircleOverviewTabProps {
   circle: ActiveCircle;
   colors: any;
+  collateralLocked: number;
   collateralRequired: number;
   minMembersToStart: number;
   ultimatumPeriod: string;
@@ -21,6 +22,7 @@ interface CircleOverviewTabProps {
 const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
   circle,
   colors,
+  collateralLocked,
   collateralRequired,
   minMembersToStart,
   ultimatumPeriod,
@@ -178,6 +180,22 @@ const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
             Security & Requirements
           </h3>
           <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span style={{ color: colors.textLight }}>
+                Initial Expected Members:
+              </span>
+              <span style={{ color: colors.text }}>
+                {circle.rawCircle?.maxMembers.toString() || "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span style={{ color: colors.textLight }}>
+                Collateral Locked:
+              </span>
+              <span style={{ color: colors.text }}>
+                ${collateralLocked.toFixed(2)}
+              </span>
+            </div>
             <div className="flex justify-between">
               <span style={{ color: colors.textLight }}>
                 Collateral Required:
