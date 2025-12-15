@@ -35,6 +35,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
   onInviteMembers,
 }) => {
   const account = useActiveAccount();
+  const hasContributed = circle.hasContributed;
   return (
     <div
       className="p-3 sm:p-4 rounded-xl border"
@@ -139,20 +140,29 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                 ) : null;
               })()}
             </div>
-            <div className="text-right">
-              <div
-                className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
-                style={{ color: colors.textLight }}
-              >
-                Contribution Deadline
-              </div>
-              <div style={{ color: colors.text }}>
-                <CountdownTimer
-                  deadline={circle.contributionDeadline}
-                  colors={colors}
-                />
-              </div>
-            </div>
+            { !hasContributed ?
+              (<div className="text-right">
+                <div
+                  className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                  style={{ color: colors.textLight }}
+                >
+                  Contribution Deadline
+                </div>
+                <div style={{ color: colors.text }}>
+                  <CountdownTimer
+                    deadline={circle.contributionDeadline}
+                    colors={colors}
+                  />
+                </div>
+              </div>) : (
+                <div
+                  className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                  style={{ color: colors.textLight }}
+                >
+                  Contribution Paid
+                </div>
+              )
+            }
           </div>
         </div>
       )}
