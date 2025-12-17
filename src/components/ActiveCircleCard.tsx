@@ -109,26 +109,15 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
               >
                 Round {circle.currentRound.toString()}
               </div>
-              {/* Show payout status ONLY if current user received payout in previous round */}
+              {/* Show payout status if current user has ever received a payout */}
               {(() => {
-                const currentRound = circle.currentRound;
-                const previousRound =
-                  currentRound > 1n ? currentRound - 1n : 0n;
+                if (!account?.address) return null;
 
-                if (!account?.address || previousRound === 0n) return null;
-
-                // Check if the CURRENT USER received the payout in the previous round
-                // Convert both to numbers for comparison since subgraph might return strings
+                // Check if the CURRENT USER received ANY payout
                 const userPayout = circle.payouts?.find((p: any) => {
-                  const payoutRound =
-                    typeof p.round === "bigint"
-                      ? p.round
-                      : BigInt(p.round || 0);
-                  const isMatchingRound = payoutRound === previousRound;
-                  const isMatchingUser =
-                    p.user?.id?.toLowerCase() === account.address.toLowerCase();
-
-                  return isMatchingRound && isMatchingUser;
+                  return (
+                    p.user?.id?.toLowerCase() === account.address.toLowerCase()
+                  );
                 });
 
                 // Only show "Payout Received" if current user got the payout
@@ -140,8 +129,8 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                 ) : null;
               })()}
             </div>
-            { !hasContributed ?
-              (<div className="text-right">
+            {!hasContributed ? (
+              <div className="text-right">
                 <div
                   className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
                   style={{ color: colors.textLight }}
@@ -154,15 +143,15 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                     colors={colors}
                   />
                 </div>
-              </div>) : (
-                <div
-                  className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
-                  style={{ color: colors.textLight }}
-                >
-                  Contribution Paid
-                </div>
-              )
-            }
+              </div>
+            ) : (
+              <div
+                className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                style={{ color: colors.textLight }}
+              >
+                Contribution Paid
+              </div>
+            )}
           </div>
         </div>
       )}

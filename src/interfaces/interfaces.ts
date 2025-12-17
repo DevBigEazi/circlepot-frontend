@@ -87,7 +87,7 @@ export interface ActiveCircle {
   name: string;
   currentPosition: number;
   totalPositions: number;
-  status: 'active' | 'completed' | 'pending' | 'voting' | 'withdrawn' | 'created' | 'unknown';
+  status: 'active' | 'completed' | 'pending' | 'voting' | 'withdrawn' | 'created' | 'dead' | 'unknown';
   payoutAmount: string;
   nextPayout: string;
   contribution: string;
@@ -103,6 +103,9 @@ export interface ActiveCircle {
   payouts?: any[];
   hasContributed?: boolean;
   userTotalContributed?: bigint;
+  hasWithdrawn?: boolean;
+  isForfeited?: boolean;
+  forfeitedAmount?: bigint;
 }
 
 export interface Circle {

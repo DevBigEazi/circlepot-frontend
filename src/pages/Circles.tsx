@@ -1,22 +1,185 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useUserProfile } from "../hooks/useUserProfile";
+import { useActiveAccount } from "thirdweb/react";
 import { client } from "../thirdwebClient";
 import { useNavigate } from "react-router";
 import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
 import { normalizeIpfsUrl } from "../utils/ipfs";
+import { useCircleSavings } from "../hooks/useCircleSavings";
+import { transformCircles } from "../utils/circleTransformer";
+import ActiveCircleCard from "../components/ActiveCircleCard";
+import CircleDetailsModal from "../modals/CircleDetailsModal";
+import CircleChatModal from "../modals/CircleChatModal";
+import InviteMembersModal from "../modals/InviteMembersModal";
+import { ActiveCircle } from "../interfaces/interfaces";
+import { Users, TrendingUp, CheckCircle, AlertOctagon } from "lucide-react";
 
 const Circles: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
+  const account = useActiveAccount();
 
   const { profile } = useUserProfile(client);
-  // Normalize IPFS URL to ensure it's properly formatted
+
+  // Normalize IPFS URL
   const profileImageUrl = useMemo(() => {
     if (!profile?.photo) return null;
-    const normalized = normalizeIpfsUrl(profile.photo);
-    return normalized;
+    return normalizeIpfsUrl(profile.photo);
   }, [profile?.photo]);
+
+  // Fetch circle data
+  const {
+    circles,
+    joinedCircles,
+    votingEvents,
+    votes,
+    voteResults,
+    positions,
+    contributions,
+    payouts,
+    collateralWithdrawals,
+    forfeitures,
+    isLoading,
+    startCircle,
+    initiateVoting,
+    castVote,
+    executeVote,
+    withdrawCollateral,
+    contribute,
+    forfeitMember,
+    inviteMembers,
+  } = useCircleSavings(client);
+
+  // Modal states
+  const [showCircleDetails, setShowCircleDetails] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedCircle, setSelectedCircle] = useState<ActiveCircle | null>(
+    null
+  );
+
+  // Transform circles data
+  const allCircles = useMemo(() => {
+    return transformCircles(
+      circles,
+      joinedCircles,
+      account?.address,
+      votingEvents,
+      votes,
+      voteResults,
+      positions,
+      contributions,
+      payouts,
+      collateralWithdrawals,
+      forfeitures
+    );
+  }, [
+    circles,
+    joinedCircles,
+    account?.address,
+    votingEvents,
+    votes,
+    voteResults,
+    positions,
+    contributions,
+    payouts,
+    collateralWithdrawals,
+    forfeitures,
+  ]);
+
+  // Categorize circles
+  const { activeCircles, historyCircles } = useMemo(() => {
+    if (!account?.address) {
+      return { activeCircles: [], historyCircles: [] };
+    }
+
+    const userAddressLower = account.address.toLowerCase();
+
+    const involvedCircles = allCircles.filter((circle) => {
+      // Check if user is creator
+      const isCreator =
+        circle.rawCircle?.creator?.id?.toLowerCase() === userAddressLower;
+      // Check if user is a member
+      const isMember = circle.currentPosition > 0;
+
+      // Check if user was forfeited (even if no longer a current member)
+      const isForfeited = circle.isForfeited;
+
+      return isCreator || isMember || isForfeited;
+    });
+
+    const active = involvedCircles.filter((c) => {
+      // If user has withdrawn or forfeited, it's not active for them
+      if (c.hasWithdrawn || c.isForfeited) return false;
+      // If circle is in a terminal state, it's not active
+      if (["completed", "withdrawn", "dead"].includes(c.status)) return false;
+
+      // Otherwise include standard active states
+      return ["active", "created", "pending", "voting"].includes(c.status);
+    });
+
+    const history = involvedCircles.filter((c) => {
+      // 1. Completed
+      if (c.status === "completed") return true;
+      // 2. Withdrawn (Circle status OR User specific withdrawal OR Dead)
+      if (c.status === "withdrawn" || c.status === "dead" || c.hasWithdrawn)
+        return true;
+
+      // 3. Forfeited
+      if (c.isForfeited) return true;
+
+      // 4. Payout Received by current user
+      // Track in history even if still active, as a record of success
+      if (
+        account?.address &&
+        c.payouts &&
+        c.payouts.some(
+          (p: any) =>
+            p.user?.id?.toLowerCase() === account.address.toLowerCase()
+        )
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+
+    return { activeCircles: active, historyCircles: history };
+  }, [allCircles, account?.address]);
+
+  // Calculate total committed balance
+  const totalBalance = useMemo(() => {
+    return activeCircles
+      .reduce((sum, circle) => {
+        const collateralAmount = circle.rawCircle?.collateralAmount
+          ? Number(circle.rawCircle.collateralAmount) / 1e18
+          : 0;
+
+        const contributedAmount = circle.userTotalContributed
+          ? Number(circle.userTotalContributed) / 1e18
+          : 0;
+
+        return sum + collateralAmount + contributedAmount;
+      }, 0)
+      .toFixed(2);
+  }, [activeCircles]);
+
+  // Handlers
+  const handleViewDetails = (circle: ActiveCircle) => {
+    setSelectedCircle(circle);
+    setShowCircleDetails(true);
+  };
+
+  const handleChatClick = (circle: ActiveCircle) => {
+    setSelectedCircle(circle);
+    setShowChatModal(true);
+  };
+
+  const handleInviteClick = (circle: ActiveCircle) => {
+    setSelectedCircle(circle);
+    setShowInviteModal(true);
+  };
 
   return (
     <>
@@ -28,13 +191,411 @@ const Circles: React.FC = () => {
         onBack={() => navigate(-1)}
       />
 
-      {/* main UI */}
       <div
-        className="min-h-screen pb-20"
+        className="min-h-screen pb-10"
         style={{ backgroundColor: colors.background }}
       >
-        <h2>Circles</h2>
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          {/* Header */}
+          <div className="mb-8">
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{ color: colors.text }}
+            >
+              Your Service Circles
+            </h1>
+            <p style={{ color: colors.textLight }}>
+              Manage your collaborative savings circles and track your
+              contributions
+            </p>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-5 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
+            <div
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-48 md:w-auto md:col-span-1 snap-start"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className="text-xs md:text-sm"
+                  style={{ color: colors.textLight }}
+                >
+                  Total Committed
+                </div>
+                <TrendingUp size={16} style={{ color: colors.primary }} />
+              </div>
+              <div
+                className="text-lg md:text-xl font-bold"
+                style={{ color: colors.text }}
+              >
+                $
+                {Number(totalBalance).toLocaleString("en-US", {
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
+                Active
+              </div>
+              <div
+                className="text-xl md:text-2xl font-bold"
+                style={{ color: colors.text }}
+              >
+                {activeCircles.length}
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
+                Completed
+              </div>
+              <div
+                className="text-xl md:text-2xl font-bold"
+                style={{ color: colors.text }}
+              >
+                {historyCircles.filter((c) => c.status === "completed").length}
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
+                Withdrawn
+              </div>
+              <div
+                className="text-xl md:text-2xl font-bold"
+                style={{ color: colors.text }}
+              >
+                {
+                  historyCircles.filter(
+                    (c) =>
+                      (c.status === "withdrawn" || c.hasWithdrawn) &&
+                      !c.isForfeited
+                  ).length
+                }
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
+                Forfeited
+              </div>
+              <div className="text-xl md:text-2xl font-bold text-red-500">
+                {historyCircles.filter((c) => c.isForfeited).length}
+              </div>
+            </div>
+          </div>
+
+          {/* Active Circles Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Users style={{ color: colors.primary }} className="w-5 h-5" />
+              <h2 className="text-xl font-bold" style={{ color: colors.text }}>
+                Active Circles
+              </h2>
+            </div>
+
+            {isLoading ? (
+              <div
+                className="text-center py-8"
+                style={{ color: colors.textLight }}
+              >
+                Loading circles...
+              </div>
+            ) : activeCircles.length === 0 ? (
+              <div
+                className="rounded-xl p-8 text-center border dashed"
+                style={{ borderColor: colors.border }}
+              >
+                <p style={{ color: colors.textLight }}>
+                  No active circles found.
+                </p>
+                <button
+                  onClick={() => navigate("/create/circle")}
+                  className="mt-4 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  Create a Circle
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 mb-5">
+                {activeCircles.map((circle) => (
+                  <ActiveCircleCard
+                    key={circle.id}
+                    circle={circle}
+                    colors={colors}
+                    onViewDetails={handleViewDetails}
+                    onChat={handleChatClick}
+                    onStartCircle={startCircle}
+                    onInitiateVoting={initiateVoting}
+                    onCastVote={castVote}
+                    onExecuteVote={executeVote}
+                    onWithdrawCollateral={withdrawCollateral}
+                    onContribute={contribute}
+                    onForfeitMember={forfeitMember}
+                    onInviteMembers={() => handleInviteClick(circle)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* History Section */}
+          {historyCircles.length > 0 && (
+            <div className="mt-12 mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <CheckCircle
+                  style={{ color: colors.text }}
+                  className="w-5 h-5"
+                />
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  Circle History
+                </h2>
+              </div>
+              <div className="space-y-4">
+                {historyCircles.map((circle) => {
+                  const userPayout = circle.payouts?.find(
+                    (p: any) =>
+                      p.user?.id?.toLowerCase() ===
+                      account?.address?.toLowerCase()
+                  );
+                  const hasWithdrawn =
+                    circle.hasWithdrawn ||
+                    circle.status === "withdrawn" ||
+                    circle.status === "dead";
+                  const isForfeited = circle.isForfeited;
+
+                  let statusLabel = "";
+                  let statusIcon = null;
+                  let statusClass = "";
+                  let detailsText = null;
+
+                  if (isForfeited) {
+                    statusLabel = "Forfeited";
+                    statusIcon = (
+                      <AlertOctagon
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
+                    statusClass = "text-red-600 bg-red-50 dark:bg-red-900/20";
+                    detailsText = (
+                      <span className="text-xs md:text-sm text-red-500">
+                        Collateral Lost: $
+                        {(
+                          Number(circle.forfeitedAmount || 0n) / 1e18
+                        ).toLocaleString("en-US", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    );
+                  } else if (hasWithdrawn) {
+                    statusLabel = "Withdrawn";
+                    statusIcon = (
+                      <AlertOctagon
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
+                    statusClass =
+                      "text-orange-600 bg-orange-50 dark:bg-orange-900/20";
+                    detailsText = (
+                      <span
+                        className="text-xs md:text-sm"
+                        style={{ color: colors.textLight }}
+                      >
+                        Collateral Withdrawn
+                      </span>
+                    );
+                  } else if (circle.status === "completed") {
+                    statusLabel = "Completed";
+                    statusIcon = (
+                      <CheckCircle
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
+                    statusClass =
+                      "text-green-600 bg-green-50 dark:bg-green-900/20";
+                    detailsText = (
+                      <span
+                        className="text-xs md:text-sm"
+                        style={{ color: colors.textLight }}
+                      >
+                        Collateral Returned ($
+                        {Math.floor(
+                          Number(circle.rawCircle.collateralAmount) / 1e18
+                        )}
+                        )
+                      </span>
+                    );
+                  } else if (userPayout) {
+                    statusLabel = "Payout Received";
+                    statusIcon = (
+                      <TrendingUp
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
+                    statusClass =
+                      "text-blue-600 bg-blue-50 dark:bg-blue-900/20";
+                    detailsText = (
+                      <span
+                        className="text-xs md:text-sm"
+                        style={{ color: colors.textLight }}
+                      >
+                        Received: $
+                        {(
+                          Number(userPayout.payoutAmount) / 1e18
+                        ).toLocaleString("en-US", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={circle.id}
+                      className="rounded-xl p-3 md:p-4 border opacity-75"
+                      style={{
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                      }}
+                    >
+                      <div className="flex justify-between items-start md:items-center gap-2">
+                        <div className="min-w-0">
+                          <h3
+                            className="font-semibold text-sm md:text-lg truncate"
+                            style={{ color: colors.text }}
+                          >
+                            {circle.name}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            {detailsText}
+                            <span
+                              className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20"
+                              style={{ color: colors.textLight }}
+                            >
+                              {circle.frequency === 0
+                                ? "Daily"
+                                : circle.frequency === 1
+                                ? "Weekly"
+                                : "Monthly"}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          className={`flex items-center gap-1.5 font-semibold px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm shrink-0 ${statusClass}`}
+                        >
+                          {statusIcon}
+                          <span className="hidden sm:inline">
+                            {statusLabel}
+                          </span>
+                          <span className="sm:hidden">
+                            {statusLabel === "Payout Received"
+                              ? "Payout"
+                              : statusLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Modals */}
+      {showCircleDetails && selectedCircle && (
+        <CircleDetailsModal
+          circle={selectedCircle}
+          setShowCircleDetails={setShowCircleDetails}
+          colors={colors}
+          onJoinCircle={() => {
+            setShowCircleDetails(false);
+            setShowChatModal(true);
+          }}
+          onRequestInvite={() => {
+            setShowCircleDetails(false);
+          }}
+          client={client}
+          onStartCircle={startCircle}
+          onInitiateVoting={initiateVoting}
+          onCastVote={castVote}
+          onExecuteVote={executeVote}
+          onWithdrawCollateral={withdrawCollateral}
+          onContribute={contribute}
+          onForfeitMember={forfeitMember}
+        />
+      )}
+
+      {showChatModal && selectedCircle && (
+        <CircleChatModal
+          circle={selectedCircle}
+          currentUser={account?.address || "You"}
+          onClose={() => setShowChatModal(false)}
+          colors={colors}
+        />
+      )}
+
+      {showInviteModal && selectedCircle && (
+        <InviteMembersModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          circleId={selectedCircle.rawCircle?.circleId || BigInt(0)}
+          circleName={selectedCircle.name}
+          colors={colors}
+          onInvite={inviteMembers}
+        />
+      )}
     </>
   );
 };
