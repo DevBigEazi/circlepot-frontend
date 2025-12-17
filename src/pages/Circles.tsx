@@ -438,7 +438,7 @@ const Circles: React.FC = () => {
                           <div className="flex items-center gap-2 mt-1">
                             {detailsText}
                             <span
-                              className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800"
+                              className="text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20"
                               style={{ color: colors.textLight }}
                             >
                               {circle.frequency === 0
