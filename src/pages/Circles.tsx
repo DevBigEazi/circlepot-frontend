@@ -39,6 +39,7 @@ const Circles: React.FC = () => {
     contributions,
     payouts,
     collateralWithdrawals,
+    forfeitures,
     isLoading,
     startCircle,
     initiateVoting,
@@ -70,7 +71,8 @@ const Circles: React.FC = () => {
       positions,
       contributions,
       payouts,
-      collateralWithdrawals
+      collateralWithdrawals,
+      forfeitures
     );
   }, [
     circles,
@@ -83,6 +85,7 @@ const Circles: React.FC = () => {
     contributions,
     payouts,
     collateralWithdrawals,
+    forfeitures,
   ]);
 
   // Categorize circles
@@ -100,12 +103,15 @@ const Circles: React.FC = () => {
       // Check if user is a member
       const isMember = circle.currentPosition > 0;
 
-      return isCreator || isMember;
+      // Check if user was forfeited (even if no longer a current member)
+      const isForfeited = circle.isForfeited;
+
+      return isCreator || isMember || isForfeited;
     });
 
     const active = involvedCircles.filter((c) => {
-      // If user has withdrawn, it's not active for them
-      if (c.hasWithdrawn) return false;
+      // If user has withdrawn or forfeited, it's not active for them
+      if (c.hasWithdrawn || c.isForfeited) return false;
       // If circle is in a terminal state, it's not active
       if (["completed", "withdrawn", "dead"].includes(c.status)) return false;
 
@@ -120,7 +126,10 @@ const Circles: React.FC = () => {
       if (c.status === "withdrawn" || c.status === "dead" || c.hasWithdrawn)
         return true;
 
-      // 3. Payout Received by current user
+      // 3. Forfeited
+      if (c.isForfeited) return true;
+
+      // 4. Payout Received by current user
       // Track in history even if still active, as a record of success
       if (
         account?.address &&
@@ -202,22 +211,25 @@ const Circles: React.FC = () => {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-5 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-48 md:w-auto md:col-span-1 snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm" style={{ color: colors.textLight }}>
+                <div
+                  className="text-xs md:text-sm"
+                  style={{ color: colors.textLight }}
+                >
                   Total Committed
                 </div>
                 <TrendingUp size={16} style={{ color: colors.primary }} />
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-lg md:text-xl font-bold"
                 style={{ color: colors.text }}
               >
                 $
@@ -228,17 +240,20 @@ const Circles: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="text-sm mb-2" style={{ color: colors.textLight }}>
-                Active Circles
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
+                Active
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl md:text-2xl font-bold"
                 style={{ color: colors.text }}
               >
                 {activeCircles.length}
@@ -246,37 +261,68 @@ const Circles: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="text-sm mb-2" style={{ color: colors.textLight }}>
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
                 Completed
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl md:text-2xl font-bold"
                 style={{ color: colors.text }}
               >
                 {historyCircles.filter((c) => c.status === "completed").length}
               </div>
             </div>
+
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="text-sm mb-2" style={{ color: colors.textLight }}>
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
                 Withdrawn
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl md:text-2xl font-bold"
                 style={{ color: colors.text }}
               >
-                {historyCircles.filter((c) => c.status === "withdrawn").length}
+                {
+                  historyCircles.filter(
+                    (c) =>
+                      (c.status === "withdrawn" || c.hasWithdrawn) &&
+                      !c.isForfeited
+                  ).length
+                }
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+            >
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
+                Forfeited
+              </div>
+              <div className="text-xl md:text-2xl font-bold text-red-500">
+                {historyCircles.filter((c) => c.isForfeited).length}
               </div>
             </div>
           </div>
@@ -362,20 +408,63 @@ const Circles: React.FC = () => {
                     circle.hasWithdrawn ||
                     circle.status === "withdrawn" ||
                     circle.status === "dead";
+                  const isForfeited = circle.isForfeited;
 
                   let statusLabel = "";
                   let statusIcon = null;
                   let statusClass = "";
                   let detailsText = null;
 
-                  if (circle.status === "completed") {
+                  if (isForfeited) {
+                    statusLabel = "Forfeited";
+                    statusIcon = (
+                      <AlertOctagon
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
+                    statusClass = "text-red-600 bg-red-50 dark:bg-red-900/20";
+                    detailsText = (
+                      <span className="text-xs md:text-sm text-red-500">
+                        Collateral Lost: $
+                        {(
+                          Number(circle.forfeitedAmount || 0n) / 1e18
+                        ).toLocaleString("en-US", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    );
+                  } else if (hasWithdrawn) {
+                    statusLabel = "Withdrawn";
+                    statusIcon = (
+                      <AlertOctagon
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
+                    statusClass =
+                      "text-orange-600 bg-orange-50 dark:bg-orange-900/20";
+                    detailsText = (
+                      <span
+                        className="text-xs md:text-sm"
+                        style={{ color: colors.textLight }}
+                      >
+                        Collateral Withdrawn
+                      </span>
+                    );
+                  } else if (circle.status === "completed") {
                     statusLabel = "Completed";
-                    statusIcon = <CheckCircle size={18} />;
+                    statusIcon = (
+                      <CheckCircle
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
                     statusClass =
                       "text-green-600 bg-green-50 dark:bg-green-900/20";
                     detailsText = (
                       <span
-                        className="text-sm"
+                        className="text-xs md:text-sm"
                         style={{ color: colors.textLight }}
                       >
                         Collateral Returned ($
@@ -385,27 +474,19 @@ const Circles: React.FC = () => {
                         )
                       </span>
                     );
-                  } else if (hasWithdrawn) {
-                    statusLabel = "Withdrawn";
-                    statusIcon = <AlertOctagon size={18} />;
-                    statusClass =
-                      "text-orange-600 bg-orange-50 dark:bg-orange-900/20";
-                    detailsText = (
-                      <span
-                        className="text-sm"
-                        style={{ color: colors.textLight }}
-                      >
-                        Collateral Withdrawn
-                      </span>
-                    );
                   } else if (userPayout) {
                     statusLabel = "Payout Received";
-                    statusIcon = <TrendingUp size={18} />;
+                    statusIcon = (
+                      <TrendingUp
+                        size={16}
+                        className="md:w-[18px] md:h-[18px]"
+                      />
+                    );
                     statusClass =
                       "text-blue-600 bg-blue-50 dark:bg-blue-900/20";
                     detailsText = (
                       <span
-                        className="text-sm"
+                        className="text-xs md:text-sm"
                         style={{ color: colors.textLight }}
                       >
                         Received: $
@@ -421,24 +502,24 @@ const Circles: React.FC = () => {
                   return (
                     <div
                       key={circle.id}
-                      className="rounded-xl p-4 border opacity-75"
+                      className="rounded-xl p-3 md:p-4 border opacity-75"
                       style={{
                         backgroundColor: colors.surface,
                         borderColor: colors.border,
                       }}
                     >
-                      <div className="flex justify-between items-center sm:flex-row flex-col gap-4 sm:gap-0">
-                        <div>
+                      <div className="flex justify-between items-start md:items-center gap-2">
+                        <div className="min-w-0">
                           <h3
-                            className="font-semibold text-lg"
+                            className="font-semibold text-sm md:text-lg truncate"
                             style={{ color: colors.text }}
                           >
                             {circle.name}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
                             {detailsText}
                             <span
-                              className="text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20"
+                              className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20"
                               style={{ color: colors.textLight }}
                             >
                               {circle.frequency === 0
@@ -450,10 +531,17 @@ const Circles: React.FC = () => {
                           </div>
                         </div>
                         <div
-                          className={`flex items-center gap-2 font-semibold px-3 py-1.5 rounded-lg ${statusClass}`}
+                          className={`flex items-center gap-1.5 font-semibold px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm shrink-0 ${statusClass}`}
                         >
                           {statusIcon}
-                          <span>{statusLabel}</span>
+                          <span className="hidden sm:inline">
+                            {statusLabel}
+                          </span>
+                          <span className="sm:hidden">
+                            {statusLabel === "Payout Received"
+                              ? "Payout"
+                              : statusLabel}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -104,6 +104,8 @@ export interface ActiveCircle {
   hasContributed?: boolean;
   userTotalContributed?: bigint;
   hasWithdrawn?: boolean;
+  isForfeited?: boolean;
+  forfeitedAmount?: bigint;
 }
 
 export interface Circle {

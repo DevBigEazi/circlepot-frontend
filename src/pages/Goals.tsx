@@ -295,22 +295,25 @@ const Goals: React.FC = () => {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-4 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-48 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm" style={{ color: colors.textLight }}>
+                <div
+                  className="text-xs md:text-sm"
+                  style={{ color: colors.textLight }}
+                >
                   Total Saved
                 </div>
                 <TrendingUp size={16} style={{ color: colors.primary }} />
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-lg md:text-xl font-bold"
                 style={{ color: colors.text }}
               >
                 $
@@ -321,17 +324,20 @@ const Goals: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="text-sm mb-2" style={{ color: colors.textLight }}>
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
                 Active Goals
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl md:text-2xl font-bold"
                 style={{ color: colors.text }}
               >
                 {activeGoals.length}
@@ -339,17 +345,20 @@ const Goals: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="text-sm mb-2" style={{ color: colors.textLight }}>
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
                 Completed
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl md:text-2xl font-bold"
                 style={{ color: colors.text }}
               >
                 {goalsHistory.filter((g) => g.status === "completed").length}
@@ -357,17 +366,20 @@ const Goals: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="text-sm mb-2" style={{ color: colors.textLight }}>
+              <div
+                className="text-xs md:text-sm mb-2"
+                style={{ color: colors.textLight }}
+              >
                 Early Withdrawals
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl md:text-2xl font-bold"
                 style={{ color: colors.text }}
               >
                 {
