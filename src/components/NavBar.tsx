@@ -9,11 +9,11 @@ export interface Tab {
 interface NavBarProps {
   title?: string;
   titleIcon?: React.ReactNode;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   onBack?: () => void;
   actions?: React.ReactNode;
   colors: {
-    surface: string;
+    background: string;
     border: string;
     text: string;
     textLight?: string;
@@ -69,8 +69,8 @@ const NavBar: React.FC<NavBarProps> = ({
   if (variant === "tabs") {
     return (
       <div
-        className="sticky top-0 z-10 border-b"
-        style={{ backgroundColor: colors.surface, borderColor: colors.border }}
+        className="sticky top-0 z-10"
+        style={{ backgroundColor: colors.background }}
       >
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -107,12 +107,12 @@ const NavBar: React.FC<NavBarProps> = ({
                       {title}
                     </h1>
                     {subtitle && (
-                      <p
+                      <div
                         className="text-sm"
                         style={{ color: colors.textLight }}
                       >
                         {subtitle}
-                      </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -137,37 +137,50 @@ const NavBar: React.FC<NavBarProps> = ({
   if (variant === "minimal") {
     return (
       <div
-        className="sticky top-0 z-10 border-b"
-        style={{ backgroundColor: colors.surface, borderColor: colors.border }}
+        className="sticky top-0 z-10"
+        style={{ backgroundColor: colors.background }}
       >
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto px-4 pb-1 pt-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="p-2 rounded-xl transition hover:opacity-80"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl transition hover:opacity-80"
                   style={{ color: colors.text }}
                 >
                   <ArrowLeft size={20} />
                 </button>
               )}
               {title && (
-                <div className="flex items-center gap-3">
-                  {titleIcon && (
-                    <div style={{ color: colors.primary }}>{titleIcon}</div>
-                  )}
-                  <h1
-                    className="text-xl font-bold"
-                    style={{ color: colors.text }}
-                  >
-                    {title}
-                  </h1>
+                <div className="flex flex-col">
+                  <div className="h-10 flex items-center gap-2">
+                    {titleIcon && (
+                      <div
+                        className="flex-shrink-0"
+                        style={{ color: colors.primary }}
+                      >
+                        {titleIcon}
+                      </div>
+                    )}
+                    <h1
+                      className="md:text-xl text-lg font-bold leading-none"
+                      style={{ color: colors.text }}
+                    >
+                      {title}
+                    </h1>
+                  </div>
                 </div>
               )}
             </div>
-            <div className="flex gap-2">{actions}</div>
+
+            <div className="flex gap-2 h-10 items-center">{actions}</div>
           </div>
+          {subtitle && (
+            <div className="text-sm mt-1" style={{ color: colors.textLight }}>
+              {subtitle}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -176,8 +189,8 @@ const NavBar: React.FC<NavBarProps> = ({
   // Default variant (with user greeting and profile)
   return (
     <header
-      className="sticky top-0 z-40 shadow-sm"
-      style={{ backgroundColor: colors.surface, borderColor: colors.border }}
+      className="sticky top-0 z-40"
+      style={{ backgroundColor: colors.background }}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">

@@ -156,6 +156,19 @@ const TransactionsHistory: React.FC = () => {
         variant="minimal"
         onBack={() => navigate(-1)}
         title="Transaction History"
+        subtitle={
+          !isLoading &&
+          transactions.length > 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              <span style={{ color: colors.textLight }}>
+                Total Transactions:
+              </span>
+              <span style={{ color: colors.text }} className="font-semibold">
+                {transactions.length}
+              </span>
+            </div>
+          )
+        }
         titleIcon={<History size={24} />}
         colors={colors}
         actions={
@@ -176,7 +189,7 @@ const TransactionsHistory: React.FC = () => {
         className="min-h-screen pb-20"
         style={{ backgroundColor: colors.background }}
       >
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto px-4 py-1">
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
@@ -184,18 +197,6 @@ const TransactionsHistory: React.FC = () => {
                 className="animate-spin rounded-full h-12 w-12 border-b-2"
                 style={{ borderColor: colors.primary }}
               ></div>
-            </div>
-          )}
-
-          {/* Summary */}
-          {!isLoading && transactions.length > 0 && (
-            <div className="flex mb-2 justify-between items-center text-sm">
-              <span style={{ color: colors.textLight }}>
-                Total Transactions:
-              </span>
-              <span style={{ color: colors.text }} className="font-semibold">
-                {transactions.length}
-              </span>
             </div>
           )}
 

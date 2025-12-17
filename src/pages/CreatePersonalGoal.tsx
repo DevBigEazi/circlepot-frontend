@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
-  Target,
   Lock,
   TrendingUp,
   AlertTriangle,
@@ -9,7 +8,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
-import { useUserProfile } from "../hooks/useUserProfile";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { client } from "../thirdwebClient";
 import NavBar from "../components/NavBar";
@@ -19,7 +17,6 @@ import confetti from "canvas-confetti";
 const CreatePersonalGoal: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
-  const { profile } = useUserProfile(client);
   const { createPersonalGoal, isLoading: isContractLoading } =
     usePersonalGoals(client);
 
@@ -259,12 +256,12 @@ const CreatePersonalGoal: React.FC = () => {
 
   return (
     <>
-      <NavBar
-        colors={colors}
-        userName={profile?.username}
-        fullName={profile?.fullName}
+     <NavBar
+        variant="minimal"
         onBack={() => navigate(-1)}
-        title="Create Savings Goal"
+        title="Create Personal Goal"
+        subtitle="Set up savings for your dreams"
+        colors={colors}
       />
 
       <div
@@ -272,29 +269,6 @@ const CreatePersonalGoal: React.FC = () => {
         style={{ backgroundColor: colors.background }}
       >
         <div className="max-w-2xl mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div
-                className="p-2 rounded-xl"
-                style={{ backgroundColor: `${colors.primary}15` }}
-              >
-                <Target style={{ color: colors.primary }} size={24} />
-              </div>
-              <div>
-                <h1
-                  className="text-2xl font-bold"
-                  style={{ color: colors.text }}
-                >
-                  Create Your Personal Goal
-                </h1>
-                <p className="text-sm" style={{ color: colors.textLight }}>
-                  Set up automated savings for your dreams
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-6">
             {/* Goal Name */}
             <div
@@ -626,8 +600,7 @@ const CreatePersonalGoal: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
                   { icon: "📊", text: "Visual progress tracking" },
-                  { icon: "⭐", text: "Trust points for completion" },
-                  { icon: "💰", text: "Zero transaction fees" },
+                  { icon: "⭐", text: "On-chain credit score for completion" },
                   { icon: "🔒", text: "Secure digital wallet" },
                 ].map((benefit, idx) => (
                   <div key={idx} className="flex items-center gap-2">
