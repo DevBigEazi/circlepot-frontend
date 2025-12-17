@@ -98,6 +98,8 @@ export const getStateText = (state: number): ActiveCircle['status'] => {
             return "completed";
         case 5:
             return "withdrawn";
+        case 6:
+            return "dead";
         default:
             return "unknown";
     }

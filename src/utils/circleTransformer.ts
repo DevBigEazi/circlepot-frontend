@@ -11,7 +11,8 @@ export const transformCircleToActiveCircle = (
     voteResults: any[] = [],
     positions: any[] = [],
     contributions: any[] = [],
-    payouts: any[] = []
+    payouts: any[] = [],
+    collateralWithdrawals: any[] = []
 ): ActiveCircle => {
     // Find members for this circle
     const circleMembers = joinedCircles
@@ -81,6 +82,14 @@ export const transformCircleToActiveCircle = (
         }
     }
 
+    // Check if user has withdrawn collateral
+    const hasWithdrawn = userAddress
+        ? collateralWithdrawals.some(cw =>
+            cw.circleId === circle.circleId &&
+            cw.user?.id?.toLowerCase() === userAddress.toLowerCase()
+        )
+        : false;
+
     return {
         id: circle.id,
         name: circle.circleName,
@@ -105,6 +114,7 @@ export const transformCircleToActiveCircle = (
         payouts: circlePayouts,
         hasContributed: hasContributed,
         userTotalContributed: userTotalContributed,
+        hasWithdrawn: hasWithdrawn,
         rawCircle: {
             ...circle,
             circleId: circle.circleId,
@@ -135,7 +145,8 @@ export const transformCircles = (
     voteResults: any[] = [],
     positions: any[] = [],
     contributions: any[] = [],
-    payouts: any[] = []
+    payouts: any[] = [],
+    collateralWithdrawals: any[] = []
 ): ActiveCircle[] => {
     return circles
         .map((circle) =>
@@ -148,7 +159,8 @@ export const transformCircles = (
                 voteResults,
                 positions,
                 contributions,
-                payouts
+                payouts,
+                collateralWithdrawals
             )
         )
         .sort(
