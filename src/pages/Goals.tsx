@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import { TrendingUp, AlertCircle, AlertTriangle } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
-import { useUserProfile } from "../hooks/useUserProfile";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { ActiveGoalsList } from "../components/ActiveGoalsList";
 import { client } from "../thirdwebClient";
@@ -18,7 +17,6 @@ import confetti from "canvas-confetti";
 const Goals: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
-  const { profile } = useUserProfile(client);
   const {
     goals,
     contributions,
@@ -271,29 +269,18 @@ const Goals: React.FC = () => {
   return (
     <>
       <NavBar
-        colors={colors}
-        userName={profile?.username}
-        fullName={profile?.fullName}
+        variant="minimal"
         onBack={() => navigate(-1)}
+        title="Goals"
+        subtitle="Track and manage your savings goals with deadline-based incentives"
+        colors={colors}
       />
+
       <div
         className="min-h-screen pb-10"
         style={{ backgroundColor: colors.background }}
       >
         <div className="max-w-4xl mx-auto p-4 md:p-6">
-          {/* Header */}
-          <div className="mb-8">
-            <h1
-              className="text-3xl font-bold mb-2"
-              style={{ color: colors.text }}
-            >
-              Your Goals
-            </h1>
-            <p style={{ color: colors.textLight }}>
-              Track and manage your savings goals with deadline-based incentives
-            </p>
-          </div>
-
           {/* Summary Cards */}
           <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-4 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             <div

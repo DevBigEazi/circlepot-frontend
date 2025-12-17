@@ -70,7 +70,7 @@ const CircleRulesTab: React.FC<CircleRulesTabProps> = ({
               style={{ color: colors.textLight }}
             >
               <li>
-                • Positions are assigned based on trust score and reputation
+                • Positions are assigned based on credit score and reputation
               </li>
               <li>• Circle creator always gets position #1</li>
               <li>

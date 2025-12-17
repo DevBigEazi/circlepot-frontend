@@ -104,12 +104,6 @@ const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
             size={24}
             style={{ color: colors.secondary }}
           />
-          <div className="font-bold text-lg" style={{ color: colors.text }}>
-            100%
-          </div>
-          <div className="text-xs" style={{ color: colors.textLight }}>
-            Trust Score
-          </div>
         </div>
       </div>
 

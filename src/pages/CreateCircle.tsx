@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import {
-  Users,
   Shield,
   Crown,
   Clock,
@@ -10,7 +9,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
-import { useUserProfile } from "../hooks/useUserProfile";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { client } from "../thirdwebClient";
 import NavBar from "../components/NavBar";
@@ -26,7 +24,6 @@ import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
 const CreateCircle: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
-  const { profile } = useUserProfile(client);
   const { createCircle, isLoading } = useCircleSavings(client);
   const account = useActiveAccount();
 
@@ -197,10 +194,10 @@ const CreateCircle: React.FC = () => {
   return (
     <>
       <NavBar
-        colors={colors}
-        userName={profile?.username}
-        fullName={profile?.fullName}
+        variant="minimal"
         onBack={() => navigate(-1)}
+        title="Create Savings Circle"
+        colors={colors}
       />
 
       <div
@@ -209,14 +206,6 @@ const CreateCircle: React.FC = () => {
       >
         {/* Content */}
         <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-4">
-            <Users style={{ color: colors.primary }} size={24} />
-            <h1 className="text-xl font-bold" style={{ color: colors.text }}>
-              Create Savings Circle
-            </h1>
-          </div>
-
           <div className="space-y-6">
             {/* Balance Display */}
             <div
@@ -233,16 +222,16 @@ const CreateCircle: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <div className="font-semibold" style={{ color: colors.text }}>
-                    Your Balance: ${currentBalance.toFixed(2)} Digital Dollars
+                    Balance: ${currentBalance.toFixed(2)} cUSD
                   </div>
                   <div className="text-sm" style={{ color: colors.textLight }}>
-                    Required: ${totalRequired.toFixed(2)} Digital Dollars
+                    Required: ${totalRequired.toFixed(2)} cUSD
                     (collateral + buffer
                     {visibilityFee > 0 ? " + visibility fee" : ""})
                   </div>
                 </div>
                 <div
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  className={`w-1/4 sm:px-3 sm:py-1 px-2 py-0.5 rounded-full text-xs sm:text-sm font-semibold ${
                     hasSufficientBalance
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
@@ -259,7 +248,7 @@ const CreateCircle: React.FC = () => {
                   style={{ color: colors.textLight }}
                 >
                   You need ${(totalRequired - currentBalance).toFixed(2)} more
-                  Digital Dollars to create this circle
+                  cUSD to create this circle
                 </div>
               )}
             </div>

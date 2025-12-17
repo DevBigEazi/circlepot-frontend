@@ -1,11 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { useUserProfile } from "../hooks/useUserProfile";
 import { useActiveAccount } from "thirdweb/react";
 import { client } from "../thirdwebClient";
 import { useNavigate } from "react-router";
 import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
-import { normalizeIpfsUrl } from "../utils/ipfs";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { transformCircles } from "../utils/circleTransformer";
 import ActiveCircleCard from "../components/ActiveCircleCard";
@@ -19,14 +17,6 @@ const Circles: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
   const account = useActiveAccount();
-
-  const { profile } = useUserProfile(client);
-
-  // Normalize IPFS URL
-  const profileImageUrl = useMemo(() => {
-    if (!profile?.photo) return null;
-    return normalizeIpfsUrl(profile.photo);
-  }, [profile?.photo]);
 
   // Fetch circle data
   const {
@@ -184,32 +174,18 @@ const Circles: React.FC = () => {
   return (
     <>
       <NavBar
-        colors={colors}
-        userName={profile?.username}
-        fullName={profile?.fullName}
-        profileImage={profileImageUrl}
+        variant="minimal"
         onBack={() => navigate(-1)}
+        title="Circles"
+        subtitle="Manage your collaborative savings circles and track your contributions"
+        colors={colors}
       />
 
       <div
         className="min-h-screen pb-10"
         style={{ backgroundColor: colors.background }}
       >
-        <div className="max-w-4xl mx-auto p-4 md:p-6">
-          {/* Header */}
-          <div className="mb-8">
-            <h1
-              className="text-3xl font-bold mb-2"
-              style={{ color: colors.text }}
-            >
-              Your Service Circles
-            </h1>
-            <p style={{ color: colors.textLight }}>
-              Manage your collaborative savings circles and track your
-              contributions
-            </p>
-          </div>
-
+        <div className="max-w-4xl mx-auto px-4 md:py-6">
           {/* Summary Cards */}
           <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-5 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             <div
@@ -384,7 +360,7 @@ const Circles: React.FC = () => {
 
           {/* History Section */}
           {historyCircles.length > 0 && (
-            <div className="mt-12 mb-8">
+            <div className="mt-12 mb-10">
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle
                   style={{ color: colors.text }}
