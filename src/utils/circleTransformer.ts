@@ -11,7 +11,9 @@ export const transformCircleToActiveCircle = (
     voteResults: any[] = [],
     positions: any[] = [],
     contributions: any[] = [],
-    payouts: any[] = []
+    payouts: any[] = [],
+    collateralWithdrawals: any[] = [],
+    forfeitures: any[] = []
 ): ActiveCircle => {
     // Find members for this circle
     const circleMembers = joinedCircles
@@ -81,6 +83,30 @@ export const transformCircleToActiveCircle = (
         }
     }
 
+    // Check if user has withdrawn collateral
+    const hasWithdrawn = userAddress
+        ? collateralWithdrawals.some(cw =>
+            cw.circleId === circle.circleId &&
+            cw.user?.id?.toLowerCase() === userAddress.toLowerCase()
+        )
+        : false;
+
+    // Check if user has been forfeited
+    let isForfeited = false;
+    let forfeitedAmount = 0n;
+
+    if (userAddress) {
+        const forfeitureEvent = forfeitures.find(f =>
+            f.circleId === circle.circleId &&
+            f.forfeitedUser?.id?.toLowerCase() === userAddress.toLowerCase()
+        );
+
+        if (forfeitureEvent) {
+            isForfeited = true;
+            forfeitedAmount = forfeitureEvent.deductionAmount || 0n;
+        }
+    }
+
     return {
         id: circle.id,
         name: circle.circleName,
@@ -105,6 +131,9 @@ export const transformCircleToActiveCircle = (
         payouts: circlePayouts,
         hasContributed: hasContributed,
         userTotalContributed: userTotalContributed,
+        hasWithdrawn: hasWithdrawn,
+        isForfeited: isForfeited,
+        forfeitedAmount: forfeitedAmount,
         rawCircle: {
             ...circle,
             circleId: circle.circleId,
@@ -135,7 +164,9 @@ export const transformCircles = (
     voteResults: any[] = [],
     positions: any[] = [],
     contributions: any[] = [],
-    payouts: any[] = []
+    payouts: any[] = [],
+    collateralWithdrawals: any[] = [],
+    forfeitures: any[] = []
 ): ActiveCircle[] => {
     return circles
         .map((circle) =>
@@ -148,7 +179,9 @@ export const transformCircles = (
                 voteResults,
                 positions,
                 contributions,
-                payouts
+                payouts,
+                collateralWithdrawals,
+                forfeitures
             )
         )
         .sort(

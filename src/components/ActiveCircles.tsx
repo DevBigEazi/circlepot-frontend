@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { useActiveAccount } from "thirdweb/react";
 import { Users } from "lucide-react";
 import CircleDetailsModal from "../modals/CircleDetailsModal";
@@ -16,6 +17,7 @@ interface ActiveCirclesProps {
 }
 
 const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
+  const navigate = useNavigate();
   const account = useActiveAccount();
   const {
     circles,
@@ -178,6 +180,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
             </span>
           </div>
         </div>
+        
       </div>
 
       <div className="space-y-3 sm:space-y-4">
@@ -186,24 +189,34 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
             <p>No active circles found.</p>
           </div>
         ) : (
-          filteredCircles.map((circle) => (
-            <ActiveCircleCard
-              key={circle.id}
-              circle={circle}
-              colors={colors}
-              onViewDetails={handleViewDetails}
-              onChat={handleChatClick}
-              onStartCircle={startCircle}
-              onInitiateVoting={initiateVoting}
-              onCastVote={castVote}
-              onExecuteVote={executeVote}
-              onWithdrawCollateral={withdrawCollateral}
-              onContribute={contribute}
-              onForfeitMember={forfeitMember}
-              onInviteMembers={() => handleInviteClick(circle)}
-            />
-          ))
+          filteredCircles
+            .slice(0, 3)
+            .map((circle) => (
+              <ActiveCircleCard
+                key={circle.id}
+                circle={circle}
+                colors={colors}
+                onViewDetails={handleViewDetails}
+                onChat={handleChatClick}
+                onStartCircle={startCircle}
+                onInitiateVoting={initiateVoting}
+                onCastVote={castVote}
+                onExecuteVote={executeVote}
+                onWithdrawCollateral={withdrawCollateral}
+                onContribute={contribute}
+                onForfeitMember={forfeitMember}
+                onInviteMembers={() => handleInviteClick(circle)}
+              />
+            ))
         )}
+
+        <button
+          onClick={() => navigate("/circles")}
+          className="text-sm font-medium hover:opacity-80 transition-opacity whitespace-nowrap"
+          style={{ color: colors.primary }}
+        >
+          View All
+        </button>
       </div>
 
       {/* Modals */}

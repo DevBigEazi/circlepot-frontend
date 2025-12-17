@@ -32,8 +32,8 @@ const Browse: React.FC = () => {
   // Filter circles based on search and active filter
   const filteredCircles = useMemo(() => {
     return circles.filter((circle: Circle) => {
-      // Only show circles in CREATED state (state === 1) - these are joinable
-      const isCreatedState = circle.state === 1;
+      // Show circles in CREATED (1) or VOTING (2) state
+      const isJoinableState = circle.state === 1 || circle.state === 2;
 
       // Search filter
       const matchesSearch =
@@ -57,7 +57,7 @@ const Browse: React.FC = () => {
         (activeFilter === "weekly" && circle.frequency === 1) ||
         (activeFilter === "monthly" && circle.frequency === 2);
 
-      return isCreatedState && matchesSearch && matchesFilter;
+      return isJoinableState && matchesSearch && matchesFilter;
     });
   }, [circles, searchQuery, activeFilter]);
 
@@ -236,7 +236,9 @@ const Browse: React.FC = () => {
                   circle.maxMembers
                 );
                 const isJoining = joiningCircleId === circle.circleId;
-                const canJoin = circle.visibility === 1 && circle.state === 1; // Public and Created state
+                const canJoin =
+                  circle.visibility === 1 &&
+                  (circle.state === 1 || circle.state === 2); // Public and Created/Voting state
 
                 return (
                   <div
@@ -404,8 +406,8 @@ const Browse: React.FC = () => {
                       >
                         {circle.state === 1 && (
                           <span>
-                            Needs {minMembers - Number(circle.currentMembers)}{" "}
-                            more member(s) to start, but can still join.
+                            Needs at least {minMembers}{" "}
+                            members to start.
                           </span>
                         )}
                         {circle.state === 2 && <span>Voting in progress</span>}
