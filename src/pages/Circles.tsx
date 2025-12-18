@@ -12,6 +12,7 @@ import CircleChatModal from "../modals/CircleChatModal";
 import InviteMembersModal from "../modals/InviteMembersModal";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { Users, TrendingUp, CheckCircle, AlertOctagon } from "lucide-react";
+import { CircleCardSkeleton } from "../components/Skeleton";
 
 const Circles: React.FC = () => {
   const navigate = useNavigate();
@@ -313,11 +314,10 @@ const Circles: React.FC = () => {
             </div>
 
             {isLoading ? (
-              <div
-                className="text-center py-8"
-                style={{ color: colors.textLight }}
-              >
-                Loading circles...
+              <div className="grid grid-cols-1 gap-4 mb-5">
+                {[1, 2].map((i) => (
+                  <CircleCardSkeleton key={i} />
+                ))}
               </div>
             ) : activeCircles.length === 0 ? (
               <div
