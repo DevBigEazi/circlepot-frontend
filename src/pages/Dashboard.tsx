@@ -23,7 +23,6 @@ import { useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { CUSD_ABI } from "../abis/Cusd";
-import { formatBalance } from "../utils/helpers";
 import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
 
 const Dashboard: React.FC = () => {
@@ -41,7 +40,7 @@ const Dashboard: React.FC = () => {
     [chain]
   );
 
-  const { data: balanceData } = useReadContract({
+  const { data: balanceData, isLoading: isBalanceLoading } = useReadContract({
     contract: cusdContract,
     method: "balanceOf",
     params: [account?.address || "0x0000000000000000000000000000000000000000"],
@@ -59,9 +58,10 @@ const Dashboard: React.FC = () => {
     votes,
     voteResults,
     positions,
+    isLoading: isCirclesLoading,
   } = useCircleSavings(client);
-  const { goals } = usePersonalGoals(client);
-  const { creditScore } = useCreditScore();
+  const { goals, isLoading: isGoalsLoading } = usePersonalGoals(client);
+  const { creditScore, isLoading: isReputationLoading } = useCreditScore();
   const { unreadCount } = useNotifications();
 
   // Transform circles for notification sync
@@ -107,14 +107,6 @@ const Dashboard: React.FC = () => {
   // Modal states
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-
-  // User balance data
-  const currentBalances = useMemo(
-    () => ({
-      cUSD: balanceData ? formatBalance(balanceData) : 0,
-    }),
-    [balanceData]
-  );
 
   // Calculate total committed in circles with breakdown
   const {
@@ -225,7 +217,9 @@ const Dashboard: React.FC = () => {
             {/* Left Column - Balance and Overview */}
             <div className="lg:col-span-2 space-y-6">
               <BalanceDisplay
-                currentBalances={currentBalances}
+                currentBalances={{
+                  cUSD: balanceData ? Number(balanceData) / 1e18 : 0,
+                }}
                 circleCommitted={circleCommitted}
                 circleCollateral={circleCollateral}
                 circleContributions={circleContributions}
@@ -234,6 +228,12 @@ const Dashboard: React.FC = () => {
                 setShowWithdrawModal={setShowWithdrawModal}
                 colors={colors}
                 creditScore={creditScore}
+                isLoading={
+                  isReputationLoading ||
+                  isBalanceLoading ||
+                  isCirclesLoading ||
+                  isGoalsLoading
+                }
               />
 
               {/* Personal Goals Section */}

@@ -7,6 +7,7 @@ import { client } from "../thirdwebClient";
 import { Circle } from "../interfaces/interfaces";
 import JoinCircleModal from "../modals/JoinCircleModal";
 import { getFrequencyText } from "../utils/helpers";
+import { CircleCardSkeleton } from "../components/Skeleton";
 
 const Browse: React.FC = () => {
   const colors = useThemeColors();
@@ -75,7 +76,6 @@ const Browse: React.FC = () => {
       await joinCircle(circleId, collateralAmount);
       // Success - modal will handle the success screen
     } catch (error) {
-      console.error("Failed to join circle:", error);
       throw error;
     } finally {
       setJoiningCircleId(null);
@@ -184,17 +184,10 @@ const Browse: React.FC = () => {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="text-center py-12">
-            <div
-              className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent"
-              style={{
-                borderColor: colors.primary,
-                borderTopColor: "transparent",
-              }}
-            />
-            <p className="mt-4 text-sm" style={{ color: colors.textLight }}>
-              Loading circles...
-            </p>
+          <div className="grid gap-4 mt-8">
+            {[1, 2, 3].map((i) => (
+              <CircleCardSkeleton key={i} />
+            ))}
           </div>
         )}
 
@@ -406,8 +399,7 @@ const Browse: React.FC = () => {
                       >
                         {circle.state === 1 && (
                           <span>
-                            Needs at least {minMembers}{" "}
-                            members to start.
+                            Needs at least {minMembers} members to start.
                           </span>
                         )}
                         {circle.state === 2 && <span>Voting in progress</span>}

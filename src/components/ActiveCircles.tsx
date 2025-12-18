@@ -10,6 +10,7 @@ import { ThirdwebClient } from "thirdweb";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { transformCircles } from "../utils/circleTransformer";
 import ActiveCircleCard from "./ActiveCircleCard";
+import { CircleCardSkeleton, Skeleton } from "./Skeleton";
 
 interface ActiveCirclesProps {
   colors: any;
@@ -143,12 +144,18 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
   if (isLoading) {
     return (
       <div
-        className="rounded-2xl p-4 sm:p-6 shadow-sm border"
+        className="rounded-2xl p-4 sm:p-6 shadow-sm border space-y-4"
         style={{ backgroundColor: colors.surface, borderColor: colors.border }}
       >
-        <div className="text-center py-8" style={{ color: colors.textLight }}>
-          <p>Loading circles...</p>
+        <div className="flex justify-between items-center mb-6">
+          <div className="space-y-2">
+            <Skeleton width="12rem" height="1.5rem" />
+            <Skeleton width="8rem" height="1rem" />
+          </div>
         </div>
+        {[1, 2, 3].map((i) => (
+          <CircleCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -180,7 +187,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
             </span>
           </div>
         </div>
-        
       </div>
 
       <div className="space-y-3 sm:space-y-4">

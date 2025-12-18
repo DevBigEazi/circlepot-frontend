@@ -96,8 +96,6 @@ export const usePinata = () => {
           size: file.size,
         };
       } catch (err: any) {
-        console.error("❌ [Pinata] Upload error:", err);
-
         const pinataError: PinataError = {
           code: "PINATA_UPLOAD_ERROR",
           message: err.message || "Failed to upload to IPFS",

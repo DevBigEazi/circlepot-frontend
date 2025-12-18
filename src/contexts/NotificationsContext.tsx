@@ -131,7 +131,6 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
 
         setNotifications(migratedNotifications);
       } catch (error) {
-        console.error("Failed to load notifications:", error);
         setNotifications([]);
       }
     } else {

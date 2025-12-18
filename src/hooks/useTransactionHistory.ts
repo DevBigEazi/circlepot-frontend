@@ -221,8 +221,6 @@ export const useTransactionHistory = () => {
       if (!account?.address) return null;
 
       try {
-        console.log("🔄 [TransactionHistory] Fetching transaction history...");
-
         // Fetch all transaction events from subgraph
         const result: any = await request(
           SUBGRAPH_URL,
@@ -267,7 +265,6 @@ export const useTransactionHistory = () => {
               args: { from, to, value },
             };
           } catch (e) {
-            console.warn("Failed to parse log:", e);
             return null;
           }
         };
@@ -279,12 +276,6 @@ export const useTransactionHistory = () => {
         const personalSavingsAddr = PERSONAL_SAVINGS_ADDRESS?.toLowerCase();
         const circleSavingsAddr = CIRCLE_SAVINGS_ADDRESS?.toLowerCase();
 
-        console.log("🔍 [TransactionHistory] Filtering addresses:", {
-          personalSavings: personalSavingsAddr,
-          circleSavings: circleSavingsAddr,
-          totalTransfers: sentTransfers.length + receivedTransfers.length
-        });
-
         const rawCusdTransfers = [...sentTransfers, ...receivedTransfers].filter((event: any) => {
           const from = event.args.from;
           const to = event.args.to;
@@ -294,14 +285,8 @@ export const useTransactionHistory = () => {
             from === personalSavingsAddr || to === personalSavingsAddr ||
             from === circleSavingsAddr || to === circleSavingsAddr;
 
-          if (isInternalTransfer) {
-            console.log("🚫 [TransactionHistory] Filtered internal transfer:", { from, to });
-          }
-
           return !isInternalTransfer;
         });
-
-        console.log(`✅ [TransactionHistory] After filtering: ${rawCusdTransfers.length} transfers (removed ${sentTransfers.length + receivedTransfers.length - rawCusdTransfers.length} internal transfers)`);
 
         // Fetch timestamps for these transfers
         const blockCache = new Map<string, bigint>();
@@ -320,7 +305,6 @@ export const useTransactionHistory = () => {
                 timestamp = block.timestamp;
                 blockCache.set(blockNumber.toString(), timestamp);
               } catch (e) {
-                console.warn(`Could not fetch block ${blockNumber}`, e);
                 timestamp = BigInt(Math.floor(Date.now() / 1000));
               }
             }
@@ -331,8 +315,6 @@ export const useTransactionHistory = () => {
             };
           })
         );
-
-        console.log(`📊 [TransactionHistory] Found ${cusdTransfers.length} cUSD transfers`);
 
         // Extract unique circle IDs from contributions and payouts
         const circleIds = [
@@ -393,7 +375,7 @@ export const useTransactionHistory = () => {
               });
             });
           } catch (err) {
-            console.warn("⚠️ [TransactionHistory] Could not fetch user profiles:", err);
+            throw err;
           }
         }
 
@@ -406,7 +388,6 @@ export const useTransactionHistory = () => {
           userProfilesMap,
         };
       } catch (err) {
-        console.error("❌ [TransactionHistory] Error fetching from Subgraph:", err);
         throw err;
       }
     },

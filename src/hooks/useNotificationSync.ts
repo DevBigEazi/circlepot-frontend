@@ -23,7 +23,7 @@ export const useNotificationSync = (
                 const events = JSON.parse(stored);
                 processedEvents.current = new Set(events);
             } catch (error) {
-                console.error('Failed to load processed events:', error);
+                throw error;
             }
         }
     }, []);

@@ -97,7 +97,6 @@ export async function testIpfsUrl(url: string): Promise<boolean> {
     const response = await fetch(normalizedUrl, { method: 'HEAD' });
     return response.ok;
   } catch (error) {
-    console.error('IPFS URL test failed:', error);
     return false;
   }
 }

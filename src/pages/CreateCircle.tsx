@@ -155,7 +155,6 @@ const CreateCircle: React.FC = () => {
         navigate("/");
       }, 1500);
     } catch (err) {
-      console.error("Error creating circle:", err);
       const error = err as Error;
 
       // Show error message

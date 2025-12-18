@@ -4,6 +4,7 @@ import { Target, Plus } from "lucide-react";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { client } from "../thirdwebClient";
 import { useThemeColors } from "../hooks/useThemeColors";
+import { GoalCardSkeleton } from "./Skeleton";
 
 interface PersonalGoalsProps {
   className?: string;
@@ -82,14 +83,10 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
       </div>
 
       {isLoadingGoals ? (
-        <div className="text-center py-8">
-          <div
-            className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto"
-            style={{ borderColor: colors.primary }}
-          ></div>
-          <p className="text-sm mt-3" style={{ color: colors.textLight }}>
-            Loading goals...
-          </p>
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <GoalCardSkeleton key={i} />
+          ))}
         </div>
       ) : goalsError ? (
         <div className="text-center py-6">

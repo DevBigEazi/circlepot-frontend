@@ -58,7 +58,6 @@ export const useBrowseCircles = (enablePolling: boolean = true) => {
     queryKey: ["browseCircles"],
     async queryFn() {
       try {
-        console.log("🔄 [BrowseCircles] Fetching all circles...");
         const result: any = await request(
           SUBGRAPH_URL,
           allCirclesQuery,
@@ -95,11 +94,8 @@ export const useBrowseCircles = (enablePolling: boolean = true) => {
           user: joined.user,
         }));
 
-        console.log(`✅ [BrowseCircles] Fetched ${circles.length} circles`);
-
         return { circles, members };
       } catch (err) {
-        console.error("❌ [BrowseCircles] Error fetching circles:", err);
         throw err;
       }
     },

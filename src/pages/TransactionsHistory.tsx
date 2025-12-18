@@ -19,6 +19,7 @@ import {
   Transaction,
 } from "../hooks/useTransactionHistory";
 import NavBar from "../components/NavBar";
+import { TransactionItemSkeleton } from "../components/Skeleton";
 
 const TransactionsHistory: React.FC = () => {
   const navigate = useNavigate();
@@ -177,7 +178,6 @@ const TransactionsHistory: React.FC = () => {
             style={{ color: colors.text }}
             onClick={() => {
               // TODO: Implement filter functionality
-              console.log("Filter clicked");
             }}
           >
             <Filter size={18} />
@@ -192,11 +192,10 @@ const TransactionsHistory: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-1">
           {/* Loading State */}
           {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div
-                className="animate-spin rounded-full h-12 w-12 border-b-2"
-                style={{ borderColor: colors.primary }}
-              ></div>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <TransactionItemSkeleton key={i} />
+              ))}
             </div>
           )}
 
