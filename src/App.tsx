@@ -4,7 +4,6 @@ import ProfileCreationModal from "./modals/ProfileCreationModal";
 import { Route, Routes, Navigate } from "react-router";
 import { useActiveAccount } from "thirdweb/react";
 import { useUserProfile } from "./hooks/useUserProfile";
-import LoadingSpinner from "./components/LoadingSpinner";
 import AutoConnectWallet from "./components/AutoConnectWallet";
 import { BiometricProvider } from "./contexts/BiometricContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
@@ -76,13 +75,7 @@ function App({ client }: AppProps) {
             <AutoConnectWallet />
 
             {/* Loading state while checking profile or initializing */}
-            {account && (isLoading || hasProfile === null) && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-surface rounded-2xl p-8 shadow-2xl">
-                  <LoadingSpinner size="lg" text="Loading your profile..." />
-                </div>
-              </div>
-            )}
+            {account && (isLoading || hasProfile === null) && <SkeletonPage />}
 
             {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
             {showDashboard && !isLoading && !isInvalidDashboardId() && (
