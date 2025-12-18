@@ -1,6 +1,6 @@
-import React from "react";
-import { X } from "lucide-react";
+import { X, Users, CreditCard, Wallet, ArrowRight } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
+import { useNavigate } from "react-router";
 
 interface AddFundsModalProps {
   isOpen: boolean;
@@ -9,8 +9,24 @@ interface AddFundsModalProps {
 
 const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
   const colors = useThemeColors();
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
+
+  const handleInternalClick = () => {
+    navigate("/settings");
+    onClose();
+  };
+
+  const handleLocalClick = () => {
+    navigate("/local-methods");
+    onClose();
+  };
+
+  const handleExternalClick = () => {
+    navigate("/external-wallets");
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -32,17 +48,78 @@ const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="space-y-4">
-          <p style={{ color: colors.textLight }}>
-            Add funds functionality will be implemented here. This will allow
-            you to deposit cUSD into your account.
+          <p className="text-sm px-1" style={{ color: colors.textLight }}>
+            Choose how you'd like to top up your balance.
           </p>
 
           <button
-            onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-white transition"
-            style={{ background: colors.gradient }}
+            onClick={handleInternalClick}
+            className="w-full p-4 rounded-2xl border-2 border-transparent transition-all hover:border-primary/30 group flex items-center gap-4 text-left"
+            style={{ backgroundColor: colors.background }}
           >
-            Coming Soon
+            <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+              <Users size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold" style={{ color: colors.text }}>
+                Add Internally
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: colors.textLight }}>
+                Use ID, username or email. Find yours in{" "}
+                <span className="underline font-medium">Settings</span>
+              </p>
+            </div>
+            <ArrowRight
+              size={18}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: colors.primary }}
+            />
+          </button>
+
+          <button
+            onClick={handleLocalClick}
+            className="w-full p-4 rounded-2xl border-2 border-transparent transition-all hover:border-primary/30 group flex items-center gap-4 text-left"
+            style={{ backgroundColor: colors.background }}
+          >
+            <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+              <CreditCard size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold" style={{ color: colors.text }}>
+                Local Methods
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: colors.textLight }}>
+                Use your preferred local payment methods
+              </p>
+            </div>
+            <ArrowRight
+              size={18}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: colors.primary }}
+            />
+          </button>
+
+          <button
+            onClick={handleExternalClick}
+            className="w-full p-4 rounded-2xl border-2 border-transparent transition-all hover:border-primary/30 group flex items-center gap-4 text-left"
+            style={{ backgroundColor: colors.background }}
+          >
+            <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+              <Wallet size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold" style={{ color: colors.text }}>
+                Wallet or Exchanges
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: colors.textLight }}>
+                Direct cUSD deposits from external wallets
+              </p>
+            </div>
+            <ArrowRight
+              size={18}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: colors.primary }}
+            />
           </button>
         </div>
       </div>
