@@ -24,6 +24,8 @@ const CreatePersonalGoal = lazy(() => import("./pages/CreatePersonalGoal"));
 const Create = lazy(() => import("./pages/Create"));
 const Browse = lazy(() => import("./pages/Browse"));
 const JoinCircle = lazy(() => import("./pages/JoinCircle"));
+const LocalMethods = lazy(() => import("./pages/LocalMethods"));
+const ExternalWallets = lazy(() => import("./pages/ExternalWallets"));
 const Error404 = lazy(() => import("./pages/404"));
 const Layout = lazy(() => import("./layouts/Layout"));
 
@@ -112,6 +114,11 @@ function App({ client }: AppProps) {
                     />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/local-methods" element={<LocalMethods />} />
+                    <Route
+                      path="/external-wallets"
+                      element={<ExternalWallets />}
+                    />
                   </Route>
 
                   {/* Not Found - outside Layout so no bottom nav */}

@@ -4,149 +4,187 @@ interface CurrencyData {
     symbol: string;
     name: string;
     rate: number;
+    flag?: string;
 }
 
 interface CurrencyRates {
     [key: string]: CurrencyData;
 }
 
-const CURRENCIES: CurrencyRates = {
-    USD: { symbol: '$', name: 'US Dollar', rate: 1 },
-    NGN: { symbol: '₦', name: 'Nigerian Naira', rate: 1400 },
-    EUR: { symbol: '€', name: 'Euro', rate: 0.8 },
-    GBP: { symbol: '£', name: 'British Pound', rate: 0.7 },
-    KES: { symbol: 'KSh', name: 'Kenyan Shilling', rate: 125 },
-    GHS: { symbol: '₵', name: 'Ghanaian Cedi', rate: 13 },
+const INITIAL_CURRENCIES: CurrencyRates = {
+    USD: { symbol: '$', name: 'US Dollar', rate: 1, flag: 'https://flagcdn.com/w80/us.png' },
+    NGN: { symbol: '₦', name: 'Nigerian Naira', rate: 1400, flag: 'https://flagcdn.com/w80/ng.png' },
+    EUR: { symbol: '€', name: 'Euro', rate: 0.8, flag: 'https://flagcdn.com/w80/eu.png' },
+    GBP: { symbol: '£', name: 'British Pound', rate: 0.7, flag: 'https://flagcdn.com/w80/gb.png' },
+    KES: { symbol: 'KSh', name: 'Kenyan Shilling', rate: 125, flag: 'https://flagcdn.com/w80/ke.png' },
+    GHS: { symbol: '₵', name: 'Ghanaian Cedi', rate: 13, flag: 'https://flagcdn.com/w80/gh.png' },
+    JPY: { symbol: '¥', name: 'Japanese Yen', rate: 150, flag: 'https://flagcdn.com/w80/jp.png' },
+    CAD: { symbol: 'C$', name: 'Canadian Dollar', rate: 1.35, flag: 'https://flagcdn.com/w80/ca.png' },
+    AUD: { symbol: 'A$', name: 'Australian Dollar', rate: 1.5, flag: 'https://flagcdn.com/w80/au.png' },
+    CHF: { symbol: 'CHF', name: 'Swiss Franc', rate: 0.9, flag: 'https://flagcdn.com/w80/ch.png' },
+    CNY: { symbol: '¥', name: 'Chinese Yuan', rate: 7.2, flag: 'https://flagcdn.com/w80/cn.png' },
+    INR: { symbol: '₹', name: 'Indian Rupee', rate: 83, flag: 'https://flagcdn.com/w80/in.png' },
 };
 
 
 
 export const useCurrencyConverter = () => {
+    const [availableCurrencies, setAvailableCurrencies] = useState<CurrencyRates>(INITIAL_CURRENCIES);
     const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    // Load from cache on mount
+    // Initial load from cache
     useEffect(() => {
-        const cachedData = localStorage.getItem('currency_rates_cache');
-        if (cachedData) {
+        const cachedRates = localStorage.getItem('currency_rates_cache');
+        const cachedMeta = localStorage.getItem('currency_metadata_cache');
+
+        if (cachedMeta) {
             try {
-                const { rates, timestamp } = JSON.parse(cachedData);
+                setAvailableCurrencies(JSON.parse(cachedMeta));
+            } catch (e) {
+                console.error('Failed to parse cached currency metadata', e);
+            }
+        }
+
+        if (cachedRates) {
+            try {
+                const { rates, timestamp } = JSON.parse(cachedRates);
                 setExchangeRates(rates);
                 setLastUpdated(new Date(timestamp));
             } catch (e) {
-                throw e; 
+                console.error('Failed to parse cached rates', e);
             }
         } else {
-            // Set initial default rates if no cache
             const defaultRates: Record<string, number> = {};
-            Object.keys(CURRENCIES).forEach(key => {
-                defaultRates[key] = CURRENCIES[key].rate;
+            Object.keys(INITIAL_CURRENCIES).forEach(key => {
+                defaultRates[key] = INITIAL_CURRENCIES[key].rate;
             });
             setExchangeRates(defaultRates);
         }
     }, []);
 
-    // Fetch cUSD price in all supported currencies
-    const fetchRates = useCallback(async () => {
-        // Check cache validity (15 days = ~2 times per month)
-        const CACHE_DURATION = 15 * 24 * 60 * 60 * 1000; // 15 days in ms
-
-        const cachedData = localStorage.getItem('currency_rates_cache');
-        if (cachedData) {
-            try {
-                const { timestamp } = JSON.parse(cachedData);
-                const now = new Date().getTime();
-                const cacheTime = new Date(timestamp).getTime();
-
-                // If cache is less than 15 days old, don't fetch
-                if (now - cacheTime < CACHE_DURATION) {
-                    return;
-                }
-            } catch (e) {
-                // Ignore cache error, proceed to fetch
-            }
-        }
-
+    const fetchAllCurrencyData = useCallback(async () => {
         try {
             setIsLoading(true);
-            setError(null);
 
-            // Use CoinGecko API which supports CORS and doesn't require an API key for basic usage
-            // cUSD ID on CoinGecko is 'celo-dollar'
-            const convertTo = Object.keys(CURRENCIES).map(c => c.toLowerCase()).join(',');
+            // 1. Fetch available currencies and flags from RestCountries
+            const countriesRes = await fetch('https://restcountries.com/v3.1/all?fields=currencies,flags');
+            if (!countriesRes.ok) throw new Error('Failed to fetch countries');
+            const countriesData = await countriesRes.json();
 
-            const response = await fetch(
-                `https://api.coingecko.com/api/v3/simple/price?ids=celo-dollar&vs_currencies=${convertTo}`,
-                {
-                    headers: {
-                        'Accept': 'application/json',
-                    },
+            // 2. Fetch supported vs_currencies from CoinGecko
+            const supportedRes = await fetch('https://api.coingecko.com/api/v3/simple/supported_vs_currencies');
+            if (!supportedRes.ok) throw new Error('Failed to fetch supported currencies');
+            const supportedCodes: string[] = await supportedRes.json();
+            const supportedSet = new Set(supportedCodes.map(c => c.toUpperCase()));
+
+            const newCurrencyMap: CurrencyRates = { ...INITIAL_CURRENCIES };
+
+            countriesData.forEach((country: any) => {
+                if (country.currencies) {
+                    Object.entries(country.currencies).forEach(([code, data]: [string, any]) => {
+                        const upperCode = code.toUpperCase();
+                        // Only add if supported by CoinGecko and not already in map
+                        if (supportedSet.has(upperCode) && !newCurrencyMap[upperCode]) {
+                            newCurrencyMap[upperCode] = {
+                                symbol: data.symbol || upperCode,
+                                name: data.name,
+                                flag: country.flags?.png,
+                                rate: 1
+                            };
+                        }
+                    });
                 }
+            });
+
+            setAvailableCurrencies(newCurrencyMap);
+            localStorage.setItem('currency_metadata_cache', JSON.stringify(newCurrencyMap));
+
+            // 3. Fetch rates for all these currencies
+            const convertTo = Object.keys(newCurrencyMap).map(c => c.toLowerCase()).join(',');
+            const ratesRes = await fetch(
+                `https://api.coingecko.com/api/v3/simple/price?ids=celo-dollar&vs_currencies=${convertTo}`
             );
 
-            if (response.status === 429) {
-                // Don't update state, keep using what we have
+            if (ratesRes.status === 429) {
+                setIsLoading(false);
                 return;
             }
 
-            if (!response.ok) {
-                throw new Error(`API request failed: ${response.status}`);
-            }
+            if (!ratesRes.ok) throw new Error(`Rates API failed: ${ratesRes.status}`);
 
-            const data = await response.json();
+            const ratesData = await ratesRes.json();
 
-            if (data['celo-dollar']) {
-                const quotes = data['celo-dollar'];
+            if (ratesData['celo-dollar']) {
+                const quotes = ratesData['celo-dollar'];
 
                 setExchangeRates(prevRates => {
                     const newRates: Record<string, number> = {};
 
-                    Object.keys(CURRENCIES).forEach(currency => {
+                    Object.keys(newCurrencyMap).forEach(currency => {
                         const currencyKey = currency.toLowerCase();
                         if (quotes[currencyKey]) {
                             newRates[currency] = quotes[currencyKey];
+                        } else if (prevRates[currency]) {
+                            newRates[currency] = prevRates[currency];
                         } else {
-                            // Fallback to existing rate if specific currency fails
-                            newRates[currency] = prevRates[currency] || CURRENCIES[currency].rate;
+                            newRates[currency] = INITIAL_CURRENCIES[currency]?.rate || 1;
                         }
                     });
 
                     // Save to cache with new rates
-                    const now = new Date();
                     localStorage.setItem('currency_rates_cache', JSON.stringify({
                         rates: newRates,
-                        timestamp: now.toISOString()
+                        timestamp: new Date().toISOString()
                     }));
-                    setLastUpdated(now);
 
                     return newRates;
                 });
+
+                // CRITICAL: Update metadata cache with the newly fetched/merged data containing flags
+                setAvailableCurrencies(newCurrencyMap);
+                localStorage.setItem('currency_metadata_cache', JSON.stringify(newCurrencyMap));
+
+                setLastUpdated(new Date());
             }
         } catch (err) {
-            throw err;
-                setError('Failed to fetch latest rates. Using cached/default rates.');
-            // Keep existing rates on error
+            console.error('Error fetching currency data:', err);
+            setError('Failed to update rates. Using cached data.');
         } finally {
             setIsLoading(false);
         }
-    }, []); // No dependencies needed now
+    }, [exchangeRates]); // Re-add exchangeRates to ensure we have its latest value for merging
 
-    // Fetch rates on mount and check every 24 hours
     useEffect(() => {
-        fetchRates();
-        const interval = setInterval(fetchRates, 24 * 60 * 60 * 1000); // Check daily
-        return () => clearInterval(interval);
-    }, [fetchRates]);
+        const cachedRates = localStorage.getItem('currency_rates_cache');
+        const cachedMeta = localStorage.getItem('currency_metadata_cache');
+        const CACHE_DURATION = 15 * 24 * 60 * 60 * 1000;
 
-    // Convert cUSD amount to selected currency
+        let shouldFetch = true;
+        if (cachedRates && cachedMeta) {
+            try {
+                const { timestamp } = JSON.parse(cachedRates);
+                if (new Date().getTime() - new Date(timestamp).getTime() < CACHE_DURATION) {
+                    shouldFetch = false;
+                }
+            } catch (e) { }
+        }
+
+        if (shouldFetch) {
+            fetchAllCurrencyData();
+        }
+
+        const interval = setInterval(fetchAllCurrencyData, 24 * 60 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [fetchAllCurrencyData]);
+
     const convertToLocal = useCallback(
         (cusdAmount: number, targetCurrency: string): string => {
             const rate = exchangeRates[targetCurrency] || exchangeRates.USD || 1;
             const localValue = cusdAmount * rate;
 
-            // Format with appropriate decimal places
             if (localValue >= 1000) {
                 return localValue.toLocaleString(undefined, {
                     minimumFractionDigits: 0,
@@ -162,14 +200,21 @@ export const useCurrencyConverter = () => {
         [exchangeRates]
     );
 
-    // Get currency info with current rate
     const getCurrencyInfo = useCallback((currencyCode: string): CurrencyData => {
-        const baseInfo = CURRENCIES[currencyCode] || CURRENCIES.USD;
+        const baseInfo = availableCurrencies[currencyCode] || INITIAL_CURRENCIES[currencyCode] || INITIAL_CURRENCIES.USD;
         return {
             ...baseInfo,
             rate: exchangeRates[currencyCode] || baseInfo.rate
         };
-    }, [exchangeRates]);
+    }, [exchangeRates, availableCurrencies]);
+
+    // Force refresh if metadata exists but is missing flags (for users who cached early)
+    useEffect(() => {
+        const needsFlagRefresh = Object.values(availableCurrencies).some(c => !c.flag && c.name !== 'US Dollar');
+        if (needsFlagRefresh && !isLoading) {
+            fetchAllCurrencyData();
+        }
+    }, [availableCurrencies, isLoading, fetchAllCurrencyData]);
 
     return {
         exchangeRates,
@@ -178,7 +223,7 @@ export const useCurrencyConverter = () => {
         lastUpdated,
         convertToLocal,
         getCurrencyInfo,
-        refreshPrice: fetchRates,
-        availableCurrencies: CURRENCIES,
+        refreshPrice: fetchAllCurrencyData,
+        availableCurrencies,
     };
 };
