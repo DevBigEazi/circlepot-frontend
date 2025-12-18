@@ -68,28 +68,18 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
       if (value.includes("@")) {
         // Email
         searchType = "email";
-        console.log("🔍 Searching by email:", value.toLowerCase());
         profile = await getProfileByEmail(value.toLowerCase());
       } else if (/^\d+$/.test(value)) {
         // AccountId (numeric)
         searchType = "accountId";
-        console.log("🔍 Searching by accountId:", value);
         profile = await getProfileByAccountId(value);
       } else {
         // Username
         searchType = "username";
-        console.log("🔍 Searching by username:", value);
         profile = await getProfileByUsername(value);
       }
 
-      console.log(`📊 Profile result for ${searchType}:`, profile);
-
       if (profile && profile.id) {
-        console.log("✅ Valid profile found:", {
-          id: profile.id,
-          username: profile.username,
-          fullName: profile.fullName,
-        });
         updateInvitee(id, {
           status: "valid",
           address: profile.id,
@@ -97,7 +87,6 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
           error: undefined,
         });
       } else {
-        console.log("❌ No profile found or missing id field");
         const errorMessage =
           searchType === "email"
             ? "No user found with this email"
@@ -114,7 +103,6 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
         });
       }
     } catch (err) {
-      console.error("❌ Error validating invitee:", err);
       updateInvitee(id, {
         status: "invalid",
         address: undefined,
@@ -225,7 +213,6 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
         setInvitees([{ id: "1", value: "", status: "idle" }]);
       }, 2000);
     } catch (err: any) {
-      console.error("Error inviting members:", err);
       const errorMessage = err.message || "Failed to invite members";
 
       toast.custom(

@@ -49,7 +49,6 @@ const JoinCircle: React.FC = () => {
           setCircle(circleData);
         }
       } catch (err) {
-        console.error("Error fetching circle:", err);
         setError("Failed to load circle details");
       } finally {
         setIsLoading(false);
@@ -125,7 +124,6 @@ const JoinCircle: React.FC = () => {
         navigate("/");
       }, 2000);
     } catch (err: any) {
-      console.error("Error joining circle:", err);
       toast.custom(
         () => (
           <div

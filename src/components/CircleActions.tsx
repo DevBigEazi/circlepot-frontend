@@ -112,7 +112,6 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         }
       );
     } catch (error: any) {
-      console.error("Action failed:", error);
       toast.custom(
         () => (
           <div
@@ -147,7 +146,6 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Failed to copy invite link:", error);
     }
   };
 

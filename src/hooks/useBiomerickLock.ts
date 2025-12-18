@@ -13,7 +13,6 @@ export const useBiometricLock = (userId: string | null) => {
           const state = JSON.parse(biometricState);
           setIsBiometricEnabled(state.isEnabled || false);
         } catch (err) {
-          console.error('Failed to load biometric state:', err);
         }
       }
     }

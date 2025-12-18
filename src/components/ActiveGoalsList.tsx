@@ -156,7 +156,6 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
         await onWithdraw(withdrawalModal.goalId);
         closeWithdrawalModal();
       } catch (err) {
-        console.error("Withdrawal failed:", err);
       } finally {
         setIsWithdrawing(false);
       }
@@ -170,7 +169,6 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
         await onWithdraw(withdrawalModal.goalId);
         closeWithdrawalModal();
       } catch (err) {
-        console.error("Withdrawal failed:", err);
       } finally {
         setIsWithdrawing(false);
       }

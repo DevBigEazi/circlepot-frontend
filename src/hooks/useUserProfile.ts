@@ -93,7 +93,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
         );
         return result.user;
       } catch (err) {
-        console.error("❌ [UserProfile] Error fetching from Subgraph:", err);
         throw err;
       }
     },
@@ -140,9 +139,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
       photo: string = ""
     ) => {
       if (!account?.address) {
-        const error = "No wallet connected";
-        console.error("❌ [UserProfile] Create profile failed:", error);
-        throw new Error(error);
+        throw new Error("No wallet connected");
       }
 
       try {
@@ -179,11 +176,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [UserProfile] Transaction failed:", {
-                error: error.message,
-                code: (error as any)?.code,
-                details: error,
-              });
               setError(error.message);
               reject(error);
             },
@@ -191,10 +183,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [UserProfile] Error creating profile:", {
-          message: error.message,
-          details: error,
-        });
         setError(error.message || "Failed to create profile");
         throw err;
       }
@@ -206,9 +194,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
   const updatePhoto = useCallback(
     async (photo: string) => {
       if (!account?.address) {
-        const error = "No wallet connected";
-        console.error("❌ [UserProfile] Update photo failed:", error);
-        throw new Error(error);
+        throw new Error("No wallet connected");
       }
 
       try {
@@ -234,7 +220,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [UserProfile] Transaction failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -242,10 +227,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [UserProfile] Error updating photo:", {
-          message: error.message,
-          details: error,
-        });
         setError(error.message || "Failed to update photo");
         throw err;
       }
@@ -274,7 +255,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
       // If no users found with this username, it's available
       return result.users.length === 0;
     } catch (err) {
-      console.error('❌ [UserProfile] Error checking username:', err);
       // If query fails, assume unavailable (safer)
       return false;
     }
@@ -305,7 +285,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
-      console.log("🔍 [UserProfile] Querying by address:", address);
       const result = await request(
         SUBGRAPH_URL,
         query,
@@ -313,10 +292,8 @@ export const useUserProfile = (client: ThirdwebClient) => {
         SUBGRAPH_HEADERS
       );
 
-      console.log("📊 [UserProfile] Address query result:", result);
       return result.user || null;
     } catch (err) {
-      console.error("❌ [UserProfile] Error getting profile by address:", err);
       throw err;
     }
   }, []);
@@ -345,7 +322,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
-      console.log("🔍 [UserProfile] Querying by accountId:", accountId);
       const result = await request(
         SUBGRAPH_URL,
         query,
@@ -353,11 +329,9 @@ export const useUserProfile = (client: ThirdwebClient) => {
         SUBGRAPH_HEADERS
       );
 
-      console.log("📊 [UserProfile] AccountId query result:", result);
       // Return first user if found
       return result.users && result.users.length > 0 ? result.users[0] : null;
     } catch (err) {
-      console.error("❌ [UserProfile] Error getting profile by accountId:", err);
       throw err;
     }
   }, []);
@@ -386,7 +360,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
-      console.log("🔍 [UserProfile] Querying by email:", email);
       const result = await request(
         SUBGRAPH_URL,
         query,
@@ -394,11 +367,9 @@ export const useUserProfile = (client: ThirdwebClient) => {
         SUBGRAPH_HEADERS
       );
 
-      console.log("📊 [UserProfile] Email query result:", result);
       // Return first user if found
       return result.users && result.users.length > 0 ? result.users[0] : null;
     } catch (err) {
-      console.error("❌ [UserProfile] Error getting profile by email:", err);
       throw err;
     }
   }, []);
@@ -444,15 +415,12 @@ export const useUserProfile = (client: ThirdwebClient) => {
         }
       `;
 
-      console.log("🔍 [UserProfile] Querying by username:", username);
       const result = await request(
         SUBGRAPH_URL,
         query,
         { username: username, usernameNoCase: username },
         SUBGRAPH_HEADERS
       );
-
-      console.log("📊 [UserProfile] Username query result:", result);
 
       // Return exact match first, then case-insensitive match
       if (result.exactMatch && result.exactMatch.length > 0) {
@@ -463,7 +431,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
       }
       return null;
     } catch (err) {
-      console.error("❌ [UserProfile] Error getting profile by username:", err);
       throw err;
     }
   }, []);
@@ -503,7 +470,6 @@ export const useProfile = (address?: string) => {
         );
         return result.user;
       } catch (err) {
-        console.error("❌ [useProfile] Error fetching profile:", err);
         throw err;
       }
     },

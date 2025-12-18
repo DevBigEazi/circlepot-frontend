@@ -107,7 +107,7 @@ const Settings: React.FC = () => {
             biometrics: state.isEnabled || false,
           }));
         } catch (err) {
-          console.error("Failed to load biometric state:", err);
+          throw err;
         }
       }
     }
@@ -187,7 +187,6 @@ const Settings: React.FC = () => {
           await updatePhoto(profilePhotoUrl);
         } catch (uploadErr) {
           const err = uploadErr as Error;
-          console.error("Photo upload failed:", err);
           setError(`Failed to upload photo: ${err.message}`);
           return;
         }
@@ -198,7 +197,6 @@ const Settings: React.FC = () => {
         profileImage: profilePhotoUrl,
         lastProfileUpdate: new Date().toISOString(),
       }));
-      console.log("New Photo", profilePhotoUrl);
       setSuccess("Profile photo updated successfully!");
       setEditingProfile(false);
       setSelectedFile(null);
@@ -206,7 +204,6 @@ const Settings: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       const error = err as Error;
-      console.error("Failed to save profile:", error);
       setError(error.message || "Failed to save profile");
     }
   }, [
@@ -247,7 +244,6 @@ const Settings: React.FC = () => {
         disconnect(wallet);
       }
     } catch (error: any) {
-      console.error("Disconnect failed:", error);
       setDisconnectError("Failed to disconnect wallet. Please try again.");
     } finally {
       setIsDisconnecting(false);

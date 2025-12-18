@@ -46,7 +46,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       root.classList.remove('light', 'dark');
       root.classList.add(theme);
       setAppliedTheme(theme);
-      console.log('Theme applied:', theme, '- HTML classes:', root.classList.toString());
     };
 
     const getSystemTheme = (): AppliedTheme => {

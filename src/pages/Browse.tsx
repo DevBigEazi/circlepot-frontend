@@ -76,7 +76,6 @@ const Browse: React.FC = () => {
       await joinCircle(circleId, collateralAmount);
       // Success - modal will handle the success screen
     } catch (error) {
-      console.error("Failed to join circle:", error);
       throw error;
     } finally {
       setJoiningCircleId(null);

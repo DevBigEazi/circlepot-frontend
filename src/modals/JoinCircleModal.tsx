@@ -101,8 +101,6 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
       setShowJoinCircle(false);
       navigate("/");
     } catch (error: any) {
-      console.error("Failed to join circle:", error);
-
       // Show error toast
       toast.custom(
         () => (

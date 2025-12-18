@@ -128,7 +128,6 @@ const Goals: React.FC = () => {
         }
       );
     } catch (err: any) {
-      console.error("Contribution failed:", err);
       toast.custom(
         () => (
           <div
@@ -187,7 +186,6 @@ const Goals: React.FC = () => {
 
       if (isGoalComplete) {
         // Complete withdrawal - no penalty, withdraw full amount
-        console.log("Attempting complete goal withdrawal...");
         await completeGoal(goalId);
         toast.custom(
           () => (

@@ -45,7 +45,6 @@ export const useAuth = () => {
   }, []);
 
   const setError = useCallback((error: AuthError) => {
-    console.log("Setting error:", error);
     setAuthState((prev) => ({ ...prev, error, isLoading: false }));
   }, []);
 
@@ -104,13 +103,11 @@ export const useGoogleAuth = () => {
             connectionSuccessful = true;
             return wallet;
           } catch (connectError: any) {
-            console.error("Wallet connect error:", connectError);
             connectionSuccessful = false;
             throw connectError;
           }
         });
       } catch (connectError: any) {
-        console.error("Connect wrapper error:", connectError);
         throw connectError;
       }
 
@@ -231,12 +228,10 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
           email: email,
         });
 
-        console.log("Email code sent successfully");
         setEmailSent(true);
         setLoading(false);
         return true;
       } catch (error: any) {
-        console.error("Failed to send email code:", error);
 
         let errorMessage = "Failed to send verification code";
         let errorCode = "EMAIL_SEND_ERROR";
@@ -266,7 +261,6 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
           details: error,
         };
 
-        console.log("Setting auth error:", authError);
         setError(authError);
         setLoading(false);
         return false;
@@ -282,9 +276,8 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
         clearError();
 
         if (!verificationCode || verificationCode.length !== 6) {
-          console.log("Invalid code length:", verificationCode.length);
           const authError: AuthError = {
-            code: "INVALID_CODE",
+            code: "INVALID_CODE", 
             message:
               "The verification code you entered is incorrect or has expired. Please try again.",
           };
@@ -320,7 +313,6 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
           throw new Error("Email authentication was not successful");
         }
 
-        console.log("Email login successful");
         handleAuthSuccess();
         setLoading(false);
         return true;

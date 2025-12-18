@@ -73,7 +73,6 @@ export const BiometricProvider: React.FC<BiometricProviderProps> = ({
 
   const handleCancel = () => {
     // Optional: Handle cancel action (e.g., logout user)
-    console.log('Biometric authentication cancelled');
   };
 
   return (

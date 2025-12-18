@@ -86,7 +86,6 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
       setLocalVisibility(newVisibility as 0 | 1);
       setIsUpdatingVisibility(false);
     } catch (error) {
-      console.error("Failed to update visibility:", error);
       const err = error as Error;
       toast.custom(
         () => (

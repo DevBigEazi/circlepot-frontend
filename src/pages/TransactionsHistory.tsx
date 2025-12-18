@@ -178,7 +178,6 @@ const TransactionsHistory: React.FC = () => {
             style={{ color: colors.text }}
             onClick={() => {
               // TODO: Implement filter functionality
-              console.log("Filter clicked");
             }}
           >
             <Filter size={18} />

@@ -265,7 +265,6 @@ export const useCreditScore = () => {
             if (!account?.address) return null;
 
             try {
-                console.log("🔄 [CreditScore] Fetching reputation data...");
                 const result: any = await request(
                     SUBGRAPH_URL,
                     reputationQuery,
@@ -275,7 +274,6 @@ export const useCreditScore = () => {
 
                 return result;
             } catch (err) {
-                console.error("❌ [CreditScore] Error fetching from Subgraph:", err);
                 throw err;
             }
         },

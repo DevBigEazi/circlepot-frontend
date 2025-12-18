@@ -456,7 +456,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       if (!account?.address) return null;
 
       try {
-        console.log("🔄 [CircleSavings] Fetching user circles...");
         // 1. Fetch user's created circles and join events
         const userResult: any = await request(
           SUBGRAPH_URL,
@@ -467,7 +466,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
 
         // 2. Extract unique circle IDs from join events
         const joinedCircleIds = [...new Set(userResult.circleJoineds.map((j: any) => j.circleId))];
-        console.log(`📊 [CircleSavings] Found ${joinedCircleIds.length} joined circles`);
 
         // 3. Fetch details for joined circles
         let joinedCirclesDetails = [];
@@ -496,7 +494,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
           joinedCirclesVoteResults,
         };
       } catch (err) {
-        console.error("❌ [CircleSavings] Error fetching from Subgraph:", err);
         throw err;
       }
     },
@@ -722,20 +719,11 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
     async (params: CreateCircleParams) => {
       if (!account?.address) {
         const error = "No wallet connected";
-        console.error("❌ [CircleSavings] Create circle failed:", error);
         throw new Error(error);
       }
 
       try {
         setError(null);
-
-        console.log('📥 [CircleSavings] Creating circle with params:', {
-          title: params.title,
-          contributionAmount: params.contributionAmount.toString(),
-          maxMembers: params.maxMembers.toString(),
-          frequency: params.frequency,
-          visibility: params.visibility
-        });
 
         const totalCommitment = params.contributionAmount * params.maxMembers;
         const lateBuffer = (totalCommitment * 100n) / 10000n;
@@ -743,7 +731,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         const visibilityFee = params.visibility === 1 ? BigInt("500000000000000000") : 0n;
         const totalRequired = collateral + visibilityFee;
 
-        console.log("📝 [CircleSavings] Approving cUSD tokens...");
         const approveTx = prepareContractCall({
           contract: getContract({
             client,
@@ -758,8 +745,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
-              console.log("✅ [CircleSavings] Approval successful, now creating circle...");
-
               setTimeout(() => {
                 const createTransaction = prepareContractCall({
                   contract,
@@ -769,12 +754,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
 
                 sendTransaction(createTransaction, {
                   onSuccess: (receipt) => {
-                    console.log("✅ [CircleSavings] Circle created:", receipt);
                     setTimeout(() => refetchCircles(), 3000);
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    console.error("❌ [CircleSavings] Circle creation failed:", error);
                     const errorMsg = error?.message || error?.toString() || "Transaction failed";
                     setError(errorMsg);
                     reject(new Error(errorMsg));
@@ -783,7 +766,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              console.error("❌ [CircleSavings] Approval failed:", error);
               const errorMsg = error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
@@ -792,7 +774,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error creating circle:", error);
         setError(error.message || "Failed to create circle");
         throw err;
       }
@@ -810,7 +791,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Approving cUSD for joining circle...");
         const approveTx = prepareContractCall({
           contract: getContract({
             client,
@@ -825,8 +805,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
-              console.log("✅ [CircleSavings] Approval successful, now joining...");
-
               setTimeout(() => {
                 const joinTransaction = prepareContractCall({
                   contract,
@@ -836,17 +814,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
 
                 sendTransaction(joinTransaction, {
                   onSuccess: (receipt) => {
-                    console.log("✅ [CircleSavings] Joined circle successfully:", receipt);
-
-                    // Trigger multiple refetches to catch the subgraph update
-                    setTimeout(() => { console.log("🔄 Refetching (1/3)..."); refetchCircles(); }, 2000);
-                    setTimeout(() => { console.log("🔄 Refetching (2/3)..."); refetchCircles(); }, 5000);
-                    setTimeout(() => { console.log("🔄 Refetching (3/3)..."); refetchCircles(); }, 10000);
-
+                    setTimeout(() => { refetchCircles(); }, 2000);
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    console.error("❌ [CircleSavings] Join failed:", error);
                     const errorMsg = error?.message || error?.toString() || "Join failed";
                     setError(errorMsg);
                     reject(new Error(errorMsg));
@@ -855,7 +826,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              console.error("❌ [CircleSavings] Approval failed:", error);
               const errorMsg = error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
@@ -864,7 +834,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error joining circle:", error);
         setError(error.message || "Failed to join circle");
         throw err;
       }
@@ -882,7 +851,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Approving cUSD for contribution...");
         const approveTx = prepareContractCall({
           contract: getContract({
             client,
@@ -897,8 +865,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
-              console.log("✅ [CircleSavings] Approval successful, now contributing...");
-
               setTimeout(() => {
                 const contributeTransaction = prepareContractCall({
                   contract,
@@ -908,12 +874,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
 
                 sendTransaction(contributeTransaction, {
                   onSuccess: (receipt) => {
-                    console.log("✅ [CircleSavings] Contribution successful:", receipt);
                     setTimeout(() => refetchCircles(), 3000);
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    console.error("❌ [CircleSavings] Contribution failed:", error);
                     const errorMsg = error?.message || error?.toString() || "Contribution failed";
                     setError(errorMsg);
                     reject(new Error(errorMsg));
@@ -922,7 +886,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              console.error("❌ [CircleSavings] Approval failed:", error);
               const errorMsg = error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
@@ -931,7 +894,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error contributing:", error);
         setError(error.message || "Failed to contribute");
         throw err;
       }
@@ -949,7 +911,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Approving cUSD for visibility update fee...");
         const approveTx = prepareContractCall({
           contract: getContract({
             client,
@@ -964,8 +925,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(approveTx, {
             onSuccess: () => {
-              console.log("✅ [CircleSavings] Approval successful, now updating visibility...");
-
               setTimeout(() => {
                 const updateTransaction = prepareContractCall({
                   contract,
@@ -975,12 +934,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
 
                 sendTransaction(updateTransaction, {
                   onSuccess: (receipt) => {
-                    console.log("✅ [CircleSavings] Visibility updated:", receipt);
                     setTimeout(() => refetchCircles(), 3000);
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    console.error("❌ [CircleSavings] Update failed:", error);
                     setError(error.message);
                     reject(error);
                   },
@@ -988,7 +945,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              console.error("❌ [CircleSavings] Approval failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -996,7 +952,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error updating visibility:", error);
         setError(error.message || "Failed to update visibility");
         throw err;
       }
@@ -1014,7 +969,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Inviting members...");
         const inviteTransaction = prepareContractCall({
           contract,
           method: "inviteMembers",
@@ -1024,12 +978,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(inviteTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Members invited:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Invite failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1037,7 +989,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error inviting members:", error);
         setError(error.message || "Failed to invite members");
         throw err;
       }
@@ -1055,7 +1006,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Starting circle...");
         const startTransaction = prepareContractCall({
           contract,
           method: "startCircle",
@@ -1065,12 +1015,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(startTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Circle started:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Start failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1078,7 +1026,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error starting circle:", error);
         setError(error.message || "Failed to start circle");
         throw err;
       }
@@ -1096,7 +1043,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Initiating voting...");
         const voteTransaction = prepareContractCall({
           contract,
           method: "initiateVoting",
@@ -1106,12 +1052,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(voteTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Voting initiated:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Voting initiation failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1119,7 +1063,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error initiating voting:", error);
         setError(error.message || "Failed to initiate voting");
         throw err;
       }
@@ -1137,7 +1080,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Casting vote...");
         const voteTransaction = prepareContractCall({
           contract,
           method: "castVote",
@@ -1147,12 +1089,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(voteTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Vote cast:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Vote failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1160,7 +1100,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error casting vote:", error);
         setError(error.message || "Failed to cast vote");
         throw err;
       }
@@ -1178,7 +1117,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Executing vote...");
         const executeTransaction = prepareContractCall({
           contract,
           method: "executeVote",
@@ -1188,12 +1126,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(executeTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Vote executed:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Vote execution failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1201,7 +1137,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error executing vote:", error);
         setError(error.message || "Failed to execute vote");
         throw err;
       }
@@ -1219,7 +1154,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Withdrawing collateral...");
         const withdrawTransaction = prepareContractCall({
           contract,
           method: "WithdrawCollateral",
@@ -1229,12 +1163,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(withdrawTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Collateral withdrawn:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Withdrawal failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1242,7 +1174,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error withdrawing collateral:", error);
         setError(error.message || "Failed to withdraw collateral");
         throw err;
       }
@@ -1260,7 +1191,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       try {
         setError(null);
 
-        console.log("📝 [CircleSavings] Forfeiting late members...");
         const forfeitTransaction = prepareContractCall({
           contract,
           method: "forfeitMember",
@@ -1270,12 +1200,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         return new Promise((resolve, reject) => {
           sendTransaction(forfeitTransaction, {
             onSuccess: (receipt) => {
-              console.log("✅ [CircleSavings] Members forfeited:", receipt);
               setTimeout(() => refetchCircles(), 3000);
               resolve(receipt);
             },
             onError: (error) => {
-              console.error("❌ [CircleSavings] Forfeit failed:", error);
               setError(error.message);
               reject(error);
             },
@@ -1283,7 +1211,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         });
       } catch (err) {
         const error = err as Error;
-        console.error("❌ [CircleSavings] Error forfeiting member:", error);
         setError(error.message || "Failed to forfeit member");
         throw err;
       }
@@ -1376,7 +1303,6 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       }
       return null;
     } catch (err) {
-      console.error("❌ [CircleSavings] Error fetching circle:", err);
       throw err;
     }
   }, []);

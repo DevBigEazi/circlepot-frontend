@@ -36,7 +36,7 @@ export const useCurrencyConverter = () => {
                 setExchangeRates(rates);
                 setLastUpdated(new Date(timestamp));
             } catch (e) {
-                console.error('Failed to parse cached rates', e);
+                throw e; 
             }
         } else {
             // Set initial default rates if no cache
@@ -62,7 +62,6 @@ export const useCurrencyConverter = () => {
 
                 // If cache is less than 15 days old, don't fetch
                 if (now - cacheTime < CACHE_DURATION) {
-                    console.log('Using cached currency rates (valid for 15 days)');
                     return;
                 }
             } catch (e) {
@@ -88,7 +87,6 @@ export const useCurrencyConverter = () => {
             );
 
             if (response.status === 429) {
-                console.warn('Rate limit exceeded. Using cached/default rates.');
                 // Don't update state, keep using what we have
                 return;
             }
@@ -127,8 +125,8 @@ export const useCurrencyConverter = () => {
                 });
             }
         } catch (err) {
-            console.error('Failed to fetch rates:', err);
-            setError('Failed to fetch latest rates. Using cached/default rates.');
+            throw err;
+                setError('Failed to fetch latest rates. Using cached/default rates.');
             // Keep existing rates on error
         } finally {
             setIsLoading(false);

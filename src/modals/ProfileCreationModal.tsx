@@ -39,9 +39,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
       try {
         const email = await getUserEmail({ client });
         setUserEmail(email ?? null);
-        console.log(email);
       } catch (err) {
-        console.error('Failed to fetch user email:', err);
         setError('Failed to retrieve your email. Please try signing in again.');
       }
     };
@@ -69,7 +67,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         const available = await checkUsernameAvailability(cleanedValue);
         setUsernameAvailable(available);
       } catch (err) {
-        console.error('Error checking username:', err);
         setUsernameAvailable(null);
       } finally {
         setIsCheckingUsername(false);
@@ -187,12 +184,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
 
       onProfileCreated?.();
     } catch (err: any) {
-      console.error('ProfileModal Profile setup failed:', {
-        message: err.message,
-        code: err.code,
-        details: err
-      });
-
       if (err.message?.includes('ProfileAlreadyExists')) {
         onProfileCreated?.();
         return;
