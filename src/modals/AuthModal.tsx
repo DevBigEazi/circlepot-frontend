@@ -178,7 +178,7 @@ const AuthModal: React.FC = () => {
               className="cursor-pointer flex justify-center items-center rounded-xl py-3 font-semibold gap-3 group transition border-2 hover:border-green-500 disabled:opacity-50"
               style={{ borderColor: colors.border, color: colors.text }}
             >
-              <img src={image.chrome} alt="chrome logo" className="w-6 h-6" />
+              <img src={image.google} alt="google logo" className="w-6 h-6" />
               {isLoading ? (
                 <LoadingSpinner size="sm" text="Connecting..." />
               ) : (
@@ -396,7 +396,7 @@ const AuthModal: React.FC = () => {
                   {isLoading ? (
                     <LoadingSpinner size="sm" text="Verifying..." />
                   ) : (
-                    "Verify & Create Account"
+                    "Verify"
                   )}
                 </button>
 
