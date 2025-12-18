@@ -17,6 +17,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { toast } from "sonner";
 import { formatBigInt, getFrequencyText } from "../utils/helpers";
+import { Skeleton } from "../components/Skeleton";
 
 const JoinCircle: React.FC = () => {
   const { circleId } = useParams<{ circleId: string }>();
@@ -153,15 +154,41 @@ const JoinCircle: React.FC = () => {
   if (isLoading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
+        className="min-h-screen py-8 px-4"
         style={{ backgroundColor: colors.background }}
       >
-        <div className="text-center">
-          <Loader2
-            className="w-12 h-12 animate-spin mx-auto mb-4"
-            style={{ color: colors.primary }}
-          />
-          <p style={{ color: colors.text }}>Loading circle details...</p>
+        <div className="max-w-3xl mx-auto">
+          <Skeleton width="10rem" height="1.5rem" className="mb-6" />
+          <div
+            className="rounded-2xl p-6 sm:p-8 shadow-lg border space-y-6"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            }}
+          >
+            <div className="flex gap-4">
+              <Skeleton width="4rem" height="4rem" borderRadius="0.75rem" />
+              <div className="flex-1 space-y-2">
+                <Skeleton width="60%" height="2rem" />
+                <Skeleton width="30%" height="1rem" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Skeleton width="20%" height="1rem" />
+              <Skeleton width="100%" height="4rem" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton height="5rem" borderRadius="0.75rem" />
+              <Skeleton height="5rem" borderRadius="0.75rem" />
+              <Skeleton height="5rem" borderRadius="0.75rem" />
+              <Skeleton height="5rem" borderRadius="0.75rem" />
+            </div>
+            <Skeleton height="6rem" borderRadius="0.75rem" />
+            <div className="flex gap-3">
+              <Skeleton height="3.5rem" className="flex-1" />
+              <Skeleton height="3.5rem" className="flex-1" />
+            </div>
+          </div>
         </div>
       </div>
     );
