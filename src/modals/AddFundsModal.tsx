@@ -1,6 +1,9 @@
-import { X, Users, CreditCard, Wallet, ArrowRight } from "lucide-react";
+import { X, CreditCard, Wallet, ArrowRight } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useNavigate } from "react-router";
+import { useCurrency } from "../contexts/CurrencyContext";
+import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
+import image from "../constants/image";
 
 interface AddFundsModalProps {
   isOpen: boolean;
@@ -10,8 +13,12 @@ interface AddFundsModalProps {
 const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
   const colors = useThemeColors();
   const navigate = useNavigate();
+  const { selectedCurrency } = useCurrency();
+  const { getCurrencyInfo } = useCurrencyConverter();
 
   if (!isOpen) return null;
+
+  const currencyInfo = getCurrencyInfo(selectedCurrency);
 
   const handleInternalClick = () => {
     navigate("/settings");
@@ -57,8 +64,8 @@ const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
             className="w-full p-4 rounded-2xl border-2 border-transparent transition-all hover:border-primary/30 group flex items-center gap-4 text-left"
             style={{ backgroundColor: colors.background }}
           >
-            <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-              <Users size={24} />
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+              <img src={image.logo} alt="logo" className="w-8 h-8" />
             </div>
             <div className="flex-1">
               <h3 className="font-bold" style={{ color: colors.text }}>
@@ -81,8 +88,16 @@ const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
             className="w-full p-4 rounded-2xl border-2 border-transparent transition-all hover:border-primary/30 group flex items-center gap-4 text-left"
             style={{ backgroundColor: colors.background }}
           >
-            <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-              <CreditCard size={24} />
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform border-2 border-transparent group-hover:border-primary/20">
+              {currencyInfo?.flag ? (
+                <img
+                  src={currencyInfo.flag}
+                  alt={selectedCurrency}
+                  className="w-full h-full scale-125" // Scale up slightly to fill circle well
+                />
+              ) : (
+                <CreditCard size={24} className="text-primary" />
+              )}
             </div>
             <div className="flex-1">
               <h3 className="font-bold" style={{ color: colors.text }}>
