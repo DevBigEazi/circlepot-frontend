@@ -4,6 +4,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import { useNavigate } from "react-router";
 import { GoalWithdrawalModal } from "../modals/GoalWithdrawalModal";
 import { ActiveGoalsListProps, Goal } from "../interfaces/interfaces";
+import { GoalCardSkeleton } from "./Skeleton";
 
 export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
   goals,
@@ -198,12 +199,10 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
         </div>
 
         {isLoading ? (
-          <div
-            className="flex items-center justify-center py-12"
-            style={{ color: colors.textLight }}
-          >
-            <Loader size={24} className="animate-spin mr-2" />
-            <span>Loading your goals...</span>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <GoalCardSkeleton key={i} />
+            ))}
           </div>
         ) : goals.length === 0 ? (
           <div
@@ -370,7 +369,10 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
-                        onContribute(goal.goalId, BigInt(goal.contributionAmount))
+                        onContribute(
+                          goal.goalId,
+                          BigInt(goal.contributionAmount)
+                        )
                       }
                       disabled={
                         !isContributeAllowed ||

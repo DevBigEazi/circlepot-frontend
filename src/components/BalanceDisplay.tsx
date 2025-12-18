@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Wallet, Eye, EyeOff, Info } from "lucide-react";
+import { Wallet, Eye, EyeOff, Info, Star } from "lucide-react";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
 import image from "../constants/image";
-
 import { CreditScore } from "../hooks/useCreditScore";
+import { Skeleton } from "./Skeleton";
 
 interface BalanceDisplayProps {
   currentBalances: {
@@ -26,6 +26,7 @@ interface BalanceDisplayProps {
     gradient: string;
   };
   creditScore?: CreditScore | null;
+  isLoading?: boolean;
 }
 
 const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
@@ -38,6 +39,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   setShowWithdrawModal,
   colors,
   creditScore,
+  isLoading = false,
 }) => {
   // Load showBalance state from localStorage, default to true
   const [showBalance, setShowBalance] = useState(() => {
@@ -60,6 +62,51 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   const totalBalance =
     currentBalances.cUSD + circleCommitted + personalSavingsCommitted;
   const currentCurrency = getCurrencyInfo(selectedCurrency);
+
+  if (isLoading) {
+    return (
+      <div
+        className="rounded-2xl p-6 shadow-sm border space-y-6"
+        style={{ backgroundColor: colors.surface, borderColor: colors.border }}
+      >
+        <div className="flex justify-between items-start">
+          <div className="space-y-2 flex-1">
+            <div className="flex items-center gap-2">
+              <Skeleton
+                width="1.25rem"
+                height="1.25rem"
+                borderRadius="0.25rem"
+              />
+              <Skeleton width="6rem" height="1rem" />
+            </div>
+            <Skeleton width="10rem" height="2.5rem" />
+            <Skeleton width="8rem" height="1rem" />
+          </div>
+          <Skeleton width="3rem" height="1.5rem" />
+        </div>
+        <div className="flex gap-3">
+          <Skeleton height="3rem" borderRadius="0.75rem" className="flex-1" />
+          <Skeleton height="3rem" borderRadius="0.75rem" className="flex-1" />
+        </div>
+        <div
+          className="space-y-4 pt-4 border-t"
+          style={{ borderColor: colors.border }}
+        >
+          <div className="flex items-center justify-between">
+            <Skeleton width="40%" height="1.25rem" />
+            <Skeleton width="20%" height="1.25rem" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <Skeleton width="30%" height="0.75rem" />
+              <Skeleton width="15%" height="0.75rem" />
+            </div>
+            <Skeleton height="0.5rem" borderRadius="1rem" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -94,43 +141,26 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
                     backgroundColor: colors.surface,
                     borderColor: colors.border,
                   }}
-                  onMouseEnter={() => setShowTooltip(true)}
-                  onMouseLeave={() => setShowTooltip(false)}
                 >
-                  <div
-                    className="text-sm font-semibold mb-3"
+                  <h4
+                    className="font-bold text-sm mb-2"
                     style={{ color: colors.text }}
                   >
                     Balance Breakdown
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
                       <span style={{ color: colors.textLight }}>
-                        cUSD Balance:
+                        Available cUSD:
                       </span>
                       <span
                         className="font-medium"
                         style={{ color: colors.text }}
                       >
-                        ${currentBalances.cUSD.toLocaleString()}
+                        ${currentBalances.cUSD.toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span style={{ color: colors.textLight }}>
-                        Circle Collateral:
-                      </span>
-                      <span
-                        className="font-medium"
-                        style={{ color: colors.text }}
-                      >
-                        $
-                        {(circleCollateral || 0).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between text-xs">
                       <span style={{ color: colors.textLight }}>
                         Circle Contributions:
                       </span>
@@ -138,14 +168,21 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
                         className="font-medium"
                         style={{ color: colors.text }}
                       >
-                        $
-                        {(circleContributions || 0).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        ${circleContributions.toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between text-xs">
+                      <span style={{ color: colors.textLight }}>
+                        Collateral Locked:
+                      </span>
+                      <span
+                        className="font-medium"
+                        style={{ color: colors.text }}
+                      >
+                        ${circleCollateral.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
                       <span style={{ color: colors.textLight }}>
                         Personal Savings:
                       </span>
@@ -153,141 +190,131 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
                         className="font-medium"
                         style={{ color: colors.text }}
                       >
-                        $
-                        {personalSavingsCommitted.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        ${personalSavingsCommitted.toFixed(2)}
                       </span>
                     </div>
                     <div
-                      className="pt-2 mt-2 border-t flex justify-between items-center"
+                      className="pt-2 mt-2 border-t flex justify-between text-xs font-bold"
                       style={{ borderColor: colors.border }}
                     >
-                      <span
-                        className="font-semibold"
-                        style={{ color: colors.text }}
-                      >
-                        Total:
-                      </span>
-                      <span
-                        className="font-bold"
-                        style={{ color: colors.primary }}
-                      >
-                        $
-                        {totalBalance.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                      <span style={{ color: colors.text }}>Total:</span>
+                      <span style={{ color: colors.primary }}>
+                        ${totalBalance.toFixed(2)}
                       </span>
                     </div>
                   </div>
+                  <p
+                    className="mt-3 text-[10px] leading-relaxed"
+                    style={{ color: colors.textLight }}
+                  >
+                    Your total balance includes funds you can spend and funds
+                    locked in savings goals or circles.
+                  </p>
                 </div>
               )}
             </div>
           </div>
-          <h3
-            className="text-xl sm:text-3xl font-bold mb-1"
-            style={{ color: colors.text }}
-          >
-            {showBalance ? `$${totalBalance.toLocaleString()}` : "•••••"}
-          </h3>
-          <p className="text-sm" style={{ color: colors.textLight }}>
-            {showBalance
-              ? `≈ ${currentCurrency.symbol}${convertToLocal(
-                  totalBalance,
-                  selectedCurrency
-                )}`
-              : "Hidden"}
-          </p>
-        </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <button
-            onClick={() => setShowBalance(!showBalance)}
-            className="p-2 rounded-lg transition hover:opacity-80"
-            style={{ backgroundColor: colors.background }}
-          >
-            {showBalance ? (
-              <Eye size={16} style={{ color: colors.primary }} />
-            ) : (
-              <EyeOff size={16} style={{ color: colors.textLight }} />
-            )}
-          </button>
-
-          {creditScore && (
-            <div
-              className="px-1 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 shadow-sm"
-              style={{
-                borderColor: creditScore.categoryColor,
-                color: creditScore.categoryColor,
-                backgroundColor: `${creditScore.categoryColor}10`,
-              }}
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold" style={{ color: colors.text }}>
+              {showBalance ? `$${totalBalance.toFixed(2)} cUSD` : "••••••"}
+            </h1>
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="p-1.5 rounded-lg transition hover:bg-black/5"
+              style={{ color: colors.textLight }}
+              aria-label={showBalance ? "Hide balance" : "Show balance"}
             >
-              <div
-                className="w-1 h-1 rounded-full animate-pulse"
-                style={{ backgroundColor: creditScore.categoryColor }}
-              />
-              Credit Score: {creditScore.score}
-            </div>
+              {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {/* Show Original cUSD below local currency if not USD */}
+          {selectedCurrency !== "USD" && (
+            <p className="text-lg mt-1" style={{ color: colors.textLight }}>
+              {showBalance
+                ? `≈ ${currentCurrency.symbol}${convertToLocal(
+                    totalBalance,
+                    selectedCurrency
+                  )}`
+                : "••••••"}
+            </p>
           )}
         </div>
-      </div>
-
-      {/* cUSD Balance Card */}
-      <div
-        className="flex justify-between items-center p-4 rounded-xl border mb-6"
-        style={{ backgroundColor: colors.surface, borderColor: colors.border }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center bg-white dark:bg-gray-800 border"
-            style={{ borderColor: colors.border }}
-          >
-            <img src={image.cUSD} alt="cUSD" className="w-8 h-8 rounded" />
-          </div>
-          <div>
-            <div className="font-semibold" style={{ color: colors.text }}>
-              cUSD
-            </div>
-            <div className="text-xs" style={{ color: colors.textLight }}>
-              Celo Dollar
-            </div>
-          </div>
-        </div>
-        <div className="text-right">
-          <div
-            className="font-semibold text-base sm:text-lg"
-            style={{ color: colors.text }}
-          >
-            {showBalance ? currentBalances.cUSD.toLocaleString() : "•••"}
-          </div>
-          <div className="text-sm" style={{ color: colors.primary }}>
-            {showBalance
-              ? `≈ ${currentCurrency.symbol}${convertToLocal(
-                  currentBalances.cUSD,
-                  selectedCurrency
-                )}`
-              : ""}
-          </div>
+        <div
+          className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5"
+          style={{ backgroundColor: colors.background, color: colors.primary }}
+        >
+          <img src={image.cUSD} alt="cUSD" className="w-4 h-4 rounded-full" />
+          cUSD
         </div>
       </div>
 
       <div className="flex gap-3">
         <button
           onClick={() => setShowAddFundsModal(true)}
-          className="flex-1 text-base sm:text-lg py-3 rounded-xl font-semibold transition shadow-sm hover:shadow-md text-white"
+          className="flex-1 py-3 px-4 rounded-xl font-bold text-white transition-all transform active:scale-95 shadow-md"
           style={{ background: colors.gradient }}
         >
           Add Funds
         </button>
         <button
           onClick={() => setShowWithdrawModal(true)}
-          className="flex-1 text-base sm:text-lg py-3 rounded-xl font-semibold transition border hover:opacity-80"
-          style={{ borderColor: colors.border, color: colors.text }}
+          className="flex-1 py-3 px-4 rounded-xl font-bold transition-all transform active:scale-95 border"
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.border,
+            color: colors.text,
+          }}
         >
           Withdraw
         </button>
+      </div>
+
+      <div
+        className="mt-6 pt-6 border-t"
+        style={{ borderColor: colors.border }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-5 h-5 rounded-md flex items-center justify-center"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Star size={14} className="text-white fill-white" />
+            </div>
+            <span
+              className="text-sm font-semibold"
+              style={{ color: colors.text }}
+            >
+              Credit Score
+            </span>
+          </div>
+          <div className="text-right">
+            <span
+              className="text-lg font-bold"
+              style={{ color: creditScore?.categoryColor || colors.text }}
+            >
+              {creditScore?.score || 0}
+            </span>
+            <div
+              className="text-[10px] font-medium"
+              style={{ color: colors.textLight }}
+            >
+              {creditScore?.categoryLabel || "Poor"}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="absolute top-0 left-0 h-full transition-all duration-1000 ease-out"
+            style={{
+              width: `${
+                (((creditScore?.score || 0) - 300) / (850 - 300)) * 100
+              }%`,
+              backgroundColor: creditScore?.categoryColor || colors.primary,
+            }}
+          ></div>
+        </div>
       </div>
     </div>
   );
