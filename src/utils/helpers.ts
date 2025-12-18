@@ -190,3 +190,9 @@ export const calculateContributionDeadline = (
     // Return as Unix timestamp (seconds)
     return BigInt(Math.floor(deadlineDate.getTime() / 1000));
 };
+
+// Helper to shorten wallet address
+export const shortenAddress = (addr: string, startChars: number = 8, endChars: number = 8): string => {
+    if (!addr) return "";
+    return `${addr.slice(0, startChars)}...${addr.slice(-endChars)}`;
+};

@@ -13,7 +13,11 @@ import {
   Copy,
   CopyCheck,
   LogOut,
+  ChevronDown,
+  Search,
 } from "lucide-react";
+import { BsCurrencyExchange } from "react-icons/bs";
+import { SiThirdweb } from "react-icons/si";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
@@ -30,6 +34,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useNotifications } from "../contexts/NotificationsContext";
 import { Skeleton } from "../components/Skeleton";
+import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -37,6 +42,7 @@ const Settings: React.FC = () => {
   const { disconnect } = useDisconnect();
   const wallet = useActiveWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
+  const { availableCurrencies } = useCurrencyConverter();
   const { notificationsEnabled, toggleNotifications } = useNotifications();
 
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -71,11 +77,13 @@ const Settings: React.FC = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  // const [showBalance, setShowBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
+  const [currencySearch, setCurrencySearch] = useState("");
+  const currencyDropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Populate settings from profile data
@@ -112,6 +120,20 @@ const Settings: React.FC = () => {
       }
     }
   }, [userSettings.accountId]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        currencyDropdownRef.current &&
+        !currencyDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCurrencyDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const canUpdatePhoto = (): boolean => {
     if (!profile?.lastPhotoUpdate) return true;
@@ -681,7 +703,6 @@ const Settings: React.FC = () => {
             </div>
 
             {/* Appearance */}
-
             <div
               className="rounded-2xl p-4 sm:p-6 shadow-sm border"
               style={{
@@ -727,24 +748,14 @@ const Settings: React.FC = () => {
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v12M9 9h6a2 2 0 0 1 0 4H9m6 2H9" />
-                  </svg>
+                  <BsCurrencyExchange size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3
                     className="font-bold text-sm sm:text-base truncate"
                     style={{ color: colors.text }}
                   >
-                    Currency & Region
+                    Local Currency
                   </h3>
                   <p
                     className="text-xs sm:text-sm truncate"
@@ -754,23 +765,157 @@ const Settings: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <select
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border focus:outline-none focus:ring-2 text-sm"
-                style={{
-                  borderColor: colors.border,
-                  backgroundColor: colors.background,
-                  color: colors.text,
-                }}
-              >
-                <option value="NGN">Nigerian Naira (NGN)</option>
-                <option value="USD">US Dollar (USD)</option>
-                <option value="EUR">Euro (EUR)</option>
-                <option value="GBP">British Pound (GBP)</option>
-                <option value="KES">Kenyan Shilling (KES)</option>
-                <option value="GHS">Ghanaian Cedi (GHS)</option>
-              </select>
+              <div className="relative" ref={currencyDropdownRef}>
+                <button
+                  onClick={() =>
+                    setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)
+                  }
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border flex items-center justify-between transition hover:opacity-80"
+                  style={{
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                    color: colors.text,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    {availableCurrencies[selectedCurrency]?.flag && (
+                      <img
+                        src={availableCurrencies[selectedCurrency].flag}
+                        alt=""
+                        className="w-6 h-4 object-cover rounded-sm shadow-sm"
+                      />
+                    )}
+                    <span className="font-medium text-sm">
+                      {availableCurrencies[selectedCurrency]?.name ||
+                        selectedCurrency}{" "}
+                      ({selectedCurrency})
+                    </span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${
+                      isCurrencyDropdownOpen ? "rotate-180" : ""
+                    }`}
+                    style={{ color: colors.textLight }}
+                  />
+                </button>
+
+                {isCurrencyDropdownOpen && (
+                  <div
+                    className="absolute z-50 w-full mt-2 rounded-2xl border shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+                    style={{
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <div
+                      className="p-3 border-b"
+                      style={{ borderColor: colors.border }}
+                    >
+                      <div className="relative">
+                        <Search
+                          size={14}
+                          className="absolute left-3 top-1/2 -translate-y-1/2"
+                          style={{ color: colors.textLight }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Search currency..."
+                          value={currencySearch}
+                          onChange={(e) => setCurrencySearch(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 rounded-lg text-sm focus:outline-none"
+                          style={{
+                            backgroundColor: colors.background,
+                            color: colors.text,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="max-h-[300px] overflow-y-auto pt-1 pb-1">
+                      {Object.entries(availableCurrencies)
+                        .filter(
+                          ([code, data]) =>
+                            code
+                              .toLowerCase()
+                              .includes(currencySearch.toLowerCase()) ||
+                            data.name
+                              .toLowerCase()
+                              .includes(currencySearch.toLowerCase())
+                        )
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([code, data]) => (
+                          <button
+                            key={code}
+                            onClick={() => {
+                              setSelectedCurrency(code);
+                              setIsCurrencyDropdownOpen(false);
+                              setCurrencySearch("");
+                            }}
+                            className="w-full px-4 py-2.5 flex items-center gap-3 transition hover:opacity-80 text-left"
+                            style={{
+                              backgroundColor:
+                                selectedCurrency === code
+                                  ? `${colors.primary}10`
+                                  : "transparent",
+                            }}
+                          >
+                            {data.flag && (
+                              <img
+                                src={data.flag}
+                                alt=""
+                                className="w-6 h-4 object-cover rounded-sm shadow-sm flex-shrink-0"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-sm font-medium truncate ${
+                                  selectedCurrency === code ? "" : ""
+                                }`}
+                                style={{
+                                  color:
+                                    selectedCurrency === code
+                                      ? colors.primary
+                                      : colors.text,
+                                }}
+                              >
+                                {data.name}
+                              </div>
+                              <div
+                                className="text-[10px]"
+                                style={{ color: colors.textLight }}
+                              >
+                                {code} • {data.symbol}
+                              </div>
+                            </div>
+                            {selectedCurrency === code && (
+                              <div
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{ backgroundColor: colors.primary }}
+                              />
+                            )}
+                          </button>
+                        ))}
+                      {Object.entries(availableCurrencies).filter(
+                        ([code, data]) =>
+                          code
+                            .toLowerCase()
+                            .includes(currencySearch.toLowerCase()) ||
+                          data.name
+                            .toLowerCase()
+                            .includes(currencySearch.toLowerCase())
+                      ).length === 0 && (
+                        <div
+                          className="px-4 py-6 text-center text-sm"
+                          style={{ color: colors.textLight }}
+                        >
+                          No currencies found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Security & Privacy */}
@@ -962,17 +1107,7 @@ const Settings: React.FC = () => {
               }}
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={colors.primary}
-                  strokeWidth="2"
-                  className="flex-shrink-0"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
+                <SiThirdweb size={18} className="text-pink-500"/>
                 <h4
                   className="font-bold text-sm sm:text-base truncate"
                   style={{ color: colors.text }}

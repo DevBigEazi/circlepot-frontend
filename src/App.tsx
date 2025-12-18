@@ -24,7 +24,9 @@ const CreatePersonalGoal = lazy(() => import("./pages/CreatePersonalGoal"));
 const Create = lazy(() => import("./pages/Create"));
 const Browse = lazy(() => import("./pages/Browse"));
 const JoinCircle = lazy(() => import("./pages/JoinCircle"));
-const Erorr404 = lazy(() => import("./pages/404"));
+const LocalMethods = lazy(() => import("./pages/LocalMethods"));
+const ExternalWallets = lazy(() => import("./pages/ExternalWallets"));
+const Error404 = lazy(() => import("./pages/404"));
 const Layout = lazy(() => import("./layouts/Layout"));
 
 interface AppProps {
@@ -112,10 +114,15 @@ function App({ client }: AppProps) {
                     />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/local-methods" element={<LocalMethods />} />
+                    <Route
+                      path="/external-wallets"
+                      element={<ExternalWallets />}
+                    />
                   </Route>
 
                   {/* Not Found - outside Layout so no bottom nav */}
-                  <Route path="*" element={<Erorr404 />} />
+                  <Route path="*" element={<Error404 />} />
                 </Routes>
               </Suspense>
             )}
@@ -123,7 +130,7 @@ function App({ client }: AppProps) {
             {/* Show 404 without Layout for invalid dashboard IDs */}
             {showDashboard && isInvalidDashboardId() && (
               <Suspense fallback={<SkeletonPage />}>
-                <Erorr404 />
+                <Error404 />
               </Suspense>
             )}
 
