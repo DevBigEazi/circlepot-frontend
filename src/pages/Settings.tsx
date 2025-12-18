@@ -29,6 +29,7 @@ import { useBiometric } from "../hooks/useBiometric";
 import ThemeToggle from "../components/ThemeToggle";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useNotifications } from "../contexts/NotificationsContext";
+import { Skeleton } from "../components/Skeleton";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -370,276 +371,317 @@ const Settings: React.FC = () => {
                   </p>
                 </div>
               </div>
-
-              <div className="space-y-3 sm:space-y-4">
-                {/* Profile Image */}
-                <div className="flex flex-col items-center">
-                  <div className="relative mb-3 sm:mb-4">
-                    <div
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4"
-                      style={{ borderColor: colors.primary }}
-                    >
-                      {previewImage ? (
-                        <img
-                          src={previewImage}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
+              {isLoading ? (
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center">
+                    <Skeleton
+                      width="6rem"
+                      height="6rem"
+                      borderRadius="50%"
+                      className="mb-4"
+                    />
+                    <Skeleton
+                      width="8rem"
+                      height="2rem"
+                      borderRadius="0.75rem"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton width="30%" height="1rem" />
+                        <Skeleton
+                          width="100%"
+                          height="3rem"
+                          borderRadius="0.75rem"
                         />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center"
-                          style={{ backgroundColor: colors.background }}
-                        >
-                          <User size={28} style={{ color: colors.textLight }} />
-                        </div>
-                      )}
-                    </div>
-                    {editingProfile && canUpdatePhoto() && (
-                      <button
-                        onClick={triggerFileInput}
-                        disabled={isProcessing}
-                        className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 transition hover:scale-110"
-                        style={{ backgroundColor: colors.primary }}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Profile Image */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative mb-3 sm:mb-4">
+                      <div
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4"
+                        style={{ borderColor: colors.primary }}
                       >
-                        {isUploading ? (
-                          <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        {previewImage ? (
+                          <img
+                            src={previewImage}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <Camera size={14} className="text-white" />
+                          <div
+                            className="w-full h-full flex items-center justify-center"
+                            style={{ backgroundColor: colors.background }}
+                          >
+                            <User
+                              size={28}
+                              style={{ color: colors.textLight }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {editingProfile && canUpdatePhoto() && (
+                        <button
+                          onClick={triggerFileInput}
+                          disabled={isProcessing}
+                          className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 transition hover:scale-110"
+                          style={{ backgroundColor: colors.primary }}
+                        >
+                          {isUploading ? (
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Camera size={14} className="text-white" />
+                          )}
+                        </button>
+                      )}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isProcessing}
+                      />
+                    </div>
+
+                    {/* Photo Update Lock Warning */}
+                    {!canUpdatePhoto() && (
+                      <div
+                        className="w-full rounded-lg p-2 sm:p-3 flex items-center gap-2 mb-3"
+                        style={{
+                          backgroundColor: colors.warningBg,
+                          borderColor: colors.warningBorder,
+                        }}
+                      >
+                        <Lock
+                          size={14}
+                          className="flex-shrink-0"
+                          style={{ color: colors.accent }}
+                        />
+                        <p
+                          className="text-xs"
+                          style={{ color: colors.textLight }}
+                        >
+                          Photo update available in {daysUntilPhotoUpdate()}{" "}
+                          days
+                        </p>
+                      </div>
+                    )}
+
+                    {editingProfile && canUpdatePhoto() && (
+                      <>
+                        <button
+                          onClick={triggerFileInput}
+                          disabled={isProcessing}
+                          className="text-xs sm:text-sm font-medium disabled:opacity-50 flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition hover:bg-opacity-10 mb-3"
+                          style={{
+                            color: colors.primary,
+                            backgroundColor: selectedFile
+                              ? colors.successBg
+                              : "transparent",
+                          }}
+                        >
+                          {selectedFile ? (
+                            <>
+                              <Check size={14} />
+                              <span className="hidden sm:inline">
+                                Image Selected
+                              </span>
+                              <span className="sm:hidden">Selected</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload size={14} />
+                              <span className="hidden sm:inline">
+                                Upload Photo
+                              </span>
+                              <span className="sm:hidden">Upload</span>
+                            </>
+                          )}
+                        </button>
+
+                        {isUploading && (
+                          <div className="w-full mb-3">
+                            <div
+                              className="flex justify-between text-xs mb-1"
+                              style={{ color: colors.textLight }}
+                            >
+                              <span className="truncate">
+                                Uploading to IPFS...
+                              </span>
+                              <span className="flex-shrink-0 ml-1">
+                                {uploadProgress}%
+                              </span>
+                            </div>
+                            <div
+                              className="w-full h-1.5 rounded-full"
+                              style={{ backgroundColor: colors.border }}
+                            >
+                              <div
+                                className="h-full rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${uploadProgress}%`,
+                                  backgroundColor: colors.primary,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {!editingProfile && canUpdatePhoto() && (
+                      <button
+                        onClick={() => setEditingProfile(true)}
+                        disabled={isLoading}
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-medium text-white text-sm transition disabled:opacity-50"
+                        style={{ background: colors.gradient }}
+                      >
+                        {isLoading ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <p>{!success && "Edit Photo"}</p>
                         )}
                       </button>
                     )}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageChange}
-                      accept="image/*"
-                      className="hidden"
-                      disabled={isProcessing}
-                    />
                   </div>
 
-                  {/* Photo Update Lock Warning */}
-                  {!canUpdatePhoto() && (
-                    <div
-                      className="w-full rounded-lg p-2 sm:p-3 flex items-center gap-2 mb-3"
+                  {/* Account ID */}
+                  <CopyableField
+                    label="Account ID"
+                    value={userSettings.accountId}
+                    field="accountId"
+                  />
+
+                  {/* Email (Copyable) */}
+                  <CopyableField
+                    label="Email"
+                    value={userSettings.userEmail}
+                    field="email"
+                  />
+
+                  {/* Full Name (Read-only) */}
+                  <div>
+                    <label
+                      className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2"
+                      style={{ color: colors.text }}
+                    >
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={userSettings.userFullName}
+                      disabled
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border cursor-not-allowed opacity-60 text-sm"
                       style={{
-                        backgroundColor: colors.warningBg,
-                        borderColor: colors.warningBorder,
+                        borderColor: colors.border,
+                        backgroundColor: colors.background,
+                        color: colors.textLight,
+                      }}
+                    />
+                    <p
+                      className="text-xs mt-1"
+                      style={{ color: colors.textLight }}
+                    >
+                      Stored on-chain and cannot be edited
+                    </p>
+                  </div>
+
+                  {/* Username (Copyable & Read-only) */}
+                  <CopyableField
+                    label="Username"
+                    value={userSettings.userName}
+                    field="username"
+                  />
+
+                  {(error || profileError || bioError) && (
+                    <div
+                      className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
+                      style={{
+                        backgroundColor: colors.errorBg,
+                        borderColor: colors.errorBorder,
                       }}
                     >
-                      <Lock
+                      <AlertCircle
                         size={14}
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 mt-0.5"
                         style={{ color: colors.accent }}
                       />
                       <p
                         className="text-xs"
                         style={{ color: colors.textLight }}
                       >
-                        Photo update available in {daysUntilPhotoUpdate()} days
+                        {error || profileError || bioError}
                       </p>
                     </div>
                   )}
 
-                  {editingProfile && canUpdatePhoto() && (
-                    <>
+                  {success && (
+                    <div
+                      className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
+                      style={{
+                        backgroundColor: colors.successBg,
+                        borderColor: colors.successBorder,
+                      }}
+                    >
+                      <Check
+                        size={14}
+                        className="flex-shrink-0 mt-0.5"
+                        style={{ color: colors.primary }}
+                      />
+                      <p
+                        className="text-xs"
+                        style={{ color: colors.textLight }}
+                      >
+                        {success}
+                      </p>
+                    </div>
+                  )}
+
+                  {editingProfile && (
+                    <div className="flex gap-2 sm:gap-3">
                       <button
-                        onClick={triggerFileInput}
+                        onClick={handleCancelEdit}
                         disabled={isProcessing}
-                        className="text-xs sm:text-sm font-medium disabled:opacity-50 flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition hover:bg-opacity-10 mb-3"
+                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium border transition disabled:opacity-50 text-sm"
                         style={{
-                          color: colors.primary,
-                          backgroundColor: selectedFile
-                            ? colors.successBg
-                            : "transparent",
+                          borderColor: colors.border,
+                          color: colors.text,
+                          backgroundColor: colors.background,
                         }}
                       >
-                        {selectedFile ? (
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={isProcessing}
+                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 text-sm"
+                        style={{ background: colors.gradient }}
+                      >
+                        {isProcessing ? (
                           <>
-                            <Check size={14} />
-                            <span className="hidden sm:inline">
-                              Image Selected
-                            </span>
-                            <span className="sm:hidden">Selected</span>
+                            <Loader size={14} className="animate-spin" />
+                            <span className="hidden sm:inline">Saving...</span>
                           </>
                         ) : (
                           <>
-                            <Upload size={14} />
                             <span className="hidden sm:inline">
-                              Upload Photo
+                              Save Changes
                             </span>
-                            <span className="sm:hidden">Upload</span>
+                            <span className="sm:hidden">Save</span>
                           </>
                         )}
                       </button>
-
-                      {isUploading && (
-                        <div className="w-full mb-3">
-                          <div
-                            className="flex justify-between text-xs mb-1"
-                            style={{ color: colors.textLight }}
-                          >
-                            <span className="truncate">
-                              Uploading to IPFS...
-                            </span>
-                            <span className="flex-shrink-0 ml-1">
-                              {uploadProgress}%
-                            </span>
-                          </div>
-                          <div
-                            className="w-full h-1.5 rounded-full"
-                            style={{ backgroundColor: colors.border }}
-                          >
-                            <div
-                              className="h-full rounded-full transition-all duration-300"
-                              style={{
-                                width: `${uploadProgress}%`,
-                                backgroundColor: colors.primary,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {!editingProfile && canUpdatePhoto() && (
-                    <button
-                      onClick={() => setEditingProfile(true)}
-                      disabled={isLoading}
-                      className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-medium text-white text-sm transition disabled:opacity-50"
-                      style={{ background: colors.gradient }}
-                    >
-                      {isLoading ? (
-                        <Loader size={14} className="animate-spin" />
-                      ) : (
-                        <p>{!success && "Edit Photo"}</p>
-                      )}
-                    </button>
+                    </div>
                   )}
                 </div>
-
-                {/* Account ID */}
-                <CopyableField
-                  label="Account ID"
-                  value={userSettings.accountId}
-                  field="accountId"
-                />
-
-                {/* Email (Copyable) */}
-                <CopyableField
-                  label="Email"
-                  value={userSettings.userEmail}
-                  field="email"
-                />
-
-                {/* Full Name (Read-only) */}
-                <div>
-                  <label
-                    className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2"
-                    style={{ color: colors.text }}
-                  >
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={userSettings.userFullName}
-                    disabled
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border cursor-not-allowed opacity-60 text-sm"
-                    style={{
-                      borderColor: colors.border,
-                      backgroundColor: colors.background,
-                      color: colors.textLight,
-                    }}
-                  />
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: colors.textLight }}
-                  >
-                    Stored on-chain and cannot be edited
-                  </p>
-                </div>
-
-                {/* Username (Copyable & Read-only) */}
-                <CopyableField
-                  label="Username"
-                  value={userSettings.userName}
-                  field="username"
-                />
-
-                {(error || profileError || bioError) && (
-                  <div
-                    className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
-                    style={{
-                      backgroundColor: colors.errorBg,
-                      borderColor: colors.errorBorder,
-                    }}
-                  >
-                    <AlertCircle
-                      size={14}
-                      className="flex-shrink-0 mt-0.5"
-                      style={{ color: colors.accent }}
-                    />
-                    <p className="text-xs" style={{ color: colors.textLight }}>
-                      {error || profileError || bioError}
-                    </p>
-                  </div>
-                )}
-
-                {success && (
-                  <div
-                    className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
-                    style={{
-                      backgroundColor: colors.successBg,
-                      borderColor: colors.successBorder,
-                    }}
-                  >
-                    <Check
-                      size={14}
-                      className="flex-shrink-0 mt-0.5"
-                      style={{ color: colors.primary }}
-                    />
-                    <p className="text-xs" style={{ color: colors.textLight }}>
-                      {success}
-                    </p>
-                  </div>
-                )}
-
-                {editingProfile && (
-                  <div className="flex gap-2 sm:gap-3">
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={isProcessing}
-                      className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium border transition disabled:opacity-50 text-sm"
-                      style={{
-                        borderColor: colors.border,
-                        color: colors.text,
-                        backgroundColor: colors.background,
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveProfile}
-                      disabled={isProcessing}
-                      className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 text-sm"
-                      style={{ background: colors.gradient }}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader size={14} className="animate-spin" />
-                          <span className="hidden sm:inline">Saving...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="hidden sm:inline">Save Changes</span>
-                          <span className="sm:hidden">Save</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Appearance */}
