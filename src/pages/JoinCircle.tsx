@@ -218,7 +218,7 @@ const JoinCircle: React.FC = () => {
             {error}
           </p>
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             className="px-6 py-3 rounded-xl font-semibold text-white transition shadow-sm hover:shadow-md"
             style={{ background: colors.gradient }}
           >
@@ -259,7 +259,7 @@ const JoinCircle: React.FC = () => {
       <div className="max-w-3xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 mb-6 transition hover:opacity-80"
           style={{ color: colors.text }}
         >
