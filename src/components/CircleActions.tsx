@@ -145,8 +145,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   // Determine if user can share invite
@@ -499,8 +498,14 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
             title="Forfeit late members (Available after grace period if you haven't received payout)"
           >
-            <UserX className="w-4 h-4" />
-            <span className="inline">Forfeit</span>
+            {isLoading ? (
+              "Processing..."
+            ) : (
+              <>
+                <UserX className="w-4 h-4" />
+                <span className="inline">Forfeit</span>
+              </>
+            )}
           </button>
         ) : (
           <div

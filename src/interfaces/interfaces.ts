@@ -105,7 +105,10 @@ export interface ActiveCircle {
   userTotalContributed?: bigint;
   hasWithdrawn?: boolean;
   isForfeited?: boolean;
+  isForfeitedThisRound?: boolean;
   forfeitedAmount?: bigint;
+  forfeitedContributionPortion?: bigint;
+  latePayCount?: number;
 }
 
 export interface Circle {
@@ -120,7 +123,7 @@ export interface Circle {
   currentMembers: bigint; // current member count
   currentRound: bigint;
   visibility: 0 | 1;
-  state: number; // 0 = PENDING, 1 = CREATED, 2 = VOTING, 3 = ACTIVE, 4 = COMPLETED, 5 = WITHDRAWN
+  state: number; // 0 = PENDING, 1 = CREATED, 2 = VOTING, 3 = ACTIVE, 4 = COMPLETED, 5 = WITHDRAWN, 6 = DEAD
   createdAt: bigint;
   startedAt: bigint;
   creator: {

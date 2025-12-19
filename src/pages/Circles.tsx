@@ -94,15 +94,15 @@ const Circles: React.FC = () => {
       // Check if user is a member
       const isMember = circle.currentPosition > 0;
 
-      // Check if user was forfeited (even if no longer a current member)
+      // Check if user was forfeited
       const isForfeited = circle.isForfeited;
 
       return isCreator || isMember || isForfeited;
     });
 
     const active = involvedCircles.filter((c) => {
-      // If user has withdrawn or forfeited, it's not active for them
-      if (c.hasWithdrawn || c.isForfeited) return false;
+      // If user has withdrawn, it's not active for them
+      if (c.hasWithdrawn) return false;
       // If circle is in a terminal state, it's not active
       if (["completed", "withdrawn", "dead"].includes(c.status)) return false;
 
@@ -117,7 +117,7 @@ const Circles: React.FC = () => {
       if (c.status === "withdrawn" || c.status === "dead" || c.hasWithdrawn)
         return true;
 
-      // 3. Forfeited
+      // 3. Forfeited record (Show in history even if still active)
       if (c.isForfeited) return true;
 
       // 4. Payout Received by current user
@@ -277,9 +277,7 @@ const Circles: React.FC = () => {
               >
                 {
                   historyCircles.filter(
-                    (c) =>
-                      (c.status === "withdrawn" || c.hasWithdrawn) &&
-                      !c.isForfeited
+                    (c) => c.status === "withdrawn" || c.hasWithdrawn
                   ).length
                 }
               </div>
@@ -296,10 +294,10 @@ const Circles: React.FC = () => {
                 className="text-xs md:text-sm mb-2"
                 style={{ color: colors.textLight }}
               >
-                Forfeited
+                Late Pen.
               </div>
-              <div className="text-xl md:text-2xl font-bold text-red-500">
-                {historyCircles.filter((c) => c.isForfeited).length}
+              <div className="text-xl md:text-2xl font-bold text-orange-500">
+                {allCircles.reduce((sum, c) => sum + (c.latePayCount || 0), 0)}
               </div>
             </div>
           </div>
@@ -392,23 +390,34 @@ const Circles: React.FC = () => {
                   let detailsText = null;
 
                   if (isForfeited) {
-                    statusLabel = "Forfeited";
+                    statusLabel = "Late Penalty";
                     statusIcon = (
                       <AlertOctagon
                         size={16}
                         className="md:w-[18px] md:h-[18px]"
                       />
                     );
-                    statusClass = "text-red-600 bg-red-50 dark:bg-red-900/20";
+                    statusClass =
+                      "text-orange-600 bg-orange-50 dark:bg-orange-900/20";
                     detailsText = (
-                      <span className="text-xs md:text-sm text-red-500">
-                        Collateral Lost: $
-                        {(
-                          Number(circle.forfeitedAmount || 0n) / 1e18
-                        ).toLocaleString("en-US", {
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-xs md:text-sm text-orange-600">
+                          {circle.latePayCount} Record
+                          {circle.latePayCount !== 1 ? "s" : ""}
+                        </span>
+                        <span
+                          className="text-[10px] md:text-xs"
+                          style={{ color: colors.textLight }}
+                        >
+                          Contribution Covered: $
+                          {(
+                            Number(circle.forfeitedContributionPortion || 0n) /
+                            1e18
+                          ).toLocaleString("en-US", {
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
                     );
                   } else if (hasWithdrawn) {
                     statusLabel = "Withdrawn";
@@ -506,18 +515,30 @@ const Circles: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <div
-                          className={`flex items-center gap-1.5 font-semibold px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm shrink-0 ${statusClass}`}
-                        >
-                          {statusIcon}
-                          <span className="hidden sm:inline">
-                            {statusLabel}
-                          </span>
-                          <span className="sm:hidden">
-                            {statusLabel === "Payout Received"
-                              ? "Payout"
-                              : statusLabel}
-                          </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <div
+                            className={`flex items-center gap-1.5 font-semibold px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm ${statusClass}`}
+                          >
+                            {statusIcon}
+                            <span className="hidden sm:inline">
+                              {statusLabel}
+                            </span>
+                            <span className="sm:hidden">
+                              {statusLabel === "Payout Received"
+                                ? "Payout"
+                                : statusLabel}
+                            </span>
+                          </div>
+                          {isForfeited && (
+                            <span className="text-[10px] md:text-xs font-bold text-orange-500 mr-1">
+                              Loss: $
+                              {(
+                                Number(circle.forfeitedAmount || 0n) / 1e18
+                              ).toLocaleString("en-US", {
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
