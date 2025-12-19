@@ -144,6 +144,15 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                   />
                 </div>
               </div>
+            ) : circle.isForfeitedThisRound ? (
+              <div className="text-right">
+                <div className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5 text-orange-500">
+                  Covered from Collateral
+                </div>
+                <div className="text-[10px] sm:text-xs font-medium text-orange-500 italic">
+                  Late payment deduction
+                </div>
+              </div>
             ) : (
               <div
                 className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
@@ -204,6 +213,19 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
         >
           active
         </span>
+        {circle.isForfeited && (
+          <span
+            className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full whitespace-nowrap border"
+            style={{
+              backgroundColor: "#FFF7ED",
+              color: "#C2410C",
+              borderColor: "#FFEDD5",
+            }}
+          >
+            {circle.latePayCount} Late Pay Record
+            {circle.latePayCount !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
       {/* Action Buttons */}

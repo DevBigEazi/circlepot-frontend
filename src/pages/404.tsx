@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { Home, ArrowLeft } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import image from "../constants/image";
@@ -75,8 +75,9 @@ const Error404: React.FC = () => {
             Go Back
           </button>
 
-          <button
-            onClick={() => navigate("/")}
+          <Link
+            to="/"
+            reloadDocument
             className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             style={{
               backgroundColor: colors.primary,
@@ -85,7 +86,7 @@ const Error404: React.FC = () => {
           >
             <Home size={20} />
             Return Home
-          </button>
+          </Link>
         </div>
       </div>
 

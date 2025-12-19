@@ -58,6 +58,8 @@ const Dashboard: React.FC = () => {
     votes,
     voteResults,
     positions,
+    collateralWithdrawals,
+    forfeitures,
     isLoading: isCirclesLoading,
   } = useCircleSavings(client);
   const { goals, isLoading: isGoalsLoading } = usePersonalGoals(client);
@@ -76,7 +78,9 @@ const Dashboard: React.FC = () => {
         voteResults,
         positions,
         contributions,
-        payouts
+        payouts,
+        collateralWithdrawals,
+        forfeitures
       ),
     [
       circles,
@@ -123,7 +127,9 @@ const Dashboard: React.FC = () => {
       voteResults,
       positions,
       contributions,
-      payouts
+      payouts,
+      collateralWithdrawals,
+      forfeitures
     );
 
     return activeCircles.reduce(
@@ -157,6 +163,8 @@ const Dashboard: React.FC = () => {
     positions,
     contributions,
     payouts,
+    collateralWithdrawals,
+    forfeitures,
   ]);
 
   // Calculate total committed in personal savings

@@ -64,8 +64,9 @@ export const transformCircleToActiveCircle = (
     const circlePositions = positions.filter(p => p.circleId === circle.circleId);
     const circlePayouts = payouts.filter(p => p.circleId === circle.circleId);
 
-    // Check if user has contributed to the current round
+    // Check if user has contributed or was forfeited for the current round
     let hasContributed = false;
+    let isForfeitedThisRound = false;
     let userTotalContributed = 0n;
 
     if (userAddress) {
@@ -76,10 +77,22 @@ export const transformCircleToActiveCircle = (
 
         if (circle.state === 3) { // ACTIVE
             const currentRound = circle.currentRound || 1n;
-            hasContributed = contributions.some(c =>
+
+            // Check manual contribution
+            const contributedThisRound = contributions.some(c =>
                 c.circleId === circle.circleId &&
                 c.round === currentRound
             );
+
+            // Check if forfeited this round
+            const forfeitedThisRoundEvent = forfeitures.find(f =>
+                f.circleId === circle.circleId &&
+                f.forfeitedUser?.id?.toLowerCase() === userAddress.toLowerCase() &&
+                f.round === currentRound
+            );
+
+            isForfeitedThisRound = !!forfeitedThisRoundEvent;
+            hasContributed = contributedThisRound || isForfeitedThisRound;
         }
     }
 
@@ -91,28 +104,42 @@ export const transformCircleToActiveCircle = (
         )
         : false;
 
-    // Check if user has been forfeited
-    let isForfeited = false;
-    let forfeitedAmount = 0n;
-
-    if (userAddress) {
-        const forfeitureEvent = forfeitures.find(f =>
+    // Check if user has been forfeited at any point and count events
+    const userForfeitures = userAddress
+        ? forfeitures.filter(f =>
             f.circleId === circle.circleId &&
             f.forfeitedUser?.id?.toLowerCase() === userAddress.toLowerCase()
-        );
+        )
+        : [];
 
-        if (forfeitureEvent) {
-            isForfeited = true;
-            forfeitedAmount = forfeitureEvent.deductionAmount || 0n;
-        }
-    }
+    const isForfeited = userForfeitures.length > 0;
+    const latePayCount = userForfeitures.length;
+
+    // Calculate actual financial loss (only the penalty fees) and the contribution portion
+    // Loss = Total Deduction - Contribution Portion
+    let forfeitedPenaltyTotal = 0n;
+    let forfeitedContributionTotal = 0n;
+
+    userForfeitures.forEach((f) => {
+        const deduction = BigInt(f.deductionAmount || 0);
+        const contributionPortion = deduction > BigInt(circle.contributionAmount || 0)
+            ? BigInt(circle.contributionAmount || 0)
+            : deduction;
+        const penaltyFee = deduction - contributionPortion;
+
+        forfeitedPenaltyTotal += penaltyFee;
+        forfeitedContributionTotal += contributionPortion;
+    });
+
+    const forfeitedAmount = forfeitedPenaltyTotal;
+    const forfeitedContributionPortion = forfeitedContributionTotal;
 
     return {
         id: circle.id,
         name: circle.circleName,
         contribution: contributionFormatted,
         frequency: circle.frequency,
-        totalPositions: Number(effectiveMembers), // Use effectiveMembers here
+        totalPositions: Number(circle.currentMembers), 
         currentPosition: userPosition > 0 ? userPosition : 1,
         payoutAmount: payoutAmount,
         nextPayout: nextPayout,
@@ -133,7 +160,10 @@ export const transformCircleToActiveCircle = (
         userTotalContributed: userTotalContributed,
         hasWithdrawn: hasWithdrawn,
         isForfeited: isForfeited,
+        isForfeitedThisRound: isForfeitedThisRound,
         forfeitedAmount: forfeitedAmount,
+        forfeitedContributionPortion: forfeitedContributionPortion,
+        latePayCount: latePayCount, 
         rawCircle: {
             ...circle,
             circleId: circle.circleId,
