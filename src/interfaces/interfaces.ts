@@ -87,7 +87,7 @@ export interface ActiveCircle {
   name: string;
   currentPosition: number;
   totalPositions: number;
-  status: 'active' | 'completed' | 'pending' | 'voting' | 'withdrawn' | 'created' | 'dead' | 'unknown';
+  status: 'active' | 'completed' | 'pending' | 'voting' | 'created' | 'dead' | 'unknown';  // Maps to CircleState enum
   payoutAmount: string;
   nextPayout: string;
   contribution: string;
@@ -95,7 +95,8 @@ export interface ActiveCircle {
   rawCircle: any;
   frequency: number; // 0: Daily, 1: Weekly, 2: Monthly
   currentRound: bigint;
-  contributionDeadline: bigint; // Unix timestamp for when contributions are due
+  contributionDeadline: bigint; // Unix timestamp for the grace deadline (when forfeit becomes available)
+  baseDeadline: bigint; // Unix timestamp for the payout deadline (before grace period)
   votingEvents?: any[];
   votes?: any[];
   voteResults?: any[];
@@ -123,7 +124,7 @@ export interface Circle {
   currentMembers: bigint; // current member count
   currentRound: bigint;
   visibility: 0 | 1;
-  state: number; // 0 = PENDING, 1 = CREATED, 2 = VOTING, 3 = ACTIVE, 4 = COMPLETED, 5 = WITHDRAWN, 6 = DEAD
+  state: number; // 0 = PENDING, 1 = CREATED, 2 = VOTING, 3 = ACTIVE, 4 = COMPLETED, 5 = DEAD
   createdAt: bigint;
   startedAt: bigint;
   creator: {

@@ -84,6 +84,8 @@ export const getFrequencyText = (frequency: number): string => {
 };
 
 // Helper to get state text
+// Maps to contract's CircleState enum:
+// PENDING = 0, CREATED = 1, VOTING = 2, ACTIVE = 3, COMPLETED = 4, DEAD = 5
 export const getStateText = (state: number): ActiveCircle['status'] => {
     switch (state) {
         case 0:
@@ -97,8 +99,6 @@ export const getStateText = (state: number): ActiveCircle['status'] => {
         case 4:
             return "completed";
         case 5:
-            return "withdrawn";
-        case 6:
             return "dead";
         default:
             return "unknown";
@@ -106,33 +106,61 @@ export const getStateText = (state: number): ActiveCircle['status'] => {
 };
 
 // Calculate next payout date based on current round
-export const calculateNextPayout = (
+// The contract sets round deadlines as follows:
+// - Round 1 deadline = startedAt + period (e.g., weekly = 7 days)
+// - Round N deadline = when round N-1 paid out + period
+// Since we don't track exact payout times, we calculate the "ideal" deadline:
+// Round N deadline = startedAt + (N * period)
+// This is the deadline BY which contributions must be made (before grace period)
+// Calculate base deadline for the current round (without grace period)
+export const calculateBaseDeadline = (
     startedAt: bigint,
     frequency: number,
-    currentRound: bigint = 1n
-): string => {
+    currentRound: bigint = 1n,
+    lastPayoutTimestamp?: bigint
+): bigint => {
     if (startedAt === 0n) {
-        return "Pending Start";
+        return 0n;
     }
 
-    const startDate = new Date(Number(startedAt) * 1000);
-    const nextDate = new Date(startDate);
+    let basisDate: Date;
+    let roundsToAdd: number;
 
-    // Calculate date for the NEXT round (currentRound + 1)
-    const nextRoundNumber = Number(currentRound);
+    if (currentRound > 1n && lastPayoutTimestamp && lastPayoutTimestamp > 0n) {
+        basisDate = new Date(Number(lastPayoutTimestamp) * 1000);
+        roundsToAdd = 1;
+    } else {
+        basisDate = new Date(Number(startedAt) * 1000);
+        roundsToAdd = Number(currentRound);
+    }
+
+    const nextDate = new Date(basisDate);
 
     switch (frequency) {
         case 0: // Daily
-            nextDate.setDate(nextDate.getDate() + nextRoundNumber);
+            nextDate.setDate(nextDate.getDate() + roundsToAdd);
             break;
         case 1: // Weekly
-            nextDate.setDate(nextDate.getDate() + (nextRoundNumber * 7));
+            nextDate.setDate(nextDate.getDate() + (roundsToAdd * 7));
             break;
         case 2: // Monthly
-            nextDate.setMonth(nextDate.getMonth() + nextRoundNumber);
+            nextDate.setMonth(nextDate.getMonth() + roundsToAdd);
             break;
     }
 
+    return BigInt(Math.floor(nextDate.getTime() / 1000));
+};
+
+export const calculateNextPayout = (
+    startedAt: bigint,
+    frequency: number,
+    currentRound: bigint = 1n,
+    lastPayoutTimestamp?: bigint
+): string => {
+    const deadline = calculateBaseDeadline(startedAt, frequency, currentRound, lastPayoutTimestamp);
+    if (deadline === 0n) return "Pending Start";
+
+    const nextDate = new Date(Number(deadline) * 1000);
     return nextDate.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -151,39 +179,43 @@ export const calculateCollateral = (
 };
 
 // Calculate contribution deadline for current round
-// Returns the grace deadline (base deadline + grace period)
-// Members can contribute without penalty until this time
-// After this: contributions are deducted from collateral with 1% late fee
+// 
+// CONTRACT LOGIC:
+// 1. Round deadline (circleRoundDeadlines[circleId][round]) = when contributions must be made
+//    - Round 1: startedAt + period (e.g., startedAt + 7 days for weekly)
+//    - Round N: previous_payout_timestamp + period
+//    
+// 2. Grace deadline = round deadline + grace period
+//    - Daily: 12 hours grace
+//    - Weekly/Monthly: 48 hours grace
+//    
+// 3. After grace deadline expires, next recipient can call forfeitMember()
+//
+// FRONTEND APPROXIMATION:
+// Since we don't track exact payout timestamps, we calculate the "ideal" deadline
+// assuming payouts happen exactly on time:
+// - Round N deadline = startedAt + (N * period)
+// - Grace deadline = Round N deadline + grace period
+//
+// IMPORTANT: The actual contract deadline may differ if previous payouts
+// were triggered late. This is an approximation for UI display.
+//
+// Returns: Unix timestamp (seconds) of the grace deadline
 export const calculateContributionDeadline = (
     startedAt: bigint,
     currentRound: bigint,
-    frequency: number
+    frequency: number,
+    lastPayoutTimestamp?: bigint
 ): bigint => {
-    if (startedAt === 0n || currentRound === 0n) {
-        return 0n;
-    }
+    const baseDeadline = calculateBaseDeadline(startedAt, frequency, currentRound, lastPayoutTimestamp);
+    if (baseDeadline === 0n) return 0n;
 
-    const startDate = new Date(Number(startedAt) * 1000);
-    const deadlineDate = new Date(startDate);
+    const deadlineDate = new Date(Number(baseDeadline) * 1000);
 
-    // Calculate base deadline based on current round and frequency
-    const roundNumber = Number(currentRound);
-
-    switch (frequency) {
-        case 0: // Daily
-            deadlineDate.setDate(deadlineDate.getDate() + roundNumber);
-            break;
-        case 1: // Weekly
-            deadlineDate.setDate(deadlineDate.getDate() + (roundNumber * 7));
-            break;
-        case 2: // Monthly
-            deadlineDate.setMonth(deadlineDate.getMonth() + roundNumber);
-            break;
-    }
-
-    // Add grace period - this is when members can still contribute from wallet
-    // After grace period: contributions are deducted from collateral with penalty
-    // Daily: 12 hours, Weekly/Monthly: 48 hours
+    // Add grace period on top of the base deadline
+    // Contract: _getGracePeriod() returns:
+    // - Daily: 12 hours (43200 seconds)
+    // - Weekly/Monthly: 48 hours (172800 seconds)
     const gracePeriodHours = frequency === 0 ? 12 : 48;
     deadlineDate.setHours(deadlineDate.getHours() + gracePeriodHours);
 

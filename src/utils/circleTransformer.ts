@@ -1,5 +1,5 @@
 import { ActiveCircle, Circle, CircleJoined } from "../interfaces/interfaces";
-import { calculateCollateral, calculateNextPayout, formatBigInt, getStateText, calculateContributionDeadline } from "./helpers";
+import { calculateCollateral, calculateNextPayout, formatBigInt, getStateText, calculateContributionDeadline, calculateBaseDeadline } from "./helpers";
 
 // Transform Circle to ActiveCircle
 export const transformCircleToActiveCircle = (
@@ -50,19 +50,32 @@ export const transformCircleToActiveCircle = (
         payoutAmountBigInt = totalPot - platformFee;
     }
 
-    const payoutAmount = formatBigInt(payoutAmountBigInt);
-    const nextPayout = calculateNextPayout(circle.startedAt, circle.frequency, circle.currentRound || 1n);
-    const collateral = calculateCollateral(
-        circle.contributionAmount,
-        circle.maxMembers // Collateral is always based on maxMembers (what you committed to)
-    );
-
     // Filter events for this circle
     const circleVotingEvents = votingEvents.filter(e => e.circleId === circle.circleId);
     const circleVotes = votes.filter(v => v.circleId === circle.circleId);
     const circleVoteResults = voteResults.filter(r => r.circleId === circle.circleId);
     const circlePositions = positions.filter(p => p.circleId === circle.circleId);
     const circlePayouts = payouts.filter(p => p.circleId === circle.circleId);
+
+    // Find the latest payout to use as basis for next round deadline
+    const lastPayout = circlePayouts.length > 0
+        ? circlePayouts.reduce((latest, current) =>
+            current.timestamp > latest.timestamp ? current : latest
+        )
+        : null;
+    const lastPayoutTimestamp = lastPayout ? lastPayout.timestamp : undefined;
+
+    const payoutAmount = formatBigInt(payoutAmountBigInt);
+    const nextPayout = calculateNextPayout(
+        circle.startedAt,
+        circle.frequency,
+        circle.currentRound || 1n,
+        lastPayoutTimestamp
+    );
+    const collateral = calculateCollateral(
+        circle.contributionAmount,
+        circle.maxMembers // Collateral is always based on maxMembers (what you committed to)
+    );
 
     // Check if user has contributed or was forfeited for the current round
     let hasContributed = false;
@@ -139,7 +152,7 @@ export const transformCircleToActiveCircle = (
         name: circle.circleName,
         contribution: contributionFormatted,
         frequency: circle.frequency,
-        totalPositions: Number(circle.currentMembers), 
+        totalPositions: Number(circle.currentMembers),
         currentPosition: userPosition > 0 ? userPosition : 1,
         payoutAmount: payoutAmount,
         nextPayout: nextPayout,
@@ -149,7 +162,14 @@ export const transformCircleToActiveCircle = (
         contributionDeadline: calculateContributionDeadline(
             circle.startedAt,
             circle.currentRound || 1n,
-            circle.frequency
+            circle.frequency,
+            lastPayoutTimestamp
+        ),
+        baseDeadline: calculateBaseDeadline(
+            circle.startedAt,
+            circle.frequency,
+            circle.currentRound || 1n,
+            lastPayoutTimestamp
         ),
         votingEvents: circleVotingEvents,
         votes: circleVotes,
@@ -163,7 +183,7 @@ export const transformCircleToActiveCircle = (
         isForfeitedThisRound: isForfeitedThisRound,
         forfeitedAmount: forfeitedAmount,
         forfeitedContributionPortion: forfeitedContributionPortion,
-        latePayCount: latePayCount, 
+        latePayCount: latePayCount,
         rawCircle: {
             ...circle,
             circleId: circle.circleId,

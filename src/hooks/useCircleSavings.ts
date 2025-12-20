@@ -303,6 +303,20 @@ const circlesByIdsQuery = gql`
         transactionHash
       }
     }
+    # All payouts for these circles
+    payoutDistributeds(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+      id
+      user {
+        id
+      }
+      circleId
+      round
+      payoutAmount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
   }
 `;
 
@@ -411,6 +425,9 @@ const singleCircleQuery = gql`
     # Payouts to calculate currentRound
     payoutDistributeds(where: { circleId: $circleId }, orderBy: round, orderDirection: desc) {
       round
+      transaction {
+        blockTimestamp
+      }
     }
   }
 `;
@@ -472,6 +489,7 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         let joinedCirclesMembers = [];
         let joinedCirclesVotingEvents = [];
         let joinedCirclesVoteResults = [];
+        let joinedCirclesPayouts = [];
         if (joinedCircleIds.length > 0) {
           const circlesResult: any = await request(
             SUBGRAPH_URL,
@@ -483,6 +501,7 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
           joinedCirclesMembers = circlesResult.circleJoineds;
           joinedCirclesVotingEvents = circlesResult.votingInitiateds;
           joinedCirclesVoteResults = circlesResult.voteExecuteds;
+          joinedCirclesPayouts = circlesResult.payoutDistributeds;
           // No need to calculate currentRound - subgraph now tracks it directly
         }
 
@@ -492,6 +511,7 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
           joinedCirclesMembers,
           joinedCirclesVotingEvents,
           joinedCirclesVoteResults,
+          joinedCirclesPayouts,
         };
       } catch (err) {
         throw err;
@@ -608,8 +628,16 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       }));
       setContributions(processedContributions);
 
-      // Process payouts
-      const processedPayouts = circlesData.payoutDistributeds.map((payout: any) => ({
+      // Process payouts - combine user payouts and all circle payouts
+      const allPayoutsMap = new Map();
+
+      // Add user payouts first
+      circlesData.payoutDistributeds.forEach((p: any) => allPayoutsMap.set(p.id, p));
+
+      // Add joined circles payouts (may overlap)
+      circlesData.joinedCirclesPayouts?.forEach((p: any) => allPayoutsMap.set(p.id, p));
+
+      const processedPayouts = Array.from(allPayoutsMap.values()).map((payout: any) => ({
         id: payout.id,
         circleId: BigInt(payout.circleId),
         round: BigInt(payout.round),

@@ -104,7 +104,7 @@ const Circles: React.FC = () => {
       // If user has withdrawn, it's not active for them
       if (c.hasWithdrawn) return false;
       // If circle is in a terminal state, it's not active
-      if (["completed", "withdrawn", "dead"].includes(c.status)) return false;
+      if (["completed", "dead"].includes(c.status)) return false;
 
       // Otherwise include standard active states
       return ["active", "created", "pending", "voting"].includes(c.status);
@@ -114,8 +114,7 @@ const Circles: React.FC = () => {
       // 1. Completed
       if (c.status === "completed") return true;
       // 2. Withdrawn (Circle status OR User specific withdrawal OR Dead)
-      if (c.status === "withdrawn" || c.status === "dead" || c.hasWithdrawn)
-        return true;
+      if (c.status === "dead" || c.hasWithdrawn) return true;
 
       // 3. Forfeited record (Show in history even if still active)
       if (c.isForfeited) return true;
@@ -277,7 +276,7 @@ const Circles: React.FC = () => {
               >
                 {
                   historyCircles.filter(
-                    (c) => c.status === "withdrawn" || c.hasWithdrawn
+                    (c) => c.status === "dead" || c.hasWithdrawn
                   ).length
                 }
               </div>
@@ -379,115 +378,116 @@ const Circles: React.FC = () => {
                       account?.address?.toLowerCase()
                   );
                   const hasWithdrawn =
-                    circle.hasWithdrawn ||
-                    circle.status === "withdrawn" ||
-                    circle.status === "dead";
+                    circle.hasWithdrawn || circle.status === "dead";
                   const isForfeited = circle.isForfeited;
 
-                  let statusLabel = "";
-                  let statusIcon = null;
-                  let statusClass = "";
-                  let detailsText = null;
-
+                  const statusInfo = [];
+                  let detailsText;
                   if (isForfeited) {
-                    statusLabel = "Late Penalty";
-                    statusIcon = (
-                      <AlertOctagon
-                        size={16}
-                        className="md:w-[18px] md:h-[18px]"
-                      />
-                    );
-                    statusClass =
-                      "text-orange-600 bg-orange-50 dark:bg-orange-900/20";
-                    detailsText = (
-                      <div className="flex flex-col">
-                        <span className="text-xs md:text-sm text-orange-600">
-                          {circle.latePayCount} Record
-                          {circle.latePayCount !== 1 ? "s" : ""}
-                        </span>
-                        <span
-                          className="text-[10px] md:text-xs"
-                          style={{ color: colors.textLight }}
-                        >
-                          Contribution Covered: $
+                    statusInfo.push({
+                      label: "Late Penalty",
+                      icon: (
+                        <AlertOctagon
+                          size={16}
+                          className="md:w-[18px] md:h-[18px]"
+                        />
+                      ),
+                      class:
+                        "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
+                    });
+                  }
+                  if (userPayout) {
+                    statusInfo.push({
+                      label: "Payout Received",
+                      icon: (
+                        <TrendingUp
+                          size={16}
+                          className="md:w-[18px] md:h-[18px]"
+                        />
+                      ),
+                      class: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
+                    });
+                  }
+                  if (hasWithdrawn && !isForfeited) {
+                    // Show withdrawn if not forfeited (already covered)
+                    statusInfo.push({
+                      label: "Withdrawn",
+                      icon: (
+                        <AlertOctagon
+                          size={16}
+                          className="md:w-[18px] md:h-[18px]"
+                        />
+                      ),
+                      class:
+                        "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
+                    });
+                  }
+                  if (
+                    circle.status === "completed" &&
+                    statusInfo.length === 0
+                  ) {
+                    statusInfo.push({
+                      label: "Completed",
+                      icon: (
+                        <CheckCircle
+                          size={16}
+                          className="md:w-[18px] md:h-[18px]"
+                        />
+                      ),
+                      class: "text-green-600 bg-green-50 dark:bg-green-900/20",
+                    });
+                  }
+
+                  // Default if somehow empty
+                  if (statusInfo.length === 0) {
+                    statusInfo.push({
+                      label:
+                        circle.status.charAt(0).toUpperCase() +
+                        circle.status.slice(1),
+                      icon: <TrendingUp size={16} />,
+                      class: "text-gray-600 bg-gray-50",
+                    });
+                  }
+
+                  detailsText = (
+                    <div className="flex flex-col gap-1">
+                      {userPayout && (
+                        <span className="text-xs md:text-sm text-blue-600 font-medium">
+                          Received: $
                           {(
-                            Number(circle.forfeitedContributionPortion || 0n) /
-                            1e18
+                            Number(userPayout.payoutAmount) / 1e18
                           ).toLocaleString("en-US", {
                             maximumFractionDigits: 2,
                           })}
                         </span>
-                      </div>
-                    );
-                  } else if (hasWithdrawn) {
-                    statusLabel = "Withdrawn";
-                    statusIcon = (
-                      <AlertOctagon
-                        size={16}
-                        className="md:w-[18px] md:h-[18px]"
-                      />
-                    );
-                    statusClass =
-                      "text-orange-600 bg-orange-50 dark:bg-orange-900/20";
-                    detailsText = (
-                      <span
-                        className="text-xs md:text-sm"
-                        style={{ color: colors.textLight }}
-                      >
-                        Collateral Withdrawn
-                      </span>
-                    );
-                  } else if (circle.status === "completed") {
-                    statusLabel = "Completed";
-                    statusIcon = (
-                      <CheckCircle
-                        size={16}
-                        className="md:w-[18px] md:h-[18px]"
-                      />
-                    );
-                    statusClass =
-                      "text-green-600 bg-green-50 dark:bg-green-900/20";
-                    detailsText = (
-                      <span
-                        className="text-xs md:text-sm"
-                        style={{ color: colors.textLight }}
-                      >
-                        Collateral Returned ($
-                        {Math.floor(
-                          Number(circle.rawCircle.collateralAmount) / 1e18
+                      )}
+                      {isForfeited && (
+                        <span className="text-xs md:text-sm text-orange-600">
+                          {circle.latePayCount} Late Pay Record
+                          {circle.latePayCount !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                      {!isForfeited &&
+                        !userPayout &&
+                        circle.status === "completed" && (
+                          <span
+                            className="text-xs md:text-sm"
+                            style={{ color: colors.textLight }}
+                          >
+                            Collateral Returned: $
+                            {Math.floor(
+                              Number(circle.rawCircle.collateralAmount) / 1e18
+                            )}
+                          </span>
                         )}
-                        )
-                      </span>
-                    );
-                  } else if (userPayout) {
-                    statusLabel = "Payout Received";
-                    statusIcon = (
-                      <TrendingUp
-                        size={16}
-                        className="md:w-[18px] md:h-[18px]"
-                      />
-                    );
-                    statusClass =
-                      "text-blue-600 bg-blue-50 dark:bg-blue-900/20";
-                    detailsText = (
-                      <span
-                        className="text-xs md:text-sm"
-                        style={{ color: colors.textLight }}
-                      >
-                        Received: $
-                        {(
-                          Number(userPayout.payoutAmount) / 1e18
-                        ).toLocaleString("en-US", {
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    );
-                  }
+                    </div>
+                  );
 
                   return (
                     <div
                       key={circle.id}
-                      className="rounded-xl p-3 md:p-4 border opacity-75"
+                      onClick={() => handleViewDetails(circle)}
+                      className="rounded-xl p-3 md:p-4 border opacity-85 hover:opacity-100 transition-all cursor-pointer hover:shadow-md"
                       style={{
                         backgroundColor: colors.surface,
                         borderColor: colors.border,
@@ -516,19 +516,15 @@ const Circles: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <div
-                            className={`flex items-center gap-1.5 font-semibold px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm ${statusClass}`}
-                          >
-                            {statusIcon}
-                            <span className="hidden sm:inline">
-                              {statusLabel}
-                            </span>
-                            <span className="sm:hidden">
-                              {statusLabel === "Payout Received"
-                                ? "Payout"
-                                : statusLabel}
-                            </span>
-                          </div>
+                          {statusInfo.map((info, idx) => (
+                            <div
+                              key={idx}
+                              className={`flex items-center gap-1.5 font-semibold px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-xs ${info.class}`}
+                            >
+                              {info.icon}
+                              <span>{info.label}</span>
+                            </div>
+                          ))}
                           {isForfeited && (
                             <span className="text-[10px] md:text-xs font-bold text-orange-500 mr-1">
                               Loss: $
