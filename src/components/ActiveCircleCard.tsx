@@ -36,6 +36,23 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
 }) => {
   const account = useActiveAccount();
   const hasContributed = circle.hasContributed;
+  const [now, setNow] = React.useState(Math.floor(Date.now() / 1000));
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Math.floor(Date.now() / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isRecipient = circle.currentPosition === Number(circle.currentRound);
+  const userPayout = circle.payouts?.find(
+    (p: any) =>
+      p.user?.id?.toLowerCase() === account?.address?.toLowerCase() &&
+      Number(p.round) === Number(circle.currentRound)
+  );
+  const payoutPending = isRecipient && !userPayout;
+
   return (
     <div
       className="p-3 sm:p-4 rounded-xl border"
@@ -113,13 +130,6 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
               {(() => {
                 if (!account?.address) return null;
 
-                // Check if the CURRENT USER received ANY payout
-                const userPayout = circle.payouts?.find((p: any) => {
-                  return (
-                    p.user?.id?.toLowerCase() === account.address.toLowerCase()
-                  );
-                });
-
                 // Only show "Payout Received" if current user got the payout
                 return userPayout ? (
                   <div className="mt-1 text-[10px] sm:text-xs font-semibold text-green-600 flex items-center gap-1">
@@ -129,13 +139,17 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                 ) : null;
               })()}
             </div>
-            {!hasContributed ? (
+            {!hasContributed || payoutPending ? (
               <div className="text-right">
                 <div
                   className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
                   style={{ color: colors.textLight }}
                 >
-                  Contribution Deadline
+                  {isRecipient
+                    ? now > Number(circle.contributionDeadline)
+                      ? "Forfeit Available"
+                      : "Time until Forfeit"
+                    : "Contribution Deadline"}
                 </div>
                 <div style={{ color: colors.text }}>
                   <CountdownTimer
@@ -143,6 +157,12 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                     colors={colors}
                   />
                 </div>
+                {hasContributed && isRecipient && (
+                  <div className="mt-1 text-[10px] font-semibold text-blue-600 flex items-center justify-end gap-1">
+                    <span>✓</span>
+                    <span>Contributed</span>
+                  </div>
+                )}
               </div>
             ) : circle.isForfeitedThisRound ? (
               <div className="text-right">
@@ -154,11 +174,17 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                 </div>
               </div>
             ) : (
-              <div
-                className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
-                style={{ color: colors.textLight }}
-              >
-                Contribution Paid
+              <div className="text-right">
+                <div
+                  className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                  style={{ color: colors.textLight }}
+                >
+                  Status
+                </div>
+                <div className="mt-1 text-[10px] sm:text-xs font-semibold text-blue-600 flex items-center justify-end gap-1">
+                  <span>✓</span>
+                  <span>Contribution Paid</span>
+                </div>
               </div>
             )}
           </div>

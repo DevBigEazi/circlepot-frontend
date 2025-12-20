@@ -444,7 +444,6 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   if (state === 3) {
     const hasContributed = circle.hasContributed;
     const currentRound = Number(circle.rawCircle.currentRound || 1);
-    const isNextRecipient = circle.currentPosition === currentRound;
 
     const contributionDeadlineWithGrace = circle.contributionDeadline;
     const deadlineElapsed = now > Number(contributionDeadlineWithGrace);
@@ -456,15 +455,10 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       ) || false;
 
     // Show forfeit button only if:
-    // 1. User is the next recipient
-    // 2. Contribution deadline (WITH grace period) has elapsed
-    // 3. User has already contributed
-    // 4. User has NOT received payout for this round
-    const canForfeit =
-      isNextRecipient &&
-      deadlineElapsed &&
-      hasContributed &&
-      !hasReceivedPayout;
+    // 1. Contribution deadline (WITH grace period) has elapsed
+    // 2. User has already contributed (to ensure they are an active player)
+    // 3. User has NOT received payout for this round (if they were the recipient)
+    const canForfeit = deadlineElapsed && hasContributed && !hasReceivedPayout;
 
     return (
       <div className="flex gap-2 flex-1">
@@ -496,7 +490,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             }
             disabled={isLoading}
             className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
-            title="Forfeit late members (Available after grace period if you haven't received payout)"
+            title="Forfeit late members (Available after grace period if payout hasn't been distributed)"
           >
             {isLoading ? (
               "Processing..."

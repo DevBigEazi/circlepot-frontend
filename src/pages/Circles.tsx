@@ -104,7 +104,7 @@ const Circles: React.FC = () => {
       // If user has withdrawn, it's not active for them
       if (c.hasWithdrawn) return false;
       // If circle is in a terminal state, it's not active
-      if (["completed", "withdrawn", "dead"].includes(c.status)) return false;
+      if (["completed", "dead"].includes(c.status)) return false;
 
       // Otherwise include standard active states
       return ["active", "created", "pending", "voting"].includes(c.status);
@@ -114,8 +114,7 @@ const Circles: React.FC = () => {
       // 1. Completed
       if (c.status === "completed") return true;
       // 2. Withdrawn (Circle status OR User specific withdrawal OR Dead)
-      if (c.status === "withdrawn" || c.status === "dead" || c.hasWithdrawn)
-        return true;
+      if (c.status === "dead" || c.hasWithdrawn) return true;
 
       // 3. Forfeited record (Show in history even if still active)
       if (c.isForfeited) return true;
@@ -277,7 +276,7 @@ const Circles: React.FC = () => {
               >
                 {
                   historyCircles.filter(
-                    (c) => c.status === "withdrawn" || c.hasWithdrawn
+                    (c) => c.status === "dead" || c.hasWithdrawn
                   ).length
                 }
               </div>
@@ -379,9 +378,7 @@ const Circles: React.FC = () => {
                       account?.address?.toLowerCase()
                   );
                   const hasWithdrawn =
-                    circle.hasWithdrawn ||
-                    circle.status === "withdrawn" ||
-                    circle.status === "dead";
+                    circle.hasWithdrawn || circle.status === "dead";
                   const isForfeited = circle.isForfeited;
 
                   let statusLabel = "";
