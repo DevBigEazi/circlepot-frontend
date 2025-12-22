@@ -30,6 +30,7 @@ const Circles: React.FC = () => {
     contributions,
     payouts,
     collateralWithdrawals,
+    collateralReturns,
     forfeitures,
     isLoading,
     startCircle,
@@ -464,19 +465,33 @@ const Circles: React.FC = () => {
                           {circle.latePayCount !== 1 ? "s" : ""}
                         </span>
                       )}
-                      {!isForfeited &&
-                        userPayout &&
-                        circle.status === "completed" && (
-                          <span
-                            className="text-xs md:text-sm"
-                            style={{ color: colors.textLight }}
-                          >
-                            Collateral Returned: $
-                            {Math.floor(
-                              Number(circle.rawCircle.collateralAmount) / 1e18
-                            )}
-                          </span>
-                        )}
+                      {circle.status === "completed" &&
+                        (() => {
+                          const userCollateralReturn = collateralReturns.find(
+                            (cr: any) =>
+                              BigInt(cr.circleId).toString() ===
+                                circle.rawCircle.circleId.toString() &&
+                              cr.user?.id?.toLowerCase() ===
+                                account?.address?.toLowerCase()
+                          );
+
+                          const returnedAmount = userCollateralReturn
+                            ? Number(userCollateralReturn.amount) / 1e18
+                            : 0;
+
+                          return (
+                            <span
+                              className="text-xs md:text-sm"
+                              style={{ color: colors.textLight }}
+                            >
+                              Collateral Returned: $
+                              {returnedAmount.toLocaleString("en-US", {
+                                maximumFractionDigits: 2,
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+                          );
+                        })()}
                     </div>
                   );
 

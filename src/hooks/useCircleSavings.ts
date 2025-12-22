@@ -12,19 +12,34 @@ import {
   SUBGRAPH_HEADERS,
   CIRCLE_SAVINGS_ADDRESS,
   CUSD_ADDRESS,
-  CHAIN_ID
+  CHAIN_ID,
 } from "../constants/constants";
 import {
-  Circle, CircleJoined, Contribution, CreateCircleParams, Payout,
-  VotingInitiated, VoteCast, VoteExecuted, PositionAssigned,
-  MemberInvited, LatePayment, MemberForfeited, CollateralWithdrawn
+  Circle,
+  CircleJoined,
+  Contribution,
+  CreateCircleParams,
+  Payout,
+  VotingInitiated,
+  VoteCast,
+  VoteExecuted,
+  PositionAssigned,
+  MemberInvited,
+  LatePayment,
+  MemberForfeited,
+  CollateralWithdrawn,
+  CollateralReturned,
 } from "../interfaces/interfaces";
 
 // GraphQL Queries
 const userCirclesQuery = gql`
   query GetUserCircles($userId: Bytes!) {
     # Query circles where user is creator
-    createdCircles: circles(where: { creator: $userId }, orderBy: updatedAt, orderDirection: desc) {
+    createdCircles: circles(
+      where: { creator: $userId }
+      orderBy: updatedAt
+      orderDirection: desc
+    ) {
       id
       circleId
       creator {
@@ -47,7 +62,11 @@ const userCirclesQuery = gql`
     }
 
     # Query circles user has joined
-    circleJoineds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    circleJoineds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       circleId
       user {
@@ -64,7 +83,11 @@ const userCirclesQuery = gql`
     }
 
     # Contributions
-    contributionMades(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    contributionMades(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -79,7 +102,11 @@ const userCirclesQuery = gql`
     }
 
     # Payouts
-    payoutDistributeds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    payoutDistributeds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -94,7 +121,11 @@ const userCirclesQuery = gql`
     }
 
     # Position assignments
-    positionAssigneds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    positionAssigneds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -110,7 +141,11 @@ const userCirclesQuery = gql`
     }
 
     # Votes cast by user
-    voteCasts(where: { voter: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    voteCasts(
+      where: { voter: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       voter {
         id
@@ -126,7 +161,11 @@ const userCirclesQuery = gql`
     }
 
     # Late payments
-    latePaymentRecordeds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    latePaymentRecordeds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -141,7 +180,11 @@ const userCirclesQuery = gql`
     }
 
     # Member forfeitures (where user was forfeited)
-    memberForfeiteds(where: { forfeitedUser: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    memberForfeiteds(
+      where: { forfeitedUser: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       forfeiter {
         id
@@ -163,7 +206,11 @@ const userCirclesQuery = gql`
     }
 
     # Invitations received
-    memberInviteds(where: { invitee: $userId }, orderBy: invitedAt, orderDirection: desc) {
+    memberInviteds(
+      where: { invitee: $userId }
+      orderBy: invitedAt
+      orderDirection: desc
+    ) {
       id
       inviter {
         id
@@ -184,7 +231,29 @@ const userCirclesQuery = gql`
     }
 
     # Collateral withdrawals
-    collateralWithdrawns(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    collateralWithdrawns(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+      }
+      circleId
+      amount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+
+    # Collateral returns
+    collateralReturneds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -225,7 +294,11 @@ const circlesByIdsQuery = gql`
       updatedAt
     }
     # Fetch ALL members for these circles to calculate positions correctly
-    circleJoineds(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: asc) {
+    circleJoineds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: asc
+    ) {
       id
       circleId
       user {
@@ -241,7 +314,11 @@ const circlesByIdsQuery = gql`
       }
     }
     # Voting initiated events
-    votingInitiateds(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    votingInitiateds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       circleId
       votingStartAt
@@ -252,7 +329,11 @@ const circlesByIdsQuery = gql`
       }
     }
     # Vote execution results
-    voteExecuteds(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    voteExecuteds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       circleId
       circleStarted
@@ -264,7 +345,11 @@ const circlesByIdsQuery = gql`
       }
     }
     # Circle started events
-    circleStarteds(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    circleStarteds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       circleId
       circleStartedAt
@@ -274,7 +359,11 @@ const circlesByIdsQuery = gql`
       }
     }
     # Position assignments for these circles
-    positionAssigneds(where: { circleId_in: $circleIds }, orderBy: position, orderDirection: asc) {
+    positionAssigneds(
+      where: { circleId_in: $circleIds }
+      orderBy: position
+      orderDirection: asc
+    ) {
       id
       user {
         id
@@ -289,7 +378,11 @@ const circlesByIdsQuery = gql`
       }
     }
     # All votes cast for these circles
-    voteCasts(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    voteCasts(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       voter {
         id
@@ -304,7 +397,11 @@ const circlesByIdsQuery = gql`
       }
     }
     # All payouts for these circles
-    payoutDistributeds(where: { circleId_in: $circleIds }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    payoutDistributeds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -368,7 +465,12 @@ const singleCircleQuery = gql`
     }
 
     # Voting initiated
-    votingInitiateds(where: { circleId: $circleId }, orderBy: transaction__blockTimestamp, orderDirection: desc, first: 1) {
+    votingInitiateds(
+      where: { circleId: $circleId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+      first: 1
+    ) {
       id
       circleId
       votingStartAt
@@ -380,7 +482,12 @@ const singleCircleQuery = gql`
     }
 
     # Vote results
-    voteExecuteds(where: { circleId: $circleId }, orderBy: transaction__blockTimestamp, orderDirection: desc, first: 1) {
+    voteExecuteds(
+      where: { circleId: $circleId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+      first: 1
+    ) {
       id
       circleId
       circleStarted
@@ -393,7 +500,11 @@ const singleCircleQuery = gql`
     }
 
     # All votes cast
-    voteCasts(where: { circleId: $circleId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    voteCasts(
+      where: { circleId: $circleId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       voter {
         id
@@ -409,7 +520,11 @@ const singleCircleQuery = gql`
     }
 
     # Position assignments
-    positionAssigneds(where: { circleId: $circleId }, orderBy: position, orderDirection: asc) {
+    positionAssigneds(
+      where: { circleId: $circleId }
+      orderBy: position
+      orderDirection: asc
+    ) {
       id
       user {
         id
@@ -425,18 +540,46 @@ const singleCircleQuery = gql`
     }
 
     # Payouts to calculate currentRound
-    payoutDistributeds(where: { circleId: $circleId }, orderBy: round, orderDirection: desc) {
+    payoutDistributeds(
+      where: { circleId: $circleId }
+      orderBy: round
+      orderDirection: desc
+    ) {
       round
       transaction {
         blockTimestamp
       }
     }
+
+    # Collateral returns for these circles
+    collateralReturneds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+        username
+        fullName
+      }
+      circleId
+      amount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
   }
 `;
 
-export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean = false) => {
+export const useCircleSavings = (
+  client: ThirdwebClient,
+  enablePolling: boolean = false
+) => {
   const account = useActiveAccount();
-  const { mutate: sendTransaction, isPending: isSending } = useSendTransaction();
+  const { mutate: sendTransaction, isPending: isSending } =
+    useSendTransaction();
   const [circles, setCircles] = useState<Circle[]>([]);
   const [joinedCircles, setJoinedCircles] = useState<CircleJoined[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
@@ -448,7 +591,12 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
   const [invitations, setInvitations] = useState<MemberInvited[]>([]);
   const [latePayments, setLatePayments] = useState<LatePayment[]>([]);
   const [forfeitures, setForfeitures] = useState<MemberForfeited[]>([]);
-  const [collateralWithdrawals, setCollateralWithdrawals] = useState<CollateralWithdrawn[]>([]);
+  const [collateralWithdrawals, setCollateralWithdrawals] = useState<
+    CollateralWithdrawn[]
+  >([]);
+  const [collateralReturns, setCollateralReturns] = useState<
+    CollateralReturned[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -484,7 +632,9 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         );
 
         // 2. Extract unique circle IDs from join events
-        const joinedCircleIds = [...new Set(userResult.circleJoineds.map((j: any) => j.circleId))];
+        const joinedCircleIds = [
+          ...new Set(userResult.circleJoineds.map((j: any) => j.circleId)),
+        ];
 
         // 3. Fetch details for joined circles
         let joinedCirclesDetails = [];
@@ -532,44 +682,46 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
   useEffect(() => {
     if (circlesData) {
       // Process circles created by user
-      const createdCircles = circlesData.createdCircles?.map((circle: any) => ({
-        id: circle.id,
-        circleId: BigInt(circle.circleId),
-        circleName: circle.circleName,
-        circleDescription: circle.circleDescription,
-        contributionAmount: BigInt(circle.contributionAmount),
-        collateralAmount: BigInt(circle.collateralAmount),
-        frequency: circle.frequency,
-        maxMembers: BigInt(circle.maxMembers),
-        currentMembers: BigInt(circle.currentMembers),
-        // For created circles not in joined list (rare), default to 1 or fetch separately. 
-        // But they should be in joined list if creator is member.
-        currentRound: 1n,
-        visibility: circle.visibility,
-        state: circle.state,
-        createdAt: BigInt(circle.createdAt),
-        startedAt: BigInt(circle.startedAt),
-        creator: circle.creator,
-      })) || [];
+      const createdCircles =
+        circlesData.createdCircles?.map((circle: any) => ({
+          id: circle.id,
+          circleId: BigInt(circle.circleId),
+          circleName: circle.circleName,
+          circleDescription: circle.circleDescription,
+          contributionAmount: BigInt(circle.contributionAmount),
+          collateralAmount: BigInt(circle.collateralAmount),
+          frequency: circle.frequency,
+          maxMembers: BigInt(circle.maxMembers),
+          currentMembers: BigInt(circle.currentMembers),
+          // For created circles not in joined list (rare), default to 1 or fetch separately.
+          // But they should be in joined list if creator is member.
+          currentRound: 1n,
+          visibility: circle.visibility,
+          state: circle.state,
+          createdAt: BigInt(circle.createdAt),
+          startedAt: BigInt(circle.startedAt),
+          creator: circle.creator,
+        })) || [];
 
       // Process circles user has joined (from separate query)
-      const joinedCirclesData = circlesData.joinedCirclesDetails?.map((circle: any) => ({
-        id: circle.id,
-        circleId: BigInt(circle.circleId),
-        circleName: circle.circleName,
-        circleDescription: circle.circleDescription,
-        contributionAmount: BigInt(circle.contributionAmount),
-        collateralAmount: BigInt(circle.collateralAmount),
-        frequency: circle.frequency,
-        maxMembers: BigInt(circle.maxMembers),
-        currentMembers: BigInt(circle.currentMembers),
-        currentRound: BigInt(circle.currentRound || 1),
-        visibility: circle.visibility,
-        state: circle.state,
-        createdAt: BigInt(circle.createdAt),
-        startedAt: BigInt(circle.startedAt),
-        creator: circle.creator,
-      })) || [];
+      const joinedCirclesData =
+        circlesData.joinedCirclesDetails?.map((circle: any) => ({
+          id: circle.id,
+          circleId: BigInt(circle.circleId),
+          circleName: circle.circleName,
+          circleDescription: circle.circleDescription,
+          contributionAmount: BigInt(circle.contributionAmount),
+          collateralAmount: BigInt(circle.collateralAmount),
+          frequency: circle.frequency,
+          maxMembers: BigInt(circle.maxMembers),
+          currentMembers: BigInt(circle.currentMembers),
+          currentRound: BigInt(circle.currentRound || 1),
+          visibility: circle.visibility,
+          state: circle.state,
+          createdAt: BigInt(circle.createdAt),
+          startedAt: BigInt(circle.startedAt),
+          creator: circle.creator,
+        })) || [];
 
       // Combine created and joined circles, removing duplicates by circleId
       const allCirclesMap = new Map();
@@ -621,43 +773,53 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       setJoinedCircles(processedJoined);
 
       // Process contributions
-      const processedContributions = circlesData.contributionMades.map((contrib: any) => ({
-        id: contrib.id,
-        circleId: BigInt(contrib.circleId),
-        round: BigInt(contrib.round),
-        amount: BigInt(contrib.amount),
-        timestamp: BigInt(contrib.transaction.blockTimestamp),
-      }));
+      const processedContributions = circlesData.contributionMades.map(
+        (contrib: any) => ({
+          id: contrib.id,
+          circleId: BigInt(contrib.circleId),
+          round: BigInt(contrib.round),
+          amount: BigInt(contrib.amount),
+          timestamp: BigInt(contrib.transaction.blockTimestamp),
+        })
+      );
       setContributions(processedContributions);
 
       // Process payouts - combine user payouts and all circle payouts
       const allPayoutsMap = new Map();
 
       // Add user payouts first
-      circlesData.payoutDistributeds.forEach((p: any) => allPayoutsMap.set(p.id, p));
+      circlesData.payoutDistributeds.forEach((p: any) =>
+        allPayoutsMap.set(p.id, p)
+      );
 
       // Add joined circles payouts (may overlap)
-      circlesData.joinedCirclesPayouts?.forEach((p: any) => allPayoutsMap.set(p.id, p));
+      circlesData.joinedCirclesPayouts?.forEach((p: any) =>
+        allPayoutsMap.set(p.id, p)
+      );
 
-      const processedPayouts = Array.from(allPayoutsMap.values()).map((payout: any) => ({
-        id: payout.id,
-        circleId: BigInt(payout.circleId),
-        round: BigInt(payout.round),
-        payoutAmount: BigInt(payout.payoutAmount),
-        user: payout.user, // Include user info for payout received indicator
-        timestamp: BigInt(payout.transaction.blockTimestamp),
-      }));
+      const processedPayouts = Array.from(allPayoutsMap.values()).map(
+        (payout: any) => ({
+          id: payout.id,
+          circleId: BigInt(payout.circleId),
+          round: BigInt(payout.round),
+          payoutAmount: BigInt(payout.payoutAmount),
+          user: payout.user, // Include user info for payout received indicator
+          timestamp: BigInt(payout.transaction.blockTimestamp),
+        })
+      );
       setPayouts(processedPayouts);
 
       // Process position assignments
-      const processedPositions = (circlesData.positionAssigneds || []).map((pos: any) => ({
-        id: pos.id,
-        circleId: BigInt(pos.circleId),
-        user: pos.user,
-        position: BigInt(pos.position),
-        timestamp: BigInt(pos.transaction.blockTimestamp),
-        transactionHash: pos.transaction.transactionHash,
-      }));
+      const processedPositions = (circlesData.positionAssigneds || []).map(
+        (pos: any) => ({
+          id: pos.id,
+          circleId: BigInt(pos.circleId),
+          user: pos.user,
+          position: BigInt(pos.position),
+          timestamp: BigInt(pos.transaction.blockTimestamp),
+          transactionHash: pos.transaction.transactionHash,
+        })
+      );
       setPositions(processedPositions);
 
       // Process votes cast
@@ -672,7 +834,9 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       setVotes(processedVotes);
 
       // Process late payments
-      const processedLatePayments = (circlesData.latePaymentRecordeds || []).map((late: any) => ({
+      const processedLatePayments = (
+        circlesData.latePaymentRecordeds || []
+      ).map((late: any) => ({
         id: late.id,
         circleId: BigInt(late.circleId),
         round: BigInt(late.round),
@@ -683,32 +847,38 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       setLatePayments(processedLatePayments);
 
       // Process member forfeitures
-      const processedForfeitures = (circlesData.memberForfeiteds || []).map((forf: any) => ({
-        id: forf.id,
-        circleId: BigInt(forf.circleId),
-        forfeiter: forf.forfeiter,
-        forfeitedUser: forf.forfeitedUser,
-        round: BigInt(forf.round),
-        deductionAmount: BigInt(forf.deductionAmount),
-        timestamp: BigInt(forf.transaction.blockTimestamp),
-        transactionHash: forf.transaction.transactionHash,
-      }));
+      const processedForfeitures = (circlesData.memberForfeiteds || []).map(
+        (forf: any) => ({
+          id: forf.id,
+          circleId: BigInt(forf.circleId),
+          forfeiter: forf.forfeiter,
+          forfeitedUser: forf.forfeitedUser,
+          round: BigInt(forf.round),
+          deductionAmount: BigInt(forf.deductionAmount),
+          timestamp: BigInt(forf.transaction.blockTimestamp),
+          transactionHash: forf.transaction.transactionHash,
+        })
+      );
       setForfeitures(processedForfeitures);
 
       // Process invitations
-      const processedInvitations = (circlesData.memberInviteds || []).map((inv: any) => ({
-        id: inv.id,
-        circleId: BigInt(inv.circleId),
-        inviter: inv.inviter,
-        invitee: inv.invitee,
-        invitedAt: BigInt(inv.invitedAt),
-        timestamp: BigInt(inv.transaction.blockTimestamp),
-        transactionHash: inv.transaction.transactionHash,
-      }));
+      const processedInvitations = (circlesData.memberInviteds || []).map(
+        (inv: any) => ({
+          id: inv.id,
+          circleId: BigInt(inv.circleId),
+          inviter: inv.inviter,
+          invitee: inv.invitee,
+          invitedAt: BigInt(inv.invitedAt),
+          timestamp: BigInt(inv.transaction.blockTimestamp),
+          transactionHash: inv.transaction.transactionHash,
+        })
+      );
       setInvitations(processedInvitations);
 
       // Process collateral withdrawals
-      const processedCollateralWithdrawals = (circlesData.collateralWithdrawns || []).map((cw: any) => ({
+      const processedCollateralWithdrawals = (
+        circlesData.collateralWithdrawns || []
+      ).map((cw: any) => ({
         id: cw.id,
         circleId: BigInt(cw.circleId),
         amount: BigInt(cw.amount),
@@ -718,7 +888,9 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       setCollateralWithdrawals(processedCollateralWithdrawals);
 
       // Process voting events from joined circles
-      const processedVotingEvents = (circlesData.joinedCirclesVotingEvents || []).map((evt: any) => ({
+      const processedVotingEvents = (
+        circlesData.joinedCirclesVotingEvents || []
+      ).map((evt: any) => ({
         id: evt.id,
         circleId: BigInt(evt.circleId),
         votingStartAt: BigInt(evt.votingStartAt),
@@ -729,7 +901,9 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
       setVotingEvents(processedVotingEvents);
 
       // Process vote results from joined circles
-      const processedVoteResults = (circlesData.joinedCirclesVoteResults || []).map((res: any) => ({
+      const processedVoteResults = (
+        circlesData.joinedCirclesVoteResults || []
+      ).map((res: any) => ({
         id: res.id,
         circleId: BigInt(res.circleId),
         circleStarted: res.circleStarted,
@@ -739,6 +913,31 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         transactionHash: res.transaction.transactionHash,
       }));
       setVoteResults(processedVoteResults);
+
+      // process collateral returns
+      const allCollateralReturnsMap = new Map();
+
+      // Add user's returns
+      circlesData.collateralReturneds.forEach((cr: any) =>
+        allCollateralReturnsMap.set(cr.id, cr)
+      );
+
+      // Add all circle returns
+      circlesData.joinedCirclesCollateralReturns?.forEach((cr: any) =>
+        allCollateralReturnsMap.set(cr.id, cr)
+      );
+
+      const processedCollateralReturns = Array.from(
+        allCollateralReturnsMap.values()
+      ).map((cr: any) => ({
+        id: cr.id,
+        circleId: BigInt(cr.circleId),
+        user: cr.user,
+        amount: BigInt(cr.amount),
+        timestamp: BigInt(cr.transaction.blockTimestamp),
+        transactionHash: cr.transaction.transactionHash,
+      }));
+      setCollateralReturns(processedCollateralReturns);
 
       setError(null);
     }
@@ -758,7 +957,8 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
         const totalCommitment = params.contributionAmount * params.maxMembers;
         const lateBuffer = (totalCommitment * 100n) / 10000n;
         const collateral = totalCommitment + lateBuffer;
-        const visibilityFee = params.visibility === 1 ? BigInt("500000000000000000") : 0n;
+        const visibilityFee =
+          params.visibility === 1 ? BigInt("500000000000000000") : 0n;
         const totalRequired = collateral + visibilityFee;
 
         const approveTx = prepareContractCall({
@@ -788,7 +988,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    const errorMsg = error?.message || error?.toString() || "Transaction failed";
+                    const errorMsg =
+                      error?.message ||
+                      error?.toString() ||
+                      "Transaction failed";
                     setError(errorMsg);
                     reject(new Error(errorMsg));
                   },
@@ -796,7 +999,8 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              const errorMsg = error?.message || error?.toString() || "Approval failed";
+              const errorMsg =
+                error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
             },
@@ -844,11 +1048,14 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
 
                 sendTransaction(joinTransaction, {
                   onSuccess: (receipt) => {
-                    setTimeout(() => { refetchCircles(); }, 2000);
+                    setTimeout(() => {
+                      refetchCircles();
+                    }, 2000);
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    const errorMsg = error?.message || error?.toString() || "Join failed";
+                    const errorMsg =
+                      error?.message || error?.toString() || "Join failed";
                     setError(errorMsg);
                     reject(new Error(errorMsg));
                   },
@@ -856,7 +1063,8 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              const errorMsg = error?.message || error?.toString() || "Approval failed";
+              const errorMsg =
+                error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
             },
@@ -908,7 +1116,10 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
                     resolve(receipt);
                   },
                   onError: (error: any) => {
-                    const errorMsg = error?.message || error?.toString() || "Contribution failed";
+                    const errorMsg =
+                      error?.message ||
+                      error?.toString() ||
+                      "Contribution failed";
                     setError(errorMsg);
                     reject(new Error(errorMsg));
                   },
@@ -916,7 +1127,8 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
               }, 1500);
             },
             onError: (error: any) => {
-              const errorMsg = error?.message || error?.toString() || "Approval failed";
+              const errorMsg =
+                error?.message || error?.toString() || "Approval failed";
               setError(errorMsg);
               reject(new Error(errorMsg));
             },
@@ -1267,38 +1479,42 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
           joinedAt: join.transaction.blockTimestamp,
         }));
 
-        const votingEvents = result.votingInitiateds?.map((evt: any) => ({
-          id: evt.id,
-          circleId: BigInt(evt.circleId),
-          votingStartAt: BigInt(evt.votingStartAt),
-          votingEndAt: BigInt(evt.votingEndAt),
-          timestamp: BigInt(evt.transaction.blockTimestamp),
-        })) || [];
+        const votingEvents =
+          result.votingInitiateds?.map((evt: any) => ({
+            id: evt.id,
+            circleId: BigInt(evt.circleId),
+            votingStartAt: BigInt(evt.votingStartAt),
+            votingEndAt: BigInt(evt.votingEndAt),
+            timestamp: BigInt(evt.transaction.blockTimestamp),
+          })) || [];
 
-        const voteResults = result.voteExecuteds?.map((res: any) => ({
-          id: res.id,
-          circleId: BigInt(res.circleId),
-          circleStarted: res.circleStarted,
-          startVoteTotal: BigInt(res.startVoteTotal),
-          withdrawVoteTotal: BigInt(res.withdrawVoteTotal),
-          timestamp: BigInt(res.transaction.blockTimestamp),
-        })) || [];
+        const voteResults =
+          result.voteExecuteds?.map((res: any) => ({
+            id: res.id,
+            circleId: BigInt(res.circleId),
+            circleStarted: res.circleStarted,
+            startVoteTotal: BigInt(res.startVoteTotal),
+            withdrawVoteTotal: BigInt(res.withdrawVoteTotal),
+            timestamp: BigInt(res.transaction.blockTimestamp),
+          })) || [];
 
-        const votes = result.voteCasts?.map((vote: any) => ({
-          id: vote.id,
-          circleId: BigInt(vote.circleId),
-          voter: vote.voter,
-          choice: vote.choice,
-          timestamp: BigInt(vote.transaction.blockTimestamp),
-        })) || [];
+        const votes =
+          result.voteCasts?.map((vote: any) => ({
+            id: vote.id,
+            circleId: BigInt(vote.circleId),
+            voter: vote.voter,
+            choice: vote.choice,
+            timestamp: BigInt(vote.transaction.blockTimestamp),
+          })) || [];
 
-        const positions = result.positionAssigneds?.map((pos: any) => ({
-          id: pos.id,
-          circleId: BigInt(pos.circleId),
-          user: pos.user,
-          position: BigInt(pos.position),
-          timestamp: BigInt(pos.transaction.blockTimestamp),
-        })) || [];
+        const positions =
+          result.positionAssigneds?.map((pos: any) => ({
+            id: pos.id,
+            circleId: BigInt(pos.circleId),
+            user: pos.user,
+            position: BigInt(pos.position),
+            timestamp: BigInt(pos.transaction.blockTimestamp),
+          })) || [];
 
         // Calculate currentRound
         const payouts = result.payoutDistributeds || [];
@@ -1350,6 +1566,7 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
     latePayments,
     forfeitures,
     collateralWithdrawals,
+    collateralReturns,
     isLoading: isCirclesLoading,
     isTransactionPending: isSending,
     error,
@@ -1369,4 +1586,3 @@ export const useCircleSavings = (client: ThirdwebClient, enablePolling: boolean 
     contract,
   };
 };
-
