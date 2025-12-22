@@ -11,6 +11,7 @@ import CircleMembersTab from "../components/CircleMembersTab";
 import { MessageCircle } from "lucide-react";
 import CircleActions from "../components/CircleActions";
 import { toast } from "sonner";
+import CirclePayoutHistoryTab from "../components/CirclePayoutHistoryTab";
 
 interface CircleDetailsModalProps {
   circle: ActiveCircle;
@@ -249,12 +250,12 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
 
           {/* Tabs */}
           <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-2 -mx-2 px-2">
-            {["overview", "rules", "members"].map((tab) => (
+            {["overview", "rules", "members", "payouts"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  activeTab === tab ? "text-white" : "hover:bg-gray-100"
+                  activeTab === tab ? "text-white" : "hover:bg-indigo-400"
                 }`}
                 style={
                   activeTab === tab
@@ -295,6 +296,9 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
           {activeTab === "members" && (
             <CircleMembersTab circle={circle} colors={colors} />
           )}
+          {activeTab === "payouts" && (
+            <CirclePayoutHistoryTab circle={circle} colors={colors} />
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -302,11 +306,11 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
           className="p-4 sm:p-6 border-t shrink-0 flex gap-3 flex-wrap"
           style={{ borderColor: colors.border }}
         >
-          {isCreator && (
+          {isCreator && circle.status !== "completed" && (
             <button
               onClick={handleVisibilityButtonClick}
               disabled={isUpdatingVisibility}
-              className="px-4 py-3 rounded-xl font-semibold transition border whitespace-nowrap"
+              className="px-4 rounded-xl font-semibold border flex-1 py-1.5 sm:py-2 text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
               style={{
                 borderColor: colors.primary,
                 color: colors.primary,
@@ -318,17 +322,20 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
                 : `Make ${circleType === "public" ? "Private" : "Public"}`}
             </button>
           )}
-          <button
+          {circle.status !== "completed" && <button
             onClick={() => {
               setShowCircleDetails(false);
               if (onJoinCircle) onJoinCircle(circle);
             }}
-            className="flex-1 py-3 rounded-xl font-semibold text-white transition shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-            style={{ background: colors.gradient }}
+            className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
+            style={{
+              backgroundColor: colors.accentBg,
+              color: colors.text,
+            }}
           >
             <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            Chat
-          </button>
+            <span>Chat</span>
+          </button>}
           <CircleActions
             circle={circle}
             colors={colors}

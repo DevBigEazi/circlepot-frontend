@@ -308,6 +308,8 @@ const circlesByIdsQuery = gql`
       id
       user {
         id
+        username
+        fullName
       }
       circleId
       round

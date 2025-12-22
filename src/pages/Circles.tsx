@@ -422,10 +422,7 @@ const Circles: React.FC = () => {
                         "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
                     });
                   }
-                  if (
-                    circle.status === "completed" &&
-                    statusInfo.length === 0
-                  ) {
+                  if (circle.status === "completed") {
                     statusInfo.push({
                       label: "Completed",
                       icon: (
@@ -468,7 +465,7 @@ const Circles: React.FC = () => {
                         </span>
                       )}
                       {!isForfeited &&
-                        !userPayout &&
+                        userPayout &&
                         circle.status === "completed" && (
                           <span
                             className="text-xs md:text-sm"
