@@ -277,6 +277,19 @@ export interface CollateralWithdrawn {
   transactionHash: string;
 }
 
+export interface CollateralReturned {
+  id: string;
+  circleId: bigint;
+  amount: bigint;
+  timestamp: bigint;
+  transactionHash: string;
+  user?: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
+}
+
 // Reputation and Credit Score interfaces
 export interface ReputationIncrease {
   id: string;

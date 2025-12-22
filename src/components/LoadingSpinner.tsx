@@ -19,7 +19,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return (
     <div className="flex items-center justify-center gap-2">
       <div className={`${sizeClasses[size]} animate-spin`}>
-        <AiOutlineLoading3Quarters size={sizeClasses[size]} />
+        <AiOutlineLoading3Quarters className="w-4 h-4" />
       </div>
       {text && <span className="text-sm text-text-light">{text}</span>}
     </div>

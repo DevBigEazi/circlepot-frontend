@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { User, Camera, Check, AlertCircle, Upload } from 'lucide-react';
+import { User, Camera, Check, AlertCircle, Upload, AlertTriangle } from 'lucide-react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { usePinata } from '../hooks/usePinata';
 import { useActiveAccount } from 'thirdweb/react';
 import { getUserEmail } from "thirdweb/wallets/in-app";
 import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorDisplay from '../components/ErrorDisplay';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
@@ -29,7 +28,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameCheckTimeout = useRef<number | undefined>(undefined);
 
@@ -40,7 +38,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         const email = await getUserEmail({ client });
         setUserEmail(email ?? null);
       } catch (err) {
-        setError('Failed to retrieve your email. Please try signing in again.');
+        toast.error('Failed to retrieve your email. Please try signing in again.');
       }
     };
 
@@ -86,12 +84,12 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image size must be less than 5MB');
+        toast.error('Image size must be less than 5MB');
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file');
+        toast.error('Please select a valid image file');
         return;
       }
 
@@ -100,10 +98,9 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         const result = e.target?.result as string;
         setPreviewImage(result);
         setSelectedFile(file);
-        setError(null);
       };
       reader.onerror = () => {
-        setError('Failed to read image file');
+        toast.error('Failed to read image file');
       };
       reader.readAsDataURL(file);
     }
@@ -111,43 +108,41 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
 
   const handleCompleteSetup = async () => {
     if (!account?.address) {
-      setError('No wallet connected');
+      toast.error('No wallet connected');
       return;
     }
 
     if (!userEmail) {
-      setError('Email is required. Please make sure you signed in with email.');
+      toast.error('Email is required. Please make sure you signed in with email.');
       return;
     }
 
     if (!userName.trim()) {
-      setError('Username is required');
+      toast.error('Username is required');
       return;
     }
 
     if (userName.trim().length < 3) {
-      setError('Username must be at least 3 characters');
+      toast.error('Username must be at least 3 characters');
       return;
     }
 
     if (usernameAvailable === false) {
-      setError('Username is not available');
+      toast.error('Username is not available');
       return;
     }
 
     if (isCheckingUsername) {
-      setError('Please wait while we check username availability');
+      toast.error('Please wait while we check username availability');
       return;
     }
 
     if (!fullName.trim()) {
-      setError('Full name is required');
+      toast.error('Full name is required');
       return;
     }
 
     try {
-      setError(null);
-
       let profilePhotoUrl = '';
 
       if (selectedFile) {
@@ -205,7 +200,26 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
         errorMessage = 'This username is already taken. Please choose another.';
       }
 
-      setError(errorMessage);
+      toast.custom(
+        () => (
+          <div
+            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
+            style={{
+              backgroundColor: "#fee2e2",
+              animation: `slideIn 0.3s ease-out`,
+            }}
+          >
+            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <span className="text-sm font-semibold text-red-600">
+              {errorMessage}
+            </span>
+          </div>
+        ),
+        {
+          duration: 4000,
+          position: "top-center",
+        }
+      );
     }
   };
 
@@ -250,16 +264,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ client, onP
 
         {/* Content */}
         <div className="p-6">
-          {/* Error Display */}
-          {error && (
-            <div className="mb-4">
-              <ErrorDisplay
-                error={{ code: 'PROFILE_ERROR', message: error }}
-                onDismiss={() => setError(null)}
-              />
-            </div>
-          )}
-
           {/* Profile Image */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4">
