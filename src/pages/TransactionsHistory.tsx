@@ -40,6 +40,7 @@ const TransactionsHistory: React.FC = () => {
       case "goal_completion":
         return Target;
       case "late_payment":
+      case "dead_circle_fee":
         return AlertCircle;
       case "collateral_withdrawal":
         return DollarSign;
@@ -77,6 +78,7 @@ const TransactionsHistory: React.FC = () => {
         return "bg-orange-100 text-orange-600";
       case "late_payment":
       case "cusd_send":
+      case "dead_circle_fee":
         return "bg-red-100 text-red-600";
       default:
         return "bg-gray-100 text-gray-600";
@@ -98,6 +100,8 @@ const TransactionsHistory: React.FC = () => {
         return "Goal Completed";
       case "late_payment":
         return "Late Payment Fee";
+      case "dead_circle_fee":
+        return "Dead Circle Fee";
       case "collateral_withdrawal":
         return "Collateral Refund";
       case "cusd_send":

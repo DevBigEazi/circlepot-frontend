@@ -64,7 +64,9 @@ const CreateCircle: React.FC = () => {
   const totalCommitment = contributionAmount * maxMembers;
   const lateBuffer = totalCommitment * 0.01; // 1% late fee buffer
   const totalToLock = totalCommitment + lateBuffer;
+
   const visibilityFee = circleForm.visibility === "1" ? 0.5 : 0;
+  const deadFee = circleForm.visibility === "1" ? 0.5 : 1.0;
   const totalRequired = totalToLock + visibilityFee;
   const hasSufficientBalance = currentBalance >= totalRequired;
 
@@ -224,8 +226,8 @@ const CreateCircle: React.FC = () => {
                     Balance: ${currentBalance.toFixed(2)} cUSD
                   </div>
                   <div className="text-sm" style={{ color: colors.textLight }}>
-                    Required: ${totalRequired.toFixed(2)} cUSD
-                    (collateral + buffer
+                    Required: ${totalRequired.toFixed(2)} cUSD (collateral +
+                    buffer
                     {visibilityFee > 0 ? " + visibility fee" : ""})
                   </div>
                 </div>
@@ -513,8 +515,21 @@ const CreateCircle: React.FC = () => {
                     <span
                       className="text-sm font-semibold"
                       style={{ color: colors.text }}
-                    >
-                      Members can withdraw collateral if circle doesn't start
+                    >Members can withdraw collateral if circle doesn't start</span>
+                  </div>
+                </div>
+                <div
+                  className="mt-2 p-3 rounded-lg border"
+                  style={{
+                    backgroundColor: colors.errorBg,
+                    borderColor: colors.errorBorder,
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertCircle size={16} className="text-red-600" />
+                    <span className="text-sm font-semibold text-red-600">
+                      If circle fails to start, you pay a ${deadFee.toFixed(2)}{" "}
+                      fee
                     </span>
                   </div>
                 </div>
@@ -632,7 +647,8 @@ const CreateCircle: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  0% platform fees (members pay 0.2%)
+                  0% platform fees (members pay 1% for up to $1000 payout and
+                  $10 fix fee for above $1000)
                 </li>
               </ul>
             </div>
@@ -664,16 +680,24 @@ const CreateCircle: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Member payouts:</span>
-                  <span className="font-semibold">0.2%</span>
+                  <span className="font-semibold">
+                    1% for up to $1000 payout and $10 fix fee for above $1000
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Visibility changes:</span>
-                  <span className="font-semibold">$0.50 cUSD</span>
+                  <span className="font-semibold">$0.50 cUSD (if public)</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Creation fees:</span>
                   <span className="font-semibold text-green-600">
                     $0 (Free)
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Dead Circle Fee:</span>
+                  <span className="font-semibold text-red-600">
+                    ${deadFee.toFixed(2)} (if failed)
                   </span>
                 </div>
               </div>

@@ -26,6 +26,9 @@ const Browse = lazy(() => import("./pages/Browse"));
 const JoinCircle = lazy(() => import("./pages/JoinCircle"));
 const LocalMethods = lazy(() => import("./pages/LocalMethods"));
 const ExternalWallets = lazy(() => import("./pages/ExternalWallets"));
+const WithdrawInternal = lazy(() => import("./pages/WithdrawInternal"));
+const WithdrawLocal = lazy(() => import("./pages/WithdrawLocal"));
+const WithdrawExternal = lazy(() => import("./pages/WithdrawExternal"));
 const Error404 = lazy(() => import("./pages/404"));
 const Layout = lazy(() => import("./layouts/Layout"));
 
@@ -118,6 +121,15 @@ function App({ client }: AppProps) {
                     <Route
                       path="/external-wallets"
                       element={<ExternalWallets />}
+                    />
+                    <Route
+                      path="/withdraw/internal"
+                      element={<WithdrawInternal />}
+                    />
+                    <Route path="/withdraw/local" element={<WithdrawLocal />} />
+                    <Route
+                      path="/withdraw/external"
+                      element={<WithdrawExternal />}
                     />
                   </Route>
 

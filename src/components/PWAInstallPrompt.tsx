@@ -122,7 +122,7 @@ const PWAInstallPrompt = () => {
             {/* Text content */}
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-text mb-0.5">
-                Install CirclePot
+                Install Circlepot
               </h3>
               <p className="text-xs text-text-light">
                 Quick access & offline support

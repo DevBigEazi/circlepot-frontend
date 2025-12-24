@@ -408,7 +408,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
                         Accept position assignment based on reputation score
                       </li>
                       <li>
-                        Pay 0.2% platform fee on payouts (creators exempt)
+                        Pay 1% platform fee on payouts less than $1000 and $10 fix fee for above $1000 (creators exempt)
                       </li>
                       <li>Accept 1% late fee for delayed contributions</li>
                     </ul>
