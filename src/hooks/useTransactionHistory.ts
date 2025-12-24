@@ -133,6 +133,17 @@ const transactionHistoryQuery = gql`
       }
     }
 
+    # Dead circle fees deducted
+    deadCircleFeeDeducteds(where: { creator: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+      id
+      circleId
+      deadFee
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+
     # Get circle details for all circles user participated in
     circles(where: { id_in: [] }) {
       id
@@ -182,6 +193,10 @@ export interface Transaction {
   | 'goal_completion'
   | 'late_payment'
   | 'collateral_withdrawal'
+  | 'cusd_send'
+  | 'late_payment'
+  | 'collateral_withdrawal'
+  | 'dead_circle_fee'
   | 'cusd_send'
   | 'cusd_receive';
   amount: bigint;
@@ -322,7 +337,9 @@ export const useTransactionHistory = () => {
             ...result.contributionMades.map((c: any) => c.circleId),
             ...result.payoutDistributeds.map((p: any) => p.circleId),
             ...result.latePaymentRecordeds.map((l: any) => l.circleId),
+            ...result.latePaymentRecordeds.map((l: any) => l.circleId),
             ...result.collateralWithdrawns.map((cw: any) => cw.circleId),
+            ...result.deadCircleFeeDeducteds.map((d: any) => d.circleId),
           ])
         ];
 
@@ -566,6 +583,23 @@ export const useTransactionHistory = () => {
         circleName: transactionsData.circleNamesMap.get(cw.circleId) || 'Unknown Circle',
         circleId: BigInt(cw.circleId),
         note: 'Collateral refund',
+      });
+    });
+
+    // Process dead circle fees
+    transactionsData.deadCircleFeeDeducteds?.forEach((fee: any) => {
+      allTransactions.push({
+        id: fee.id,
+        type: 'dead_circle_fee',
+        amount: BigInt(fee.deadFee),
+        currency: 'cUSD',
+        timestamp: BigInt(fee.transaction.blockTimestamp),
+        transactionHash: fee.transaction.transactionHash,
+        status: 'success',
+        fee: BigInt(fee.deadFee),
+        circleName: transactionsData.circleNamesMap.get(fee.circleId) || 'Unknown Circle',
+        circleId: BigInt(fee.circleId),
+        note: 'Fee for dead circle',
       });
     });
 
