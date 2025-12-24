@@ -50,8 +50,8 @@ const NotificationsContext = createContext<
   NotificationsContextType | undefined
 >(undefined);
 
-const STORAGE_KEY = "circlepot_notifications";
-const SETTINGS_KEY = "circlepot_notifications_enabled";
+const STORAGE_KEY = "Circlepot_notifications";
+const SETTINGS_KEY = "Circlepot_notifications_enabled";
 
 // Helper function to calculate time ago
 const getTimeAgo = (timestamp: number): string => {

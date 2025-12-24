@@ -515,7 +515,7 @@ const CreateCircle: React.FC = () => {
                     <span
                       className="text-sm font-semibold"
                       style={{ color: colors.text }}
-                    ></span>
+                    >Members can withdraw collateral if circle doesn't start</span>
                   </div>
                 </div>
                 <div
@@ -686,7 +686,7 @@ const CreateCircle: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Visibility changes:</span>
-                  <span className="font-semibold">$0.50 cUSD</span>
+                  <span className="font-semibold">$0.50 cUSD (if public)</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Creation fees:</span>

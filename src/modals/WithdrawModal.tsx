@@ -73,7 +73,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose }) => {
                 Internal Transfer
               </h3>
               <p className="text-xs mt-0.5" style={{ color: colors.textLight }}>
-                Send to circlepot users
+                Send to Circlepot users
               </p>
             </div>
             <ArrowRight
