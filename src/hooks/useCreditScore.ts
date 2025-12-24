@@ -287,7 +287,7 @@ export const useCreditScore = () => {
 
             // Set credit score
             if (user) {
-                const score = Number(user.totalReputation) || 300;
+                const score = Number(user.totalReputation) || 0;
                 const category = user.repCategory as ScoreCategory;
 
                 setCreditScore({
@@ -302,7 +302,7 @@ export const useCreditScore = () => {
             } else {
                 // Default score for new users
                 setCreditScore({
-                    score: 300,
+                    score: 0,
                     category: ScoreCategory.POOR,
                     categoryLabel: getCategoryLabel(ScoreCategory.POOR),
                     categoryColor: getCategoryColor(ScoreCategory.POOR),
