@@ -78,7 +78,10 @@ const CircleRulesTab: React.FC<CircleRulesTabProps> = ({
                 position)
               </li>
               <li>• Payout amount: ${circle.payoutAmount} per round</li>
-              <li>• Platform fee: 1% for up to $1000 payout, and $10 fix fee for above $1000 (creators pay 0%)</li>
+              <li>
+                • Platform fee: 1% for up to $1000 payout, and $10 fix fee for
+                above $1000 (creators pay 0%)
+              </li>
             </ul>
           </div>
 

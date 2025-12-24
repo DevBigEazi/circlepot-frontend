@@ -267,7 +267,6 @@ const userCirclesQuery = gql`
       }
     }
 
-
     # Dead circle fees deducted
     deadCircleFeeDeducteds(
       where: { creator: $userId }

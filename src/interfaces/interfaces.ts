@@ -87,7 +87,14 @@ export interface ActiveCircle {
   name: string;
   currentPosition: number;
   totalPositions: number;
-  status: 'active' | 'completed' | 'pending' | 'voting' | 'created' | 'dead' | 'unknown';  // Maps to CircleState enum
+  status:
+    | "active"
+    | "completed"
+    | "pending"
+    | "voting"
+    | "created"
+    | "dead"
+    | "unknown"; // Maps to CircleState enum
   payoutAmount: string;
   nextPayout: string;
   contribution: string;

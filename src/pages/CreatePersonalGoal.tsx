@@ -144,7 +144,9 @@ const CreatePersonalGoal: React.FC = () => {
             }}
           >
             <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
-            <span className="text-sm font-semibold text-red-600">{formError}</span>
+            <span className="text-sm font-semibold text-red-600">
+              {formError}
+            </span>
           </div>
         ),
         {
@@ -187,7 +189,7 @@ const CreatePersonalGoal: React.FC = () => {
       confetti({
         particleCount: 100,
         spread: 70,
-        origin: { y: 0.6 }
+        origin: { y: 0.6 },
       });
 
       // Show success message
@@ -201,9 +203,16 @@ const CreatePersonalGoal: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <CheckCircle size={20} style={{ color: colors.primary }} className="flex-shrink-0" />
+            <CheckCircle
+              size={20}
+              style={{ color: colors.primary }}
+              className="flex-shrink-0"
+            />
             <div>
-              <span className="text-sm font-bold block" style={{ color: colors.text }}>
+              <span
+                className="text-sm font-bold block"
+                style={{ color: colors.text }}
+              >
                 🎯 Goal "{goalForm.name}" created successfully!
               </span>
               <span className="text-xs" style={{ color: colors.textLight }}>
@@ -239,9 +248,7 @@ const CreatePersonalGoal: React.FC = () => {
               <span className="text-sm font-bold block text-red-600">
                 ✖️ Failed to create your goal!
               </span>
-              <span className="text-xs text-red-500">
-                {error.message}
-              </span>
+              <span className="text-xs text-red-500">{error.message}</span>
             </div>
           </div>
         ),
@@ -256,7 +263,7 @@ const CreatePersonalGoal: React.FC = () => {
 
   return (
     <>
-     <NavBar
+      <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}
         title="Create Personal Goal"
@@ -446,7 +453,8 @@ const CreatePersonalGoal: React.FC = () => {
                 }}
               />
               <div className="text-xs mt-2" style={{ color: colors.textLight }}>
-               Calculated based on the target amount, contribution amount, and frequency.
+                Calculated based on the target amount, contribution amount, and
+                frequency.
               </div>
             </div>
 

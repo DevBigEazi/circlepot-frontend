@@ -7,15 +7,19 @@ import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { CUSD_ABI } from "../abis/Cusd";
-import { CreateGoalParams, GoalContribution, GoalWithdrawal, PersonalGoal } from "../interfaces/interfaces";
+import {
+  CreateGoalParams,
+  GoalContribution,
+  GoalWithdrawal,
+  PersonalGoal,
+} from "../interfaces/interfaces";
 import {
   SUBGRAPH_URL,
   SUBGRAPH_HEADERS,
   PERSONAL_SAVINGS_ADDRESS,
   CUSD_ADDRESS,
-  CHAIN_ID
+  CHAIN_ID,
 } from "../constants/constants";
-
 
 const userGoalsQuery = gql`
   query GetUserGoals($userId: Bytes!) {
@@ -106,7 +110,6 @@ const singleGoalQuery = gql`
 `;
 
 export const usePersonalGoals = (client: ThirdwebClient) => {
-
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
     useSendTransaction();

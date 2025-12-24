@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface BiometricOptions {
   userId: string | undefined;
@@ -18,8 +18,7 @@ interface AuthenticateResponse {
 
 export const useBiometric = () => {
   const [isSupported] = useState<boolean>(
-    typeof window !== 'undefined' &&
-    !!window.PublicKeyCredential
+    typeof window !== "undefined" && !!window.PublicKeyCredential
   );
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
@@ -29,11 +28,12 @@ export const useBiometric = () => {
   const checkBiometricAvailable = useCallback(async (): Promise<boolean> => {
     try {
       if (!window.PublicKeyCredential) {
-        setError('WebAuthn not supported on this device');
+        setError("WebAuthn not supported on this device");
         return false;
       }
 
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      const available =
+        await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       return available;
     } catch (err) {
       const error = err as Error;
@@ -52,7 +52,7 @@ export const useBiometric = () => {
         if (!available) {
           return {
             success: false,
-            error: 'Biometric authentication not available on this device'
+            error: "Biometric authentication not available on this device",
           };
         }
 
@@ -64,26 +64,26 @@ export const useBiometric = () => {
           publicKey: {
             challenge: challenge,
             rp: {
-              name: 'Your App Name',
-              id: window.location.hostname
+              name: "Your App Name",
+              id: window.location.hostname,
             },
             user: {
               id: userId,
               name: options.userEmail,
-              displayName: options.userName
+              displayName: options.userName,
             },
             pubKeyCredParams: [
-              { alg: -7, type: 'public-key' }, // ES256
-              { alg: -257, type: 'public-key' } // RS256
+              { alg: -7, type: "public-key" }, // ES256
+              { alg: -257, type: "public-key" }, // RS256
             ],
             authenticatorSelection: {
-              authenticatorAttachment: 'platform',
-              userVerification: 'preferred',
-              residentKey: 'preferred'
+              authenticatorAttachment: "platform",
+              userVerification: "preferred",
+              residentKey: "preferred",
             },
             timeout: 60000,
-            attestation: 'direct'
-          }
+            attestation: "direct",
+          },
         };
 
         const credential = await navigator.credentials.create(
@@ -93,7 +93,7 @@ export const useBiometric = () => {
         if (!credential) {
           return {
             success: false,
-            error: 'Biometric registration cancelled'
+            error: "Biometric registration cancelled",
           };
         }
 
@@ -110,7 +110,7 @@ export const useBiometric = () => {
           `biometric_${options.userId}`,
           JSON.stringify({
             credentialId,
-            registered: new Date().toISOString()
+            registered: new Date().toISOString(),
           })
         );
 
@@ -118,11 +118,11 @@ export const useBiometric = () => {
         return { success: true };
       } catch (err) {
         const error = err as Error;
-        const errorMessage = error.message || 'Failed to register biometric';
+        const errorMessage = error.message || "Failed to register biometric";
         setError(errorMessage);
         return {
           success: false,
-          error: errorMessage
+          error: errorMessage,
         };
       }
     },
@@ -140,7 +140,7 @@ export const useBiometric = () => {
         if (!available) {
           return {
             success: false,
-            error: 'Biometric authentication not available'
+            error: "Biometric authentication not available",
           };
         }
 
@@ -149,14 +149,13 @@ export const useBiometric = () => {
         if (!stored) {
           return {
             success: false,
-            error: 'Biometric not registered. Please set up biometric first.'
+            error: "Biometric not registered. Please set up biometric first.",
           };
         }
 
         const { credentialId } = JSON.parse(stored);
-        const credentialIdArray = Uint8Array.from(
-          atob(credentialId),
-          c => c.charCodeAt(0)
+        const credentialIdArray = Uint8Array.from(atob(credentialId), (c) =>
+          c.charCodeAt(0)
         );
 
         const challenge = crypto.getRandomValues(new Uint8Array(32));
@@ -167,13 +166,13 @@ export const useBiometric = () => {
             allowCredentials: [
               {
                 id: credentialIdArray,
-                type: 'public-key',
-                transports: ['internal']
-              }
+                type: "public-key",
+                transports: ["internal"],
+              },
             ],
-            userVerification: 'preferred',
-            timeout: 60000
-          }
+            userVerification: "preferred",
+            timeout: 60000,
+          },
         };
 
         const assertion = await navigator.credentials.get(
@@ -183,18 +182,18 @@ export const useBiometric = () => {
         if (!assertion) {
           return {
             success: false,
-            error: 'Biometric authentication cancelled'
+            error: "Biometric authentication cancelled",
           };
         }
 
         return { success: true };
       } catch (err) {
         const error = err as Error;
-        const errorMessage = error.message || 'Biometric authentication failed';
+        const errorMessage = error.message || "Biometric authentication failed";
         setError(errorMessage);
         return {
           success: false,
-          error: errorMessage
+          error: errorMessage,
         };
       } finally {
         setIsAuthenticating(false);
@@ -218,6 +217,6 @@ export const useBiometric = () => {
     checkBiometricAvailable,
     registerBiometric,
     authenticateWithBiometric,
-    removeBiometric
+    removeBiometric,
   };
 };

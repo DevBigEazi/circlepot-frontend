@@ -215,7 +215,10 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl sm:text-3xl font-bold" style={{ color: colors.text }}>
+            <h1
+              className="text-xl sm:text-3xl font-bold"
+              style={{ color: colors.text }}
+            >
               {showBalance ? `$${totalBalance.toFixed(2)} cUSD` : "••••••"}
             </h1>
             <button

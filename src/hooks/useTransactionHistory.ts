@@ -18,7 +18,11 @@ import {
 const transactionHistoryQuery = gql`
   query GetTransactionHistory($userId: Bytes!) {
     # Circle contributions
-    contributionMades(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    contributionMades(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -35,7 +39,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Circle payouts
-    payoutDistributeds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    payoutDistributeds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -52,7 +60,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Goal contributions
-    goalContributions(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    goalContributions(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -68,7 +80,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Goal withdrawals
-    goalWithdrawns(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    goalWithdrawns(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -86,7 +102,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Goal completions
-    goalCompleteds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    goalCompleteds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -101,7 +121,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Late payments
-    latePaymentRecordeds(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    latePaymentRecordeds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -118,7 +142,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Collateral withdrawals
-    collateralWithdrawns(where: { user: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    collateralWithdrawns(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       user {
         id
@@ -134,7 +162,11 @@ const transactionHistoryQuery = gql`
     }
 
     # Dead circle fees deducted
-    deadCircleFeeDeducteds(where: { creator: $userId }, orderBy: transaction__blockTimestamp, orderDirection: desc) {
+    deadCircleFeeDeducteds(
+      where: { creator: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
       id
       circleId
       deadFee
@@ -186,24 +218,24 @@ const userProfilesQuery = gql`
 export interface Transaction {
   id: string;
   type:
-  | 'circle_contribution'
-  | 'circle_payout'
-  | 'goal_contribution'
-  | 'goal_withdrawal'
-  | 'goal_completion'
-  | 'late_payment'
-  | 'collateral_withdrawal'
-  | 'cusd_send'
-  | 'late_payment'
-  | 'collateral_withdrawal'
-  | 'dead_circle_fee'
-  | 'cusd_send'
-  | 'cusd_receive';
+    | "circle_contribution"
+    | "circle_payout"
+    | "goal_contribution"
+    | "goal_withdrawal"
+    | "goal_completion"
+    | "late_payment"
+    | "collateral_withdrawal"
+    | "cusd_send"
+    | "late_payment"
+    | "collateral_withdrawal"
+    | "dead_circle_fee"
+    | "cusd_send"
+    | "cusd_receive";
   amount: bigint;
   currency: string;
   timestamp: bigint;
   transactionHash: string;
-  status: 'success';
+  status: "success";
   fee?: bigint;
   note?: string;
   // Additional metadata
@@ -245,9 +277,14 @@ export const useTransactionHistory = () => {
         );
 
         const userAddress = account.address.toLowerCase();
-        const rpcRequest = getRpcClient({ client, chain: defineChain(CHAIN_ID) });
-        const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-        const paddedAddress = ("0x000000000000000000000000" + userAddress.slice(2)) as `0x${string}`;
+        const rpcRequest = getRpcClient({
+          client,
+          chain: defineChain(CHAIN_ID),
+        });
+        const TRANSFER_TOPIC =
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+        const paddedAddress = ("0x000000000000000000000000" +
+          userAddress.slice(2)) as `0x${string}`;
 
         // Fetch sent transfers (topic1 = from)
         const sentLogsPromise = eth_getLogs(rpcRequest, {
@@ -284,21 +321,30 @@ export const useTransactionHistory = () => {
           }
         };
 
-        const sentTransfers = sentLogs.map(parseLog).filter((l: any) => l !== null);
-        const receivedTransfers = receivedLogs.map(parseLog).filter((l: any) => l !== null);
+        const sentTransfers = sentLogs
+          .map(parseLog)
+          .filter((l: any) => l !== null);
+        const receivedTransfers = receivedLogs
+          .map(parseLog)
+          .filter((l: any) => l !== null);
 
         // Combine and filter out internal contract transfers
         const personalSavingsAddr = PERSONAL_SAVINGS_ADDRESS?.toLowerCase();
         const circleSavingsAddr = CIRCLE_SAVINGS_ADDRESS?.toLowerCase();
 
-        const rawCusdTransfers = [...sentTransfers, ...receivedTransfers].filter((event: any) => {
+        const rawCusdTransfers = [
+          ...sentTransfers,
+          ...receivedTransfers,
+        ].filter((event: any) => {
           const from = event.args.from;
           const to = event.args.to;
 
           // Filter out transfers involving savings contracts
           const isInternalTransfer =
-            from === personalSavingsAddr || to === personalSavingsAddr ||
-            from === circleSavingsAddr || to === circleSavingsAddr;
+            from === personalSavingsAddr ||
+            to === personalSavingsAddr ||
+            from === circleSavingsAddr ||
+            to === circleSavingsAddr;
 
           return !isInternalTransfer;
         });
@@ -340,7 +386,7 @@ export const useTransactionHistory = () => {
             ...result.latePaymentRecordeds.map((l: any) => l.circleId),
             ...result.collateralWithdrawns.map((cw: any) => cw.circleId),
             ...result.deadCircleFeeDeducteds.map((d: any) => d.circleId),
-          ])
+          ]),
         ];
 
         // Fetch circle names if there are any circles
@@ -368,15 +414,20 @@ export const useTransactionHistory = () => {
         // Extract unique addresses from cUSD transfers
         const uniqueAddresses = [
           ...new Set(
-            cusdTransfers.flatMap((event: any) => [
-              event.args.from?.toLowerCase(),
-              event.args.to?.toLowerCase(),
-            ]).filter((addr: string) => addr && addr !== userAddress)
-          )
+            cusdTransfers
+              .flatMap((event: any) => [
+                event.args.from?.toLowerCase(),
+                event.args.to?.toLowerCase(),
+              ])
+              .filter((addr: string) => addr && addr !== userAddress)
+          ),
         ];
 
         // Fetch user profiles for these addresses
-        let userProfilesMap = new Map<string, { username: string; fullName: string }>();
+        let userProfilesMap = new Map<
+          string,
+          { username: string; fullName: string }
+        >();
         if (uniqueAddresses.length > 0) {
           try {
             const profilesResult: any = await request(
@@ -408,7 +459,7 @@ export const useTransactionHistory = () => {
         throw err;
       }
     },
-    enabled: !!account?.address
+    enabled: !!account?.address,
   });
 
   // Transform data into unified transaction list
@@ -432,22 +483,32 @@ export const useTransactionHistory = () => {
 
       allTransactions.push({
         id: `${event.transactionHash}-${event.logIndex || 0}`,
-        type: isSend ? 'cusd_send' : 'cusd_receive',
+        type: isSend ? "cusd_send" : "cusd_receive",
         amount: amount,
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: event.timestamp, // This is now BigInt from queryFn
         transactionHash: event.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n, // We don't have gas fee info easily here
         from: from,
         to: to,
-        fromUsername: isSend ? 'You' : (otherProfile?.username || from),
-        fromFullName: isSend ? 'You' : (otherProfile?.fullName || ''),
-        toUsername: !isSend ? 'You' : (otherProfile?.username || to),
-        toFullName: !isSend ? 'You' : (otherProfile?.fullName || ''),
+        fromUsername: isSend ? "You" : otherProfile?.username || from,
+        fromFullName: isSend ? "You" : otherProfile?.fullName || "",
+        toUsername: !isSend ? "You" : otherProfile?.username || to,
+        toFullName: !isSend ? "You" : otherProfile?.fullName || "",
         note: isSend
-          ? `Sent to ${otherProfile?.username || (otherAddress ? `${otherAddress.slice(0, 6)}...${otherAddress.slice(-4)}` : 'Unknown')}`
-          : `Received from ${otherProfile?.username || (otherAddress ? `${otherAddress.slice(0, 6)}...${otherAddress.slice(-4)}` : 'Unknown')}`,
+          ? `Sent to ${
+              otherProfile?.username ||
+              (otherAddress
+                ? `${otherAddress.slice(0, 6)}...${otherAddress.slice(-4)}`
+                : "Unknown")
+            }`
+          : `Received from ${
+              otherProfile?.username ||
+              (otherAddress
+                ? `${otherAddress.slice(0, 6)}...${otherAddress.slice(-4)}`
+                : "Unknown")
+            }`,
       });
     });
 
@@ -455,14 +516,16 @@ export const useTransactionHistory = () => {
     transactionsData.contributionMades?.forEach((contrib: any) => {
       allTransactions.push({
         id: contrib.id,
-        type: 'circle_contribution',
+        type: "circle_contribution",
         amount: BigInt(contrib.amount),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(contrib.transaction.blockTimestamp),
         transactionHash: contrib.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n,
-        circleName: transactionsData.circleNamesMap.get(contrib.circleId) || 'Unknown Circle',
+        circleName:
+          transactionsData.circleNamesMap.get(contrib.circleId) ||
+          "Unknown Circle",
         circleId: BigInt(contrib.circleId),
         round: BigInt(contrib.round),
         note: `Round ${contrib.round} contribution`,
@@ -473,14 +536,16 @@ export const useTransactionHistory = () => {
     transactionsData.payoutDistributeds?.forEach((payout: any) => {
       allTransactions.push({
         id: payout.id,
-        type: 'circle_payout',
+        type: "circle_payout",
         amount: BigInt(payout.payoutAmount),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(payout.transaction.blockTimestamp),
         transactionHash: payout.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n,
-        circleName: transactionsData.circleNamesMap.get(payout.circleId) || 'Unknown Circle',
+        circleName:
+          transactionsData.circleNamesMap.get(payout.circleId) ||
+          "Unknown Circle",
         circleId: BigInt(payout.circleId),
         round: BigInt(payout.round),
         note: `Position #${payout.round} payout`,
@@ -491,16 +556,17 @@ export const useTransactionHistory = () => {
     transactionsData.goalContributions?.forEach((contrib: any) => {
       allTransactions.push({
         id: contrib.id,
-        type: 'goal_contribution',
+        type: "goal_contribution",
         amount: BigInt(contrib.amount),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(contrib.transaction.blockTimestamp),
         transactionHash: contrib.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n,
-        goalName: transactionsData.goalNamesMap.get(contrib.goalId) || 'Unknown Goal',
+        goalName:
+          transactionsData.goalNamesMap.get(contrib.goalId) || "Unknown Goal",
         goalId: BigInt(contrib.goalId),
-        note: 'Savings contribution',
+        note: "Savings contribution",
       });
     });
 
@@ -514,17 +580,19 @@ export const useTransactionHistory = () => {
 
       allTransactions.push({
         id: withdrawal.id,
-        type: 'goal_withdrawal',
+        type: "goal_withdrawal",
         amount: BigInt(withdrawal.amount),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(withdrawal.transaction.blockTimestamp),
         transactionHash: withdrawal.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n,
         penalty: BigInt(withdrawal.penalty),
-        goalName: transactionsData.goalNamesMap.get(withdrawal.goalId) || 'Unknown Goal',
+        goalName:
+          transactionsData.goalNamesMap.get(withdrawal.goalId) ||
+          "Unknown Goal",
         goalId: BigInt(withdrawal.goalId),
-        note: withdrawal.penalty > 0 ? `Early withdrawal` : 'Withdrawal',
+        note: withdrawal.penalty > 0 ? `Early withdrawal` : "Withdrawal",
       });
     });
 
@@ -535,19 +603,22 @@ export const useTransactionHistory = () => {
       if (seenGoalIds.has(completion.goalId)) return;
       seenGoalIds.add(completion.goalId);
 
-      const goalAmount = transactionsData.goalAmountsMap.get(completion.goalId) || 0n;
+      const goalAmount =
+        transactionsData.goalAmountsMap.get(completion.goalId) || 0n;
       allTransactions.push({
         id: completion.id,
-        type: 'goal_completion',
+        type: "goal_completion",
         amount: goalAmount,
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(completion.transaction.blockTimestamp),
         transactionHash: completion.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n,
-        goalName: transactionsData.goalNamesMap.get(completion.goalId) || 'Unknown Goal',
+        goalName:
+          transactionsData.goalNamesMap.get(completion.goalId) ||
+          "Unknown Goal",
         goalId: BigInt(completion.goalId),
-        note: 'Goal completed successfully',
+        note: "Goal completed successfully",
       });
     });
 
@@ -555,14 +626,16 @@ export const useTransactionHistory = () => {
     transactionsData.latePaymentRecordeds?.forEach((late: any) => {
       allTransactions.push({
         id: late.id,
-        type: 'late_payment',
+        type: "late_payment",
         amount: BigInt(late.fee),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(late.transaction.blockTimestamp),
         transactionHash: late.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: BigInt(late.fee),
-        circleName: transactionsData.circleNamesMap.get(late.circleId) || 'Unknown Circle',
+        circleName:
+          transactionsData.circleNamesMap.get(late.circleId) ||
+          "Unknown Circle",
         circleId: BigInt(late.circleId),
         round: BigInt(late.round),
         note: `Late payment fee for Round ${late.round}`,
@@ -573,16 +646,17 @@ export const useTransactionHistory = () => {
     transactionsData.collateralWithdrawns?.forEach((cw: any) => {
       allTransactions.push({
         id: cw.id,
-        type: 'collateral_withdrawal',
+        type: "collateral_withdrawal",
         amount: BigInt(cw.amount),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(cw.transaction.blockTimestamp),
         transactionHash: cw.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: 0n,
-        circleName: transactionsData.circleNamesMap.get(cw.circleId) || 'Unknown Circle',
+        circleName:
+          transactionsData.circleNamesMap.get(cw.circleId) || "Unknown Circle",
         circleId: BigInt(cw.circleId),
-        note: 'Collateral refund',
+        note: "Collateral refund",
       });
     });
 
@@ -590,22 +664,23 @@ export const useTransactionHistory = () => {
     transactionsData.deadCircleFeeDeducteds?.forEach((fee: any) => {
       allTransactions.push({
         id: fee.id,
-        type: 'dead_circle_fee',
+        type: "dead_circle_fee",
         amount: BigInt(fee.deadFee),
-        currency: 'cUSD',
+        currency: "cUSD",
         timestamp: BigInt(fee.transaction.blockTimestamp),
         transactionHash: fee.transaction.transactionHash,
-        status: 'success',
+        status: "success",
         fee: BigInt(fee.deadFee),
-        circleName: transactionsData.circleNamesMap.get(fee.circleId) || 'Unknown Circle',
+        circleName:
+          transactionsData.circleNamesMap.get(fee.circleId) || "Unknown Circle",
         circleId: BigInt(fee.circleId),
-        note: 'Fee for dead circle',
+        note: "Fee for dead circle",
       });
     });
 
     // Sort all transactions by timestamp (newest first)
-    return allTransactions.sort((a, b) =>
-      Number(b.timestamp) - Number(a.timestamp)
+    return allTransactions.sort(
+      (a, b) => Number(b.timestamp) - Number(a.timestamp)
     );
   }, [transactionsData, account]);
 

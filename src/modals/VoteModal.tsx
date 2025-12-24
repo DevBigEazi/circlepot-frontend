@@ -67,7 +67,7 @@ const VoteModal: React.FC<VoteModalProps> = ({
             }}
             disabled={isLoading}
             className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-            style={{ backgroundColor: "#ef4444" }} // Red-500
+            style={{ backgroundColor: "#ef4444" }}
           >
             <UserX className="w-5 h-5" />
             <span>Vote to Withdraw</span>

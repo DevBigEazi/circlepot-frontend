@@ -155,33 +155,66 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
                 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
                 style={{ color: colors.text }}
               >
-                ${currentAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                $
+                {currentAmount.toLocaleString("en-US", {
+                  maximumFractionDigits: 2,
+                })}
               </p>
 
               {!isGoalComplete && penaltyPercentage > 0 && (
-                <div className="space-y-2 pt-3 sm:pt-4 border-t" style={{ borderColor: colors.border }}>
+                <div
+                  className="space-y-2 pt-3 sm:pt-4 border-t"
+                  style={{ borderColor: colors.border }}
+                >
                   <div className="flex justify-between">
-                    <span style={{ color: colors.textLight }} className="text-xs">
+                    <span
+                      style={{ color: colors.textLight }}
+                      className="text-xs"
+                    >
                       Early Withdrawal Penalty
                     </span>
-                    <span style={{ color: "#ef4444" }} className="text-xs font-semibold">
+                    <span
+                      style={{ color: "#ef4444" }}
+                      className="text-xs font-semibold"
+                    >
                       {penaltyPercentage.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span style={{ color: colors.textLight }} className="text-xs">
+                    <span
+                      style={{ color: colors.textLight }}
+                      className="text-xs"
+                    >
                       Penalty Amount
                     </span>
-                    <span style={{ color: "#ef4444" }} className="text-xs font-semibold">
-                      ${penaltyAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                    <span
+                      style={{ color: "#ef4444" }}
+                      className="text-xs font-semibold"
+                    >
+                      $
+                      {penaltyAmount.toLocaleString("en-US", {
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t" style={{ borderColor: colors.border }}>
-                    <span style={{ color: colors.text }} className="text-xs sm:text-sm font-semibold">
+                  <div
+                    className="flex justify-between pt-2 border-t"
+                    style={{ borderColor: colors.border }}
+                  >
+                    <span
+                      style={{ color: colors.text }}
+                      className="text-xs sm:text-sm font-semibold"
+                    >
                       You Receive
                     </span>
-                    <span style={{ color: colors.primary }} className="text-xs sm:text-sm font-semibold">
-                      ${netAmount.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                    <span
+                      style={{ color: colors.primary }}
+                      className="text-xs sm:text-sm font-semibold"
+                    >
+                      $
+                      {netAmount.toLocaleString("en-US", {
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
                 </div>
@@ -194,9 +227,16 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
                 className="rounded-lg p-3 flex gap-2"
                 style={{ backgroundColor: "#fef2f2", borderColor: "#fee2e2" }}
               >
-                <AlertCircle size={16} style={{ color: "#ef4444", flexShrink: 0, marginTop: "2px" }} />
-                <p style={{ color: "#991b1b" }} className="text-xs leading-relaxed">
-                  Withdrawing early will result in a penalty and a reputation decrease of 5 points.
+                <AlertCircle
+                  size={16}
+                  style={{ color: "#ef4444", flexShrink: 0, marginTop: "2px" }}
+                />
+                <p
+                  style={{ color: "#991b1b" }}
+                  className="text-xs leading-relaxed"
+                >
+                  Withdrawing early will result in a penalty and a reputation
+                  decrease of 5 points.
                 </p>
               </div>
             )}
@@ -206,9 +246,16 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
                 className="rounded-lg p-3 flex gap-2"
                 style={{ backgroundColor: "#f0fdf4", borderColor: "#dcfce7" }}
               >
-                <AlertCircle size={16} style={{ color: "#22c55e", flexShrink: 0, marginTop: "2px" }} />
-                <p style={{ color: "#166534" }} className="text-xs leading-relaxed">
-                  Goal target reached! Withdraw your full amount without penalty and gain 10 reputation points.
+                <AlertCircle
+                  size={16}
+                  style={{ color: "#22c55e", flexShrink: 0, marginTop: "2px" }}
+                />
+                <p
+                  style={{ color: "#166534" }}
+                  className="text-xs leading-relaxed"
+                >
+                  Goal target reached! Withdraw your full amount without penalty
+                  and gain 10 reputation points.
                 </p>
               </div>
             )}

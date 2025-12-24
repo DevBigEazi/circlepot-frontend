@@ -748,7 +748,7 @@ const Settings: React.FC = () => {
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
-                  <BsCurrencyExchange className="text-white" size={18}/>
+                  <BsCurrencyExchange className="text-white" size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3
@@ -1107,7 +1107,7 @@ const Settings: React.FC = () => {
               }}
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <SiThirdweb size={18} className="text-pink-500"/>
+                <SiThirdweb size={18} className="text-pink-500" />
                 <h4
                   className="font-bold text-sm sm:text-base truncate"
                   style={{ color: colors.text }}
