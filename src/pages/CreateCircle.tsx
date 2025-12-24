@@ -632,7 +632,7 @@ const CreateCircle: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  0% platform fees (members pay 0.2%)
+                  0% platform fees (members pay 1% for up to $1000 payout and $10 fix fee for above $1000)
                 </li>
               </ul>
             </div>
@@ -664,7 +664,7 @@ const CreateCircle: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Member payouts:</span>
-                  <span className="font-semibold">0.2%</span>
+                  <span className="font-semibold">1% for up to $1000 payout and $10 fix fee for above $1000</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Visibility changes:</span>

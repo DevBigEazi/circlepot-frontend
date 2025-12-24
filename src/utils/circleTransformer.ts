@@ -39,14 +39,14 @@ export const transformCircleToActiveCircle = (
     const effectiveMembers = isStarted ? circle.currentMembers : circle.maxMembers;
 
     // Calculate payout amount
-    // Creator gets full payout, non-creators pay 0.2% platform fee (20 basis points)
+    // Creator gets full payout, non-creators pay 1% on payout up to $1000, and $10 fix fee for above $1000 platform fee (100 basis points)
     const totalPot = circle.contributionAmount * effectiveMembers;
     const isCreator = userAddress && circle.creator?.id?.toLowerCase() === userAddress.toLowerCase();
 
     let payoutAmountBigInt = totalPot;
     if (!isCreator) {
-        // Apply platform fee: 20 basis points = 0.2%
-        const platformFee = (totalPot * 20n) / 10000n;
+        // Apply platform fee: 100 basis points = 1%
+        const platformFee = (totalPot * 100n) / 10000n;
         payoutAmountBigInt = totalPot - platformFee;
     }
 
