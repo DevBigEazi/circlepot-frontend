@@ -748,7 +748,7 @@ const Settings: React.FC = () => {
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
-                  <BsCurrencyExchange size={18} />
+                  <BsCurrencyExchange className="text-white" size={18}/>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3

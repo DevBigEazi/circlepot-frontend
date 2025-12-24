@@ -277,6 +277,17 @@ export interface CollateralWithdrawn {
   transactionHash: string;
 }
 
+export interface DeadCircleFeeDeducted {
+  id: string;
+  circleId: bigint;
+  creator: {
+    id: string;
+  };
+  deadFee: bigint;
+  timestamp: bigint;
+  transactionHash: string;
+}
+
 export interface CollateralReturned {
   id: string;
   circleId: bigint;

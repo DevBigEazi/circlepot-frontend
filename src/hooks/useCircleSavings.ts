@@ -29,6 +29,7 @@ import {
   MemberForfeited,
   CollateralWithdrawn,
   CollateralReturned,
+  DeadCircleFeeDeducted,
 } from "../interfaces/interfaces";
 
 // GraphQL Queries
@@ -260,6 +261,25 @@ const userCirclesQuery = gql`
       }
       circleId
       amount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+
+
+    # Dead circle fees deducted
+    deadCircleFeeDeducteds(
+      where: { creator: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      circleId
+      creator {
+        id
+      }
+      deadFee
       transaction {
         blockTimestamp
         transactionHash
@@ -597,6 +617,9 @@ export const useCircleSavings = (
   const [collateralReturns, setCollateralReturns] = useState<
     CollateralReturned[]
   >([]);
+  const [deadCircleFees, setDeadCircleFees] = useState<DeadCircleFeeDeducted[]>(
+    []
+  );
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -886,6 +909,19 @@ export const useCircleSavings = (
         transactionHash: cw.transaction.transactionHash,
       }));
       setCollateralWithdrawals(processedCollateralWithdrawals);
+
+      // Process dead circle fees
+      const processedDeadCircleFees = (
+        circlesData.deadCircleFeeDeducteds || []
+      ).map((fee: any) => ({
+        id: fee.id,
+        circleId: BigInt(fee.circleId),
+        creator: fee.creator,
+        deadFee: BigInt(fee.deadFee),
+        timestamp: BigInt(fee.transaction.blockTimestamp),
+        transactionHash: fee.transaction.transactionHash,
+      }));
+      setDeadCircleFees(processedDeadCircleFees);
 
       // Process voting events from joined circles
       const processedVotingEvents = (
@@ -1567,6 +1603,7 @@ export const useCircleSavings = (
     forfeitures,
     collateralWithdrawals,
     collateralReturns,
+    deadCircleFees,
     isLoading: isCirclesLoading,
     isTransactionPending: isSending,
     error,
