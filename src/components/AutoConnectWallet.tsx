@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useAutoConnect } from 'thirdweb/react';
-import { inAppWallet } from 'thirdweb/wallets/in-app';
-import { client } from '../thirdwebClient';
+import { useEffect } from "react";
+import { useAutoConnect } from "thirdweb/react";
+import { inAppWallet } from "thirdweb/wallets/in-app";
+import { client } from "../thirdwebClient";
 
 /**
  * Enables automatic wallet reconnection on page load
@@ -12,22 +12,21 @@ export const AutoConnectWallet: React.FC = () => {
     wallets: [
       inAppWallet({
         auth: {
-          options: ['google', 'email'],
+          options: ["google", "email"],
         },
         executionMode: {
-          mode: 'EIP7702',
+          mode: "EIP7702",
           sponsorGas: true,
         },
       }),
     ],
-    onConnect: () => {
-    },
+    onConnect: () => {},
   });
 
   useEffect(() => {
     if (!isLoading) {
       if (autoConnected) {
-      } 
+      }
     }
   }, [autoConnected, isLoading]);
 

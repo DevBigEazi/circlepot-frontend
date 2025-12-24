@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Fingerprint, AlertCircle, Loader } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { Fingerprint, AlertCircle, Loader } from "lucide-react";
 
 interface BiometricOverlayProps {
   isOpen: boolean;
@@ -30,16 +30,16 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
 
     try {
       const result = await onAuthenticate();
-      
+
       if (!result.success) {
-        setError(result.error || 'Authentication failed');
-        setAttempts(prev => prev + 1);
+        setError(result.error || "Authentication failed");
+        setAttempts((prev) => prev + 1);
       }
       // If successful, the overlay will be closed by parent component
     } catch (err) {
       const error = err as Error;
-      setError(error.message || 'Authentication failed');
-      setAttempts(prev => prev + 1);
+      setError(error.message || "Authentication failed");
+      setAttempts((prev) => prev + 1);
     } finally {
       setIsAuthenticating(false);
     }
@@ -51,9 +51,9 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
       }}
     >
       <div
@@ -89,13 +89,10 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
         </h2>
 
         {/* Subtitle */}
-        <p
-          className="text-center mb-8 text-sm"
-          style={{ color: colors.text }}
-        >
+        <p className="text-center mb-8 text-sm" style={{ color: colors.text }}>
           {isAuthenticating
-            ? 'Authenticating...'
-            : 'Use your fingerprint or face to unlock'}
+            ? "Authenticating..."
+            : "Use your fingerprint or face to unlock"}
         </p>
 
         {/* Error Message */}
@@ -139,9 +136,9 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
                 Authenticating...
               </span>
             ) : attempts >= 3 ? (
-              'Too many failed attempts'
+              "Too many failed attempts"
             ) : (
-              'Try Again'
+              "Try Again"
             )}
           </button>
 

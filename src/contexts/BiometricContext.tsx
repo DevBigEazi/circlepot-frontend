@@ -1,8 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import BiometricOverlay from '../components/BiometricOverlay';
-import { useBiometric } from '../hooks/useBiometric';
-import { useBiometricLock } from '../hooks/useBiomerickLock';
-import { useThemeColors } from '../hooks/useThemeColors';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import BiometricOverlay from "../components/BiometricOverlay";
+import { useBiometric } from "../hooks/useBiometric";
+import { useBiometricLock } from "../hooks/useBiomerickLock";
+import { useThemeColors } from "../hooks/useThemeColors";
 
 interface BiometricContextType {
   isBiometricEnabled: boolean;
@@ -11,21 +17,23 @@ interface BiometricContextType {
   isAuthenticated: boolean;
 }
 
-const BiometricContext = createContext<BiometricContextType | undefined>(undefined);
+const BiometricContext = createContext<BiometricContextType | undefined>(
+  undefined
+);
 
 interface BiometricProviderProps {
   children: ReactNode;
   userId: string | null;
 }
 
-export const BiometricProvider: React.FC<BiometricProviderProps> = ({ 
-  children, 
-  userId 
+export const BiometricProvider: React.FC<BiometricProviderProps> = ({
+  children,
+  userId,
 }) => {
   const colors = useThemeColors();
   const { authenticateWithBiometric } = useBiometric();
   const { isLocked, isBiometricEnabled, unlock } = useBiometricLock(userId);
-  
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [localBiometricEnabled, setLocalBiometricEnabled] = useState(false);
 
@@ -40,16 +48,16 @@ export const BiometricProvider: React.FC<BiometricProviderProps> = ({
   // Handle biometric authentication
   const handleAuthenticate = async () => {
     if (!userId) {
-      return { success: false, error: 'User ID not found' };
+      return { success: false, error: "User ID not found" };
     }
 
     const result = await authenticateWithBiometric(userId);
-    
+
     if (result.success) {
       setIsAuthenticated(true);
       unlock();
     }
-    
+
     return result;
   };
 
@@ -85,7 +93,7 @@ export const BiometricProvider: React.FC<BiometricProviderProps> = ({
       }}
     >
       {children}
-      
+
       {/* Show biometric overlay when app is locked */}
       {isLocked && localBiometricEnabled && (
         <BiometricOverlay
@@ -102,7 +110,9 @@ export const BiometricProvider: React.FC<BiometricProviderProps> = ({
 export const useBiometricContext = () => {
   const context = useContext(BiometricContext);
   if (!context) {
-    throw new Error('useBiometricContext must be used within BiometricProvider');
+    throw new Error(
+      "useBiometricContext must be used within BiometricProvider"
+    );
   }
   return context;
 };

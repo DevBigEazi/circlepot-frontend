@@ -515,7 +515,9 @@ const CreateCircle: React.FC = () => {
                     <span
                       className="text-sm font-semibold"
                       style={{ color: colors.text }}
-                    >Members can withdraw collateral if circle doesn't start</span>
+                    >
+                      Members can withdraw collateral if circle doesn't start
+                    </span>
                   </div>
                 </div>
                 <div

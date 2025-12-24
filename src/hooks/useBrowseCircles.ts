@@ -28,9 +28,13 @@ const allCirclesQuery = gql`
       startedAt
       updatedAt
     }
-    
+
     # Get all members for these circles
-    circleJoineds(orderBy: transaction__blockTimestamp, orderDirection: asc, first: 1000) {
+    circleJoineds(
+      orderBy: transaction__blockTimestamp
+      orderDirection: asc
+      first: 1000
+    ) {
       id
       circleId
       user {
@@ -53,7 +57,7 @@ export const useBrowseCircles = (enablePolling: boolean = true) => {
     data: circlesData,
     isLoading,
     refetch,
-    error
+    error,
   } = useQuery({
     queryKey: ["browseCircles"],
     async queryFn() {

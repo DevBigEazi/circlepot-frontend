@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  DollarSign,
-  Users,
-  TrendingUp,
-  Calendar,
-  Shield,
-} from "lucide-react";
+import { DollarSign, Users, TrendingUp, Calendar, Shield } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { getFrequencyText } from "../utils/helpers";
 
