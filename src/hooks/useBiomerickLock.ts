@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 export const useBiometricLock = (userId: string | null) => {
   const [isLocked, setIsLocked] = useState(false);
@@ -12,8 +12,7 @@ export const useBiometricLock = (userId: string | null) => {
         try {
           const state = JSON.parse(biometricState);
           setIsBiometricEnabled(state.isEnabled || false);
-        } catch (err) {
-        }
+        } catch (err) {}
       }
     }
   }, [userId]);
@@ -25,36 +24,36 @@ export const useBiometricLock = (userId: string | null) => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // User left the app - set lock flag
-        sessionStorage.setItem('app_locked', 'true');
+        sessionStorage.setItem("app_locked", "true");
       } else {
         // User returned to the app
-        const wasLocked = sessionStorage.getItem('app_locked');
-        if (wasLocked === 'true') {
+        const wasLocked = sessionStorage.getItem("app_locked");
+        if (wasLocked === "true") {
           setIsLocked(true);
         }
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Also lock when the page is about to unload
     const handleBeforeUnload = () => {
-      sessionStorage.setItem('app_locked', 'true');
+      sessionStorage.setItem("app_locked", "true");
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [isBiometricEnabled, userId]);
 
   // Check if app should be locked on mount
   useEffect(() => {
     if (isBiometricEnabled && userId) {
-      const wasLocked = sessionStorage.getItem('app_locked');
-      if (wasLocked === 'true') {
+      const wasLocked = sessionStorage.getItem("app_locked");
+      if (wasLocked === "true") {
         setIsLocked(true);
       }
     }
@@ -62,12 +61,12 @@ export const useBiometricLock = (userId: string | null) => {
 
   const unlock = useCallback(() => {
     setIsLocked(false);
-    sessionStorage.removeItem('app_locked');
+    sessionStorage.removeItem("app_locked");
   }, []);
 
   const lock = useCallback(() => {
     setIsLocked(true);
-    sessionStorage.setItem('app_locked', 'true');
+    sessionStorage.setItem("app_locked", "true");
   }, []);
 
   return {

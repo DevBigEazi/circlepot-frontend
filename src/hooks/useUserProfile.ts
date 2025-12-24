@@ -10,9 +10,8 @@ import {
   SUBGRAPH_URL,
   SUBGRAPH_HEADERS,
   USER_PROFILE_ADDRESS,
-  CHAIN_ID
+  CHAIN_ID,
 } from "../constants/constants";
-
 
 const userProfileQuery = gql`
   query GetUserProfile($id: String!) {
@@ -53,7 +52,6 @@ interface UserProfile {
 }
 
 export const useUserProfile = (client: ThirdwebClient) => {
-
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
     useSendTransaction();
@@ -235,31 +233,33 @@ export const useUserProfile = (client: ThirdwebClient) => {
   );
 
   // Check username availability
-  const checkUsernameAvailability = useCallback(async (username: string): Promise<boolean> => {
-    try {
-      const query = gql`
-        query CheckUsernameAvailable($username: String!) {
-          users(where: { username: $username }) {
-            id
+  const checkUsernameAvailability = useCallback(
+    async (username: string): Promise<boolean> => {
+      try {
+        const query = gql`
+          query CheckUsernameAvailable($username: String!) {
+            users(where: { username: $username }) {
+              id
+            }
           }
-        }
-      `
+        `;
 
-      const result = await request(
-        SUBGRAPH_URL,
-        query,
-        { username: username.toLowerCase() },
-        SUBGRAPH_HEADERS
-      )
+        const result = await request(
+          SUBGRAPH_URL,
+          query,
+          { username: username.toLowerCase() },
+          SUBGRAPH_HEADERS
+        );
 
-      // If no users found with this username, it's available
-      return result.users.length === 0;
-    } catch (err) {
-      // If query fails, assume unavailable (safer)
-      return false;
-    }
-  }, []);
-
+        // If no users found with this username, it's available
+        return result.users.length === 0;
+      } catch (err) {
+        // If query fails, assume unavailable (safer)
+        return false;
+      }
+    },
+    []
+  );
 
   // Get profile by wallet address (id field)
   const getProfileByAddress = useCallback(async (address: string) => {
@@ -396,7 +396,10 @@ export const useUserProfile = (client: ThirdwebClient) => {
             totalGoalsCompleted
             totalCirclesCompleted
           }
-          caseInsensitiveMatch: users(where: { username_contains_nocase: $usernameNoCase }, first: 1) {
+          caseInsensitiveMatch: users(
+            where: { username_contains_nocase: $usernameNoCase }
+            first: 1
+          ) {
             id
             email
             username
@@ -426,7 +429,10 @@ export const useUserProfile = (client: ThirdwebClient) => {
       if (result.exactMatch && result.exactMatch.length > 0) {
         return result.exactMatch[0];
       }
-      if (result.caseInsensitiveMatch && result.caseInsensitiveMatch.length > 0) {
+      if (
+        result.caseInsensitiveMatch &&
+        result.caseInsensitiveMatch.length > 0
+      ) {
         return result.caseInsensitiveMatch[0];
       }
       return null;
@@ -477,24 +483,25 @@ export const useProfile = (address?: string) => {
   });
 
   return {
-    profile: userProfile ? {
-      userAddress: userProfile.id,
-      email: userProfile.email,
-      username: userProfile.username,
-      fullName: userProfile.fullName,
-      accountId: BigInt(userProfile.accountId),
-      photo: userProfile.photo,
-      lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
-      createdAt: BigInt(userProfile.createdAt),
-      hasProfile: userProfile.hasProfile,
-      repCategory: userProfile.repCategory,
-      totalReputation: userProfile.totalReputation,
-      totalLatePayments: userProfile.totalLatePayments,
-      totalGoalsCompleted: userProfile.totalGoalsCompleted,
-      totalCirclesCompleted: userProfile.totalCirclesCompleted,
-    } : null,
+    profile: userProfile
+      ? {
+          userAddress: userProfile.id,
+          email: userProfile.email,
+          username: userProfile.username,
+          fullName: userProfile.fullName,
+          accountId: BigInt(userProfile.accountId),
+          photo: userProfile.photo,
+          lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
+          createdAt: BigInt(userProfile.createdAt),
+          hasProfile: userProfile.hasProfile,
+          repCategory: userProfile.repCategory,
+          totalReputation: userProfile.totalReputation,
+          totalLatePayments: userProfile.totalLatePayments,
+          totalGoalsCompleted: userProfile.totalGoalsCompleted,
+          totalCirclesCompleted: userProfile.totalCirclesCompleted,
+        }
+      : null,
     isLoading,
     error,
   };
 };
-

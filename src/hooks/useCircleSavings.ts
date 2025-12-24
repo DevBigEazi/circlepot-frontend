@@ -267,7 +267,6 @@ const userCirclesQuery = gql`
       }
     }
 
-
     # Dead circle fees deducted
     deadCircleFeeDeducteds(
       where: { creator: $userId }
@@ -573,7 +572,7 @@ const singleCircleQuery = gql`
 
     # Collateral returns for these circles
     collateralReturneds(
-      where: { circleId_in: $circleIds }
+      where: { circleId: $circleId }
       orderBy: transaction__blockTimestamp
       orderDirection: desc
     ) {

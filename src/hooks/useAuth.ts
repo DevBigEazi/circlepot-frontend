@@ -232,7 +232,6 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
         setLoading(false);
         return true;
       } catch (error: any) {
-
         let errorMessage = "Failed to send verification code";
         let errorCode = "EMAIL_SEND_ERROR";
 
@@ -277,7 +276,7 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
 
         if (!verificationCode || verificationCode.length !== 6) {
           const authError: AuthError = {
-            code: "INVALID_CODE", 
+            code: "INVALID_CODE",
             message:
               "The verification code you entered is incorrect or has expired. Please try again.",
           };

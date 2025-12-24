@@ -17,7 +17,9 @@ const BottomNav: React.FC = () => {
   const isActive = (route: string) => {
     if (route === "/") {
       // Match / or any dashboard/:userId route
-      return location.pathname === "/" || location.pathname.startsWith("/dashboard/");
+      return (
+        location.pathname === "/" || location.pathname.startsWith("/dashboard/")
+      );
     }
     return location.pathname === route;
   };
@@ -42,10 +44,7 @@ const BottomNav: React.FC = () => {
                 : { color: colors.textLight }
             }
           >
-            <item.icon
-              size={20}
-              strokeWidth={isActive(item.route) ? 2.5 : 2}
-            />
+            <item.icon size={20} strokeWidth={isActive(item.route) ? 2.5 : 2} />
             <span className="text-xs font-medium">{item.label}</span>
           </Link>
         ))}

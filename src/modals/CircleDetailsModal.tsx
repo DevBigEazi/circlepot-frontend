@@ -322,20 +322,22 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
                 : `Make ${circleType === "public" ? "Private" : "Public"}`}
             </button>
           )}
-          {circle.status !== "completed" && <button
-            onClick={() => {
-              setShowCircleDetails(false);
-              if (onJoinCircle) onJoinCircle(circle);
-            }}
-            className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
-            style={{
-              backgroundColor: colors.accentBg,
-              color: colors.text,
-            }}
-          >
-            <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Chat</span>
-          </button>}
+          {circle.status !== "completed" && (
+            <button
+              onClick={() => {
+                setShowCircleDetails(false);
+                if (onJoinCircle) onJoinCircle(circle);
+              }}
+              className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
+              style={{
+                backgroundColor: colors.accentBg,
+                color: colors.text,
+              }}
+            >
+              <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Chat</span>
+            </button>
+          )}
           <CircleActions
             circle={circle}
             colors={colors}
