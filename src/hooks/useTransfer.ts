@@ -1,26 +1,19 @@
 import { useCallback, useMemo, useState } from "react";
-import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract, estimateGas, getGasPrice } from "thirdweb";
+import { useActiveAccount, useSendBatchTransaction, useSendTransaction } from "thirdweb/react";
+import { prepareContractCall, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { client } from "../thirdwebClient";
-import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
+import { CUSD_ADDRESS, CHAIN_ID, PLATFORM_FEE_RECIPIENT, WITHDRAWAL_FEE } from "../constants/constants";
 import { CUSD_ABI } from "../abis/Cusd";
 
 export const useTransfer = () => {
     const account = useActiveAccount();
 
-    // Standard User-Paid Transaction Hook (Default for EIP7702 when sponsorGas: false)
-    const { mutate: sendUserPaidTransaction, isPending: isSendingUserPaid } = useSendTransaction();
-
-    // Explicitly Sponsored Transaction Hook (Opt-In)
-    const { mutate: sendSponsoredTransaction, isPending: isSendingSponsored } = useSendTransaction({
-        // @ts-ignore - gasless: true opt-in for EIP7702 managed sponsorship
-        gasless: true,
-    });
+    // Hooks for different transfer types
+    const { mutate: sendSingleTx, isPending: isSendingSingle } = useSendTransaction();
+    const { mutate: sendBatchTx, isPending: isSendingBatch } = useSendBatchTransaction();
 
     const [error, setError] = useState<string | null>(null);
-    const [estimatedFee, setEstimatedFee] = useState<bigint | null>(null);
-    const [isEstimating, setIsEstimating] = useState(false);
 
     const chain = useMemo(() => defineChain(CHAIN_ID), []);
 
@@ -35,42 +28,8 @@ export const useTransfer = () => {
         [chain]
     );
 
-    const getEstimatedFee = useCallback(
-        async (to: string, amount: bigint) => {
-            if (!account) return null;
-            setIsEstimating(true);
-            try {
-                const transaction = prepareContractCall({
-                    contract,
-                    method: "transfer",
-                    params: [to, amount],
-                });
-
-                // Celo Fee Abstraction: We want to know the cost in cUSD
-                // @ts-ignore
-                transaction.feeCurrency = CUSD_ADDRESS;
-
-                const [gas, gasPrice] = await Promise.all([
-                    estimateGas({ transaction, account }),
-                    getGasPrice({ client, chain })
-                ]);
-
-                // Add 20% buffer for safety
-                const fee = (BigInt(gas) * gasPrice * BigInt(120)) / BigInt(100);
-                setEstimatedFee(fee);
-                return fee;
-            } catch (err) {
-                console.error("Fee estimation failed:", err);
-                return null;
-            } finally {
-                setIsEstimating(false);
-            }
-        },
-        [account, contract, client, chain]
-    );
-
     const transfer = useCallback(
-        async (to: string, amount: bigint, isSponsored: boolean = true) => {
+        async (to: string, amount: bigint, isExternal: boolean = false) => {
             if (!account) {
                 throw new Error("No wallet connected");
             }
@@ -78,46 +37,71 @@ export const useTransfer = () => {
             setError(null);
 
             try {
-                const transaction = prepareContractCall({
-                    contract,
-                    method: "transfer",
-                    params: [to, amount],
-                });
-
-                // Celo Fee Abstraction: Use cUSD to pay for gas
-                // @ts-ignore - feeCurrency is supported on Celo
-                transaction.feeCurrency = CUSD_ADDRESS;
-
-                const sendTx = isSponsored ? sendSponsoredTransaction : sendUserPaidTransaction;
-
-                return new Promise((resolve, reject) => {
-                    sendTx(transaction, {
-                        onSuccess: (result) => {
-                            resolve(result);
-                        },
-                        onError: (err) => {
-                            const errorMessage = err.message || "Transfer failed";
-                            setError(errorMessage);
-                            reject(err);
-                        },
+                if (!isExternal) {
+                    // INTERNAL TRANSFER: Single Transaction (Gasless)
+                    const transaction = prepareContractCall({
+                        contract,
+                        method: "transfer",
+                        params: [to, amount],
                     });
-                });
+
+                    return new Promise((resolve, reject) => {
+                        sendSingleTx(transaction as any, {
+                            onSuccess: (result) => resolve(result),
+                            onError: (err) => {
+                                setError(err.message || "Internal transfer failed");
+                                reject(err);
+                            },
+                        });
+                    });
+                } else {
+                    // EXTERNAL WITHDRAWAL: Atomic Batch (Fee + Withdrawal)
+                    // This ensures both succeed OR both fail together.
+
+                    const feeInWei = BigInt(Math.floor(WITHDRAWAL_FEE * 1e18));
+
+                    // 1. Fee Transaction
+                    const feeTx = prepareContractCall({
+                        contract,
+                        method: "transfer",
+                        params: [PLATFORM_FEE_RECIPIENT, feeInWei],
+                    });
+
+                    // 2. Withdrawal Transaction
+                    const withdrawTx = prepareContractCall({
+                        contract,
+                        method: "transfer",
+                        params: [to, amount],
+                    });
+
+                    // Send as a batch. 
+                    // For Account Abstraction (EIP-7702), this is bundled into a single signature and execution.
+                    return new Promise((resolve, reject) => {
+                        sendBatchTx([feeTx, withdrawTx] as any, {
+                            onSuccess: (result) => {
+                                resolve(result);
+                            },
+                            onError: (err) => {
+                                setError(err.message || "Withdrawal failed");
+                                reject(err);
+                            },
+                        });
+                    });
+                }
             } catch (err: any) {
-                const errorMessage = err.message || "Failed to prepare transfer";
-                setError(errorMessage);
+                const msg = err.message || "Failed to process transfer";
+                setError(msg);
                 throw err;
             }
         },
-        [account, contract, sendSponsoredTransaction, sendUserPaidTransaction]
+        [account, contract, sendSingleTx, sendBatchTx]
     );
 
     return {
         transfer,
-        getEstimatedFee,
-        estimatedFee,
-        isEstimating,
-        isTransferring: isSendingUserPaid || isSendingSponsored,
+        isTransferring: isSendingSingle || isSendingBatch,
         error,
         clearError: () => setError(null),
+        withdrawalFee: WITHDRAWAL_FEE
     };
 };
