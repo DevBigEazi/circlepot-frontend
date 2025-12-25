@@ -12,6 +12,7 @@ import {
   CHAIN_ID,
   PERSONAL_SAVINGS_ADDRESS,
   CIRCLE_SAVINGS_ADDRESS,
+  PLATFORM_FEE_RECIPIENT,
 } from "../constants/constants";
 
 // GraphQL Query for all transaction types
@@ -218,19 +219,19 @@ const userProfilesQuery = gql`
 export interface Transaction {
   id: string;
   type:
-    | "circle_contribution"
-    | "circle_payout"
-    | "goal_contribution"
-    | "goal_withdrawal"
-    | "goal_completion"
-    | "late_payment"
-    | "collateral_withdrawal"
-    | "cusd_send"
-    | "late_payment"
-    | "collateral_withdrawal"
-    | "dead_circle_fee"
-    | "cusd_send"
-    | "cusd_receive";
+  | "circle_contribution"
+  | "circle_payout"
+  | "goal_contribution"
+  | "goal_withdrawal"
+  | "goal_completion"
+  | "late_payment"
+  | "collateral_withdrawal"
+  | "cusd_send"
+  | "late_payment"
+  | "collateral_withdrawal"
+  | "dead_circle_fee"
+  | "cusd_send"
+  | "cusd_receive";
   amount: bigint;
   currency: string;
   timestamp: bigint;
@@ -469,46 +470,93 @@ export const useTransactionHistory = () => {
     const allTransactions: Transaction[] = [];
     const userAddress = account?.address?.toLowerCase();
 
-    // Process cUSD transfers
+    // Group transfers by hash to handle fee merging
+    const transfersByHash = new Map<string, any[]>();
     transactionsData.cusdTransfers?.forEach((event: any) => {
-      const from = event.args.from?.toLowerCase();
-      const to = event.args.to?.toLowerCase();
-      const isSend = from === userAddress;
-      const amount = BigInt(event.args.value);
+      const hash = event.transactionHash;
+      if (!transfersByHash.has(hash)) transfersByHash.set(hash, []);
+      transfersByHash.get(hash)?.push(event);
+    });
 
-      // Skip zero value transfers if desired, or keep them
+    transfersByHash.forEach((events) => {
+      const userSends = events.filter(
+        (e) => e.args.from?.toLowerCase() === userAddress
+      );
+      const userReceives = events.filter(
+        (e) => e.args.to?.toLowerCase() === userAddress
+      );
 
-      const otherAddress = isSend ? to : from;
-      const otherProfile = transactionsData.userProfilesMap?.get(otherAddress);
+      // Handle Sent Transfers (Potential Merging)
+      let platformFee = 0n;
+      const feeRecipient = PLATFORM_FEE_RECIPIENT?.toLowerCase();
 
-      allTransactions.push({
-        id: `${event.transactionHash}-${event.logIndex || 0}`,
-        type: isSend ? "cusd_send" : "cusd_receive",
-        amount: amount,
-        currency: "cUSD",
-        timestamp: event.timestamp, // This is now BigInt from queryFn
-        transactionHash: event.transactionHash,
-        status: "success",
-        fee: 0n, // We don't have gas fee info easily here
-        from: from,
-        to: to,
-        fromUsername: isSend ? "You" : otherProfile?.username || from,
-        fromFullName: isSend ? "You" : otherProfile?.fullName || "",
-        toUsername: !isSend ? "You" : otherProfile?.username || to,
-        toFullName: !isSend ? "You" : otherProfile?.fullName || "",
-        note: isSend
-          ? `Sent to ${
-              otherProfile?.username ||
-              (otherAddress
-                ? `${otherAddress.slice(0, 6)}...${otherAddress.slice(-4)}`
-                : "Unknown")
-            }`
-          : `Received from ${
-              otherProfile?.username ||
-              (otherAddress
-                ? `${otherAddress.slice(0, 6)}...${otherAddress.slice(-4)}`
-                : "Unknown")
+      // If we find multiple sends from the user in one TX, look for a platform fee to merge
+      if (userSends.length > 1 && feeRecipient) {
+        const feeEvent = userSends.find(
+          (e) => e.args.to?.toLowerCase() === feeRecipient
+        );
+        if (feeEvent) {
+          platformFee = BigInt(feeEvent.args.value);
+        }
+      }
+
+      // Add Sends
+      userSends.forEach((event) => {
+        const to = event.args.to?.toLowerCase();
+        // Skip the explicit "Fee" entry if we've already merged it into another entry in this hash
+        if (platformFee > 0n && to === feeRecipient && userSends.length > 1) {
+          return;
+        }
+
+        const amount = BigInt(event.args.value);
+        const otherProfile = transactionsData.userProfilesMap?.get(to);
+
+        allTransactions.push({
+          id: `${event.transactionHash}-${event.logIndex || 0}`,
+          type: "cusd_send",
+          amount: amount,
+          currency: "cUSD",
+          timestamp: event.timestamp,
+          transactionHash: event.transactionHash,
+          status: "success",
+          fee: platformFee, // Reflect the platform fee here
+          from: userAddress,
+          to: to,
+          fromUsername: "You",
+          fromFullName: "You",
+          toUsername: otherProfile?.username || to,
+          toFullName: otherProfile?.fullName || "",
+          note: `Sent to ${otherProfile?.username ||
+            (to ? `${to.slice(0, 6)}...${to.slice(-4)}` : "Unknown")
             }`,
+        });
+      });
+
+      // Add Receives
+      userReceives.forEach((event) => {
+        const from = event.args.from?.toLowerCase();
+        const amount = BigInt(event.args.value);
+        const otherProfile = transactionsData.userProfilesMap?.get(from);
+
+        allTransactions.push({
+          id: `${event.transactionHash}-${event.logIndex || 0}`,
+          type: "cusd_receive",
+          amount: amount,
+          currency: "cUSD",
+          timestamp: event.timestamp,
+          transactionHash: event.transactionHash,
+          status: "success",
+          fee: 0n,
+          from: from,
+          to: userAddress,
+          fromUsername: otherProfile?.username || from,
+          fromFullName: otherProfile?.fullName || "",
+          toUsername: "You",
+          toFullName: "You",
+          note: `Received from ${otherProfile?.username ||
+            (from ? `${from.slice(0, 6)}...${from.slice(-4)}` : "Unknown")
+            }`,
+        });
       });
     });
 

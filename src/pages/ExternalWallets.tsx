@@ -31,7 +31,7 @@ const ExternalWallets: React.FC = () => {
           text: address,
         });
       } catch (err) {
-        console.error("Error sharing:", err);
+        throw err;
       }
     }
   };

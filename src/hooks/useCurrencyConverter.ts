@@ -105,7 +105,7 @@ export const useCurrencyConverter = () => {
       try {
         setAvailableCurrencies(JSON.parse(cachedMeta));
       } catch (e) {
-        console.error("Failed to parse cached currency metadata", e);
+        throw e;
       }
     }
 
@@ -115,7 +115,7 @@ export const useCurrencyConverter = () => {
         setExchangeRates(rates);
         setLastUpdated(new Date(timestamp));
       } catch (e) {
-        console.error("Failed to parse cached rates", e);
+        throw e;
       }
     } else {
       const defaultRates: Record<string, number> = {};
@@ -229,7 +229,6 @@ export const useCurrencyConverter = () => {
         setLastUpdated(new Date());
       }
     } catch (err) {
-      console.error("Error fetching currency data:", err);
       setError("Failed to update rates. Using cached data.");
     } finally {
       setIsLoading(false);
