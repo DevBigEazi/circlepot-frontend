@@ -54,10 +54,7 @@ interface UserProfile {
 export const useUserProfile = (client: ThirdwebClient) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
-    useSendTransaction({
-      // @ts-ignore - gasless: true opt-in for EIP7702 managed sponsorship
-      gasless: true,
-    });
+    useSendTransaction();
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);

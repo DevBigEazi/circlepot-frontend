@@ -112,10 +112,7 @@ const singleGoalQuery = gql`
 export const usePersonalGoals = (client: ThirdwebClient) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
-    useSendTransaction({
-      // @ts-ignore - gasless: true opt-in for EIP7702 managed sponsorship
-      gasless: true,
-    });
+    useSendTransaction();
   const [goals, setGoals] = useState<PersonalGoal[]>([]);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [withdrawals, setWithdrawals] = useState<GoalWithdrawal[]>([]);
