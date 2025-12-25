@@ -19,32 +19,11 @@ import AddFundsModal from "../modals/AddFundsModal";
 import WithdrawModal from "../modals/WithdrawModal";
 import { transformCircles } from "../utils/circleTransformer";
 
-import { useReadContract } from "thirdweb/react";
-import { getContract } from "thirdweb";
-import { defineChain } from "thirdweb/chains";
-import { CUSD_ABI } from "../abis/Cusd";
-import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
+import { useBalance } from "../hooks/useBalance";
 
 const Dashboard: React.FC = () => {
   const account = useActiveAccount();
-  const chain = useMemo(() => defineChain(CHAIN_ID), []);
-
-  const cusdContract = useMemo(
-    () =>
-      getContract({
-        client,
-        chain,
-        address: CUSD_ADDRESS,
-        abi: CUSD_ABI,
-      }),
-    [chain]
-  );
-
-  const { data: balanceData, isLoading: isBalanceLoading } = useReadContract({
-    contract: cusdContract,
-    method: "balanceOf",
-    params: [account?.address || "0x0000000000000000000000000000000000000000"],
-  });
+  const { balance: balanceData, isLoading: isBalanceLoading } = useBalance();
 
   const { profile } = useUserProfile(client);
 

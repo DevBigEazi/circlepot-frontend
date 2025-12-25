@@ -54,7 +54,10 @@ interface UserProfile {
 export const useUserProfile = (client: ThirdwebClient) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
-    useSendTransaction();
+    useSendTransaction({
+      // @ts-ignore - gasless: true opt-in for EIP7702 managed sponsorship
+      gasless: true,
+    });
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +124,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
       setProfile(null);
     }
   }, [userData, isUserLoading, account?.address]);
-  
+
   // Create profile function
   const createProfile = useCallback(
     async (
@@ -407,21 +410,21 @@ export const useProfile = (address?: string) => {
   return {
     profile: userProfile
       ? {
-          userAddress: userProfile.id,
-          email: userProfile.email,
-          username: userProfile.username,
-          fullName: userProfile.fullName,
-          accountId: BigInt(userProfile.accountId),
-          photo: userProfile.photo,
-          lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
-          createdAt: BigInt(userProfile.createdAt),
-          hasProfile: userProfile.hasProfile,
-          repCategory: userProfile.repCategory,
-          totalReputation: userProfile.totalReputation,
-          totalLatePayments: userProfile.totalLatePayments,
-          totalGoalsCompleted: userProfile.totalGoalsCompleted,
-          totalCirclesCompleted: userProfile.totalCirclesCompleted,
-        }
+        userAddress: userProfile.id,
+        email: userProfile.email,
+        username: userProfile.username,
+        fullName: userProfile.fullName,
+        accountId: BigInt(userProfile.accountId),
+        photo: userProfile.photo,
+        lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
+        createdAt: BigInt(userProfile.createdAt),
+        hasProfile: userProfile.hasProfile,
+        repCategory: userProfile.repCategory,
+        totalReputation: userProfile.totalReputation,
+        totalLatePayments: userProfile.totalLatePayments,
+        totalGoalsCompleted: userProfile.totalGoalsCompleted,
+        totalCirclesCompleted: userProfile.totalCirclesCompleted,
+      }
       : null,
     isLoading,
     error,

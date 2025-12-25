@@ -598,7 +598,10 @@ export const useCircleSavings = (
 ) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
-    useSendTransaction();
+    useSendTransaction({
+      // @ts-ignore - gasless: true opt-in for EIP7702 managed sponsorship
+      gasless: true,
+    });
   const [circles, setCircles] = useState<Circle[]>([]);
   const [joinedCircles, setJoinedCircles] = useState<CircleJoined[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);

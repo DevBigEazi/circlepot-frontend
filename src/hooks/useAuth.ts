@@ -32,7 +32,7 @@ export const useAuth = () => {
     },
     executionMode: {
       mode: "EIP7702",
-      sponsorGas: true,
+      sponsorGas: false, // Enable granular control (opt-in for sponsorship per-call)
     },
   });
 
