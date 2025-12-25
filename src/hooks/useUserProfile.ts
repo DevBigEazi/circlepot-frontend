@@ -19,6 +19,7 @@ const userProfileQuery = gql`
       id
       email
       username
+      usernameLowercase
       fullName
       accountId
       photo
@@ -33,11 +34,11 @@ const userProfileQuery = gql`
     }
   }
 `;
-
 interface UserProfile {
   userAddress: string;
   email: string;
-  username: string;
+  username: string; // The "Display" name (e.g. "AbC")
+  usernameLowercase: string; // The "Identity" (e.g. "abc")
   fullName: string;
   accountId: bigint;
   photo: string;
@@ -50,17 +51,17 @@ interface UserProfile {
   totalGoalsCompleted: Number;
   totalCirclesCompleted: Number;
 }
-
 export const useUserProfile = (client: ThirdwebClient) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
-    useSendTransaction();
+    useSendTransaction({
+      // @ts-ignore - gasless: true opt-in for EIP7702 managed sponsorship
+      gasless: true,
+    });
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
-
   const contract = useMemo(
     () =>
       getContract({
@@ -71,8 +72,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
       }),
     [client, chain]
   );
-
-  // Fetch user profile from Subgraph
   const {
     data: userData,
     isLoading: isUserLoading,
@@ -81,7 +80,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
     queryKey: ["userProfile", account?.address],
     async queryFn() {
       if (!account?.address) return null;
-
       try {
         const result = await request(
           SUBGRAPH_URL,
@@ -95,20 +93,19 @@ export const useUserProfile = (client: ThirdwebClient) => {
       }
     },
     enabled: !!account?.address,
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (formerly cacheTime)
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnReconnect: false, // Don't refetch on network reconnect
-    retry: 1, // Only retry once on failure
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
   });
-
-  // Update local state when subgraph data changes
   useEffect(() => {
     if (userData) {
       setHasProfile(userData.hasProfile);
       setProfile({
         userAddress: userData.id,
         email: userData.email,
-        username: userData.username,
+        username: userData.username, // Original casing shown to user
+        usernameLowercase: userData.usernameLowercase,
         fullName: userData.fullName,
         accountId: BigInt(userData.accountId),
         photo: userData.photo,
@@ -139,37 +136,20 @@ export const useUserProfile = (client: ThirdwebClient) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
-
       try {
         setError(null);
-
-        // Validate inputs
-        if (!email || email.trim().length === 0) {
-          throw new Error("Email is required and cannot be empty");
-        }
-
-        if (!username || username.trim().length === 0) {
-          throw new Error("Username is required and cannot be empty");
-        }
-
-        if (!fullName || fullName.trim().length === 0) {
-          throw new Error("Full name is required and cannot be empty");
-        }
-
-        // Photo is optional - pass empty string if not provided
+        if (!email || email.trim().length === 0) throw new Error("Email is required");
+        if (!username || username.trim().length === 0) throw new Error("Username is required");
+        if (!fullName || fullName.trim().length === 0) throw new Error("Full name is required");
         const photoUrl = photo?.trim() || "";
-
         const transaction = prepareContractCall({
           contract,
           method: "createProfile",
           params: [email, username, fullName, photoUrl],
         });
-
-        // Send transaction using the hook from top level
         return new Promise((resolve, reject) => {
           sendTransaction(transaction, {
             onSuccess: (receipt) => {
-              // Refetch profile from subgraph after successful transaction
               setTimeout(() => refetchUser(), 2000);
               resolve(receipt);
             },
@@ -232,66 +212,78 @@ export const useUserProfile = (client: ThirdwebClient) => {
     [account?.address, contract, sendTransaction, refetchUser]
   );
 
-  // Check username availability
+  // Check username availability - CASE INSENSITIVE
   const checkUsernameAvailability = useCallback(
     async (username: string): Promise<boolean> => {
       try {
         const query = gql`
           query CheckUsernameAvailable($username: String!) {
-            users(where: { username: $username }) {
+            users(where: { usernameLowercase: $username }) {
               id
             }
           }
         `;
-
         const result = await request(
           SUBGRAPH_URL,
           query,
-          { username: username.toLowerCase() },
+          { username: username.toLowerCase() }, // Always compare against lowercase
           SUBGRAPH_HEADERS
         );
-
-        // If no users found with this username, it's available
         return result.users.length === 0;
       } catch (err) {
-        // If query fails, assume unavailable (safer)
         return false;
       }
     },
     []
   );
-
-  // Get profile by wallet address (id field)
-  const getProfileByAddress = useCallback(async (address: string) => {
+  // Helper common fields for profile queries
+  const profileFields = `
+    id
+    email
+    username
+    usernameLowercase
+    fullName
+    accountId
+    photo
+    lastPhotoUpdate
+    createdAt
+    hasProfile
+    repCategory
+    totalReputation
+    totalLatePayments
+    totalGoalsCompleted
+    totalCirclesCompleted
+  `;
+  // Get profile by username
+  const getProfileByUsername = useCallback(async (username: string) => {
     try {
       const query = gql`
-        query GetUserByAddress($id: String!) {
-          user(id: $id) {
-            id
-            email
-            username
-            fullName
-            accountId
-            photo
-            lastPhotoUpdate
-            createdAt
-            hasProfile
-            repCategory
-            totalReputation
-            totalLatePayments
-            totalGoalsCompleted
-            totalCirclesCompleted
+        query GetUserByUsername($usernameLowercase: String!) {
+          users(where: { usernameLowercase: $usernameLowercase }, first: 1) {
+            ${profileFields}
           }
         }
       `;
-
       const result = await request(
         SUBGRAPH_URL,
         query,
+        { usernameLowercase: username.toLowerCase() },
+        SUBGRAPH_HEADERS
+      );
+      return result.users && result.users.length > 0 ? result.users[0] : null;
+    } catch (err) {
+      throw err;
+    }
+  }, []);
+  // Get profile by Address
+  const getProfileByAddress = useCallback(async (address: string) => {
+    try {
+      const result = await request(
+        SUBGRAPH_URL,
+        userProfileQuery,
         { id: address.toLowerCase() },
         SUBGRAPH_HEADERS
       );
-
       return result.user || null;
     } catch (err) {
       throw err;
@@ -374,73 +366,6 @@ export const useUserProfile = (client: ThirdwebClient) => {
     }
   }, []);
 
-  // Get profile by username
-  const getProfileByUsername = useCallback(async (username: string) => {
-    try {
-      // Try exact match first, then case-insensitive
-      const query = gql`
-        query GetUserByUsername($username: String!, $usernameNoCase: String!) {
-          exactMatch: users(where: { username: $username }, first: 1) {
-            id
-            email
-            username
-            fullName
-            accountId
-            photo
-            lastPhotoUpdate
-            createdAt
-            hasProfile
-            repCategory
-            totalReputation
-            totalLatePayments
-            totalGoalsCompleted
-            totalCirclesCompleted
-          }
-          caseInsensitiveMatch: users(
-            where: { username_contains_nocase: $usernameNoCase }
-            first: 1
-          ) {
-            id
-            email
-            username
-            fullName
-            accountId
-            photo
-            lastPhotoUpdate
-            createdAt
-            hasProfile
-            repCategory
-            totalReputation
-            totalLatePayments
-            totalGoalsCompleted
-            totalCirclesCompleted
-          }
-        }
-      `;
-
-      const result = await request(
-        SUBGRAPH_URL,
-        query,
-        { username: username, usernameNoCase: username },
-        SUBGRAPH_HEADERS
-      );
-
-      // Return exact match first, then case-insensitive match
-      if (result.exactMatch && result.exactMatch.length > 0) {
-        return result.exactMatch[0];
-      }
-      if (
-        result.caseInsensitiveMatch &&
-        result.caseInsensitiveMatch.length > 0
-      ) {
-        return result.caseInsensitiveMatch[0];
-      }
-      return null;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
-
   return {
     hasProfile,
     profile,
@@ -485,21 +410,21 @@ export const useProfile = (address?: string) => {
   return {
     profile: userProfile
       ? {
-          userAddress: userProfile.id,
-          email: userProfile.email,
-          username: userProfile.username,
-          fullName: userProfile.fullName,
-          accountId: BigInt(userProfile.accountId),
-          photo: userProfile.photo,
-          lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
-          createdAt: BigInt(userProfile.createdAt),
-          hasProfile: userProfile.hasProfile,
-          repCategory: userProfile.repCategory,
-          totalReputation: userProfile.totalReputation,
-          totalLatePayments: userProfile.totalLatePayments,
-          totalGoalsCompleted: userProfile.totalGoalsCompleted,
-          totalCirclesCompleted: userProfile.totalCirclesCompleted,
-        }
+        userAddress: userProfile.id,
+        email: userProfile.email,
+        username: userProfile.username,
+        fullName: userProfile.fullName,
+        accountId: BigInt(userProfile.accountId),
+        photo: userProfile.photo,
+        lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
+        createdAt: BigInt(userProfile.createdAt),
+        hasProfile: userProfile.hasProfile,
+        repCategory: userProfile.repCategory,
+        totalReputation: userProfile.totalReputation,
+        totalLatePayments: userProfile.totalLatePayments,
+        totalGoalsCompleted: userProfile.totalGoalsCompleted,
+        totalCirclesCompleted: userProfile.totalCirclesCompleted,
+      }
       : null,
     isLoading,
     error,

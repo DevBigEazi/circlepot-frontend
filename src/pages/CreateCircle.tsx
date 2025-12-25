@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Shield,
@@ -14,36 +14,14 @@ import { client } from "../thirdwebClient";
 import NavBar from "../components/NavBar";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
-import { useActiveAccount, useReadContract } from "thirdweb/react";
-import { getContract } from "thirdweb";
-import { defineChain } from "thirdweb/chains";
-import { CUSD_ABI } from "../abis/Cusd";
-import { formatBalance } from "../utils/helpers";
-import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
+import { useBalance } from "../hooks/useBalance";
 
 const CreateCircle: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
   const { createCircle, isLoading } = useCircleSavings(client);
-  const account = useActiveAccount();
 
-  const chain = useMemo(() => defineChain(CHAIN_ID), []);
-  const cusdContract = useMemo(
-    () =>
-      getContract({
-        client,
-        chain,
-        address: CUSD_ADDRESS,
-        abi: CUSD_ABI,
-      }),
-    [chain]
-  );
-
-  const { data: balanceData } = useReadContract({
-    contract: cusdContract,
-    method: "balanceOf",
-    params: [account?.address || "0x0000000000000000000000000000000000000000"],
-  });
+  const { balance: balanceData } = useBalance();
 
   const [circleForm, setCircleForm] = useState({
     name: "",
@@ -57,7 +35,7 @@ const CreateCircle: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
 
   // Get actual balance from blockchain
-  const currentBalance = balanceData ? formatBalance(balanceData) : 0;
+  const currentBalance = balanceData ? Number(balanceData) / 1e18 : 0;
 
   const contributionAmount = parseFloat(circleForm.contribution) || 0;
   const maxMembers = parseInt(circleForm.maxMembers);
