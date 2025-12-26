@@ -136,27 +136,37 @@ const WithdrawInternal: React.FC = () => {
       />
       <div className="flex-1 pb-20 pt-4 px-4 overflow-y-auto">
         <div className="max-w-xl mx-auto space-y-6">
-          <div
-            className="p-5 rounded-[1.5rem] border-2 border-dashed flex gap-4 items-start"
+          {/* Instruction Card */}
+          <div className="p-5 rounded-[1.5rem] border-2 border-dashed flex gap-4 items-start"
             style={{
               backgroundColor: colors.primary + "10",
               borderColor: colors.primary + "30",
-            }}
-          >
-            <div className="p-2 rounded-xl bg-white flex-shrink-0">
+            }}>
+<div className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0">
               <Info size={20} style={{ color: colors.primary }} />
             </div>
-            <p
-              className="text-[11px] font-semibold opacity-80"
-              style={{ color: colors.textLight }}
-            >
-              Transfers to other Circlepot users are{" "}
-              <strong>always instant and 100% free</strong>. No gas or
-              withdrawal fees!
-            </p>
+            <div className="space-y-1">
+              <h4
+                className="text-xs font-black uppercase tracking-wider"
+                style={{ color: colors.text }}
+              >
+                How to send
+              </h4>
+              <p
+                className="text-[11px] leading-relaxed font-semibold opacity-80"
+                style={{ color: colors.textLight }}
+              >
+                Search for recipients using their{" "}
+                <span className="text-primary">Username</span>,
+                <span className="text-primary"> Email</span>, or{" "}
+                <span className="text-primary"> Account ID</span>. Transfers to other Circlepot users are{" "}
+              <strong>always instant and 100% free</strong>. No withdrawal fees required!
+              </p>
+            </div>
           </div>
 
           <form onSubmit={handleWithdraw} className="space-y-6">
+            {/* Balance Card */}
             <div
               className="p-6 rounded-[2rem] border-2 shadow-sm flex justify-between items-center"
               style={{
