@@ -119,6 +119,42 @@ const WithdrawExternal: React.FC = () => {
         style={{ backgroundColor: colors.background }}
       >
         <div className="max-w-xl mx-auto px-4 space-y-6">
+          {/* Instructions Card */}
+          <div
+            className="p-5 rounded-3xl border-2 border-dashed flex gap-4 items-start"
+            style={{
+              backgroundColor: colors.primary + "05",
+              borderColor: colors.primary + "20",
+            }}
+          >
+            <div className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0">
+              <Info size={20} style={{ color: colors.primary }} />
+            </div>
+            <div className="space-y-2">
+              <h4
+                className="text-xs font-black uppercase tracking-wider"
+                style={{ color: colors.text }}
+              >
+                How to withdraw
+              </h4>
+              <ol
+                className="text-[11px] leading-relaxed font-semibold space-y-1 ml-4 list-decimal"
+                style={{ color: colors.textLight }}
+              >
+                <li>
+                  Open your external wallet and tap <strong>Deposit</strong>.
+                </li>
+                <li>
+                  Select <strong>cUSD</strong> as the token.
+                </li>
+                <li>
+                  Select the <strong>Celo Network</strong> (Critical!).
+                </li>
+                <li>Copy and paste that address below.</li>
+                <li>Enter amount and send.</li>
+              </ol>
+            </div>
+          </div>
           {/* Internal Transfer Nudge */}
           <div
             className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer transition-transform active:scale-[0.98]"
@@ -231,6 +267,13 @@ const WithdrawExternal: React.FC = () => {
                       MAX
                     </button>
                   </div>
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{ color: colors.textLight }}
+                  >
+                    <strong>{withdrawalFee} cUSD</strong> withdrawal fee is
+                    charged on all external withdrawals.
+                  </p>
                 </div>
               </div>
             </div>
@@ -281,8 +324,10 @@ const WithdrawExternal: React.FC = () => {
               className="text-xs leading-relaxed"
               style={{ color: colors.textLight }}
             >
-              A small <strong>{withdrawalFee} cUSD withdrawal fee</strong> is
-              charged to help cover platform gas costs.
+              <strong>Important:</strong> Only send to a wallet on the{" "}
+              <strong>Celo Network</strong>. Sending to the wrong network may
+              result in permanent loss of funds. Blockchain transactions are
+              irreversible.
             </p>
           </div>
         </div>
