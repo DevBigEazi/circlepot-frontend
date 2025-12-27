@@ -30,6 +30,8 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     contributions,
     payouts,
     collateralWithdrawals,
+    getWithdrawalInfo,
+    getLateMembersForCircle,
     forfeitures,
     isLoading,
     startCircle,
@@ -217,6 +219,8 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
                 onWithdrawCollateral={withdrawCollateral}
                 onContribute={contribute}
                 onForfeitMember={forfeitMember}
+                getWithdrawalInfo={getWithdrawalInfo}
+                getLateMembersForCircle={getLateMembersForCircle}
                 onInviteMembers={() => handleInviteClick(circle)}
               />
             ))
@@ -252,6 +256,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
           onWithdrawCollateral={withdrawCollateral}
           onContribute={contribute}
           onForfeitMember={forfeitMember}
+          getLateMembersForCircle={getLateMembersForCircle}
         />
       )}
 
