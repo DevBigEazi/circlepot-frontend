@@ -52,7 +52,7 @@ const ExternalWallets: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="space-y-6">
             <p className="text-sm px-1" style={{ color: colors.textLight }}>
-              Deposit cUSD directly from external sources. Scan the QR code or
+              Deposit USDm directly from external sources. Scan the QR code or
               copy the address below.
             </p>
 
@@ -143,11 +143,11 @@ const ExternalWallets: React.FC = () => {
                   {
                     step: 2,
                     title: "Select Token",
-                    desc: "Choose cUSD as the token to deposit (Supports cUSD only).",
+                    desc: "Choose USDm as the token to deposit (Supports USDm only).",
                     icon: (
                       <img
-                        src={image.cUSD}
-                        alt="cUSD"
+                        src={image.USDm}
+                        alt="USDm"
                         className="w-4 h-4 rounded-full"
                       />
                     ),
@@ -216,7 +216,7 @@ const ExternalWallets: React.FC = () => {
                   style={{ color: colors.textLight }}
                 >
                   <li>
-                    Send only <b>cUSD</b> to this address.
+                    Send only <b>USDm</b> to this address.
                   </li>
                   <li>
                     Ensure you are using the <b>Celo</b> network.

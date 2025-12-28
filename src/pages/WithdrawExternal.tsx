@@ -56,7 +56,7 @@ const WithdrawExternal: React.FC = () => {
 
     if (balance && totalRequired > balance) {
       toast.error(
-        `Insufficient balance. You need ${amount} + ${withdrawalFee} cUSD fee.`
+        `Insufficient balance. You need ${amount} + ${withdrawalFee} USDm fee.`
       );
       return;
     }
@@ -145,7 +145,7 @@ const WithdrawExternal: React.FC = () => {
                   Open your external wallet and tap <strong>Deposit</strong>.
                 </li>
                 <li>
-                  Select <strong>cUSD</strong> as the token.
+                  Select <strong>USDm</strong> as the token.
                 </li>
                 <li>
                   Select the <strong>Celo Network</strong> (Critical!).
@@ -204,7 +204,7 @@ const WithdrawExternal: React.FC = () => {
                   className="text-lg font-medium"
                   style={{ color: colors.textLight }}
                 >
-                  cUSD
+                  USDm
                 </span>
               </div>
             </div>
@@ -271,7 +271,7 @@ const WithdrawExternal: React.FC = () => {
                     className="text-xs leading-relaxed"
                     style={{ color: colors.textLight }}
                   >
-                    <strong>{withdrawalFee} cUSD</strong> withdrawal fee is
+                    <strong>{withdrawalFee} USDm</strong> withdrawal fee is
                     charged on all external withdrawals.
                   </p>
                 </div>

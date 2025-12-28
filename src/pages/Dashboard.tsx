@@ -205,7 +205,7 @@ const Dashboard: React.FC = () => {
             <div className="lg:col-span-2 space-y-6">
               <BalanceDisplay
                 currentBalances={{
-                  cUSD: balanceData ? Number(balanceData) / 1e18 : 0,
+                  USDm: balanceData ? Number(balanceData) / 1e18 : 0,
                 }}
                 circleCommitted={circleCommitted}
                 circleCollateral={circleCollateral}

@@ -8,7 +8,7 @@ import { client } from "../thirdwebClient";
 import {
   SUBGRAPH_URL,
   SUBGRAPH_HEADERS,
-  CUSD_ADDRESS,
+  USDm_ADDRESS,
   CHAIN_ID,
   PERSONAL_SAVINGS_ADDRESS,
   CIRCLE_SAVINGS_ADDRESS,
@@ -226,12 +226,12 @@ export interface Transaction {
   | "goal_completion"
   | "late_payment"
   | "collateral_withdrawal"
-  | "cusd_send"
+  | "USDm_send"
   | "late_payment"
   | "collateral_withdrawal"
   | "dead_circle_fee"
-  | "cusd_send"
-  | "cusd_receive";
+  | "USDm_send"
+  | "USDm_receive";
   amount: bigint;
   currency: string;
   timestamp: bigint;
@@ -246,7 +246,7 @@ export interface Transaction {
   goalId?: bigint;
   round?: bigint;
   penalty?: bigint;
-  // For cUSD transfers
+  // For USDm transfers
   from?: string;
   to?: string;
   fromUsername?: string;
@@ -289,14 +289,14 @@ export const useTransactionHistory = () => {
 
         // Fetch sent transfers (topic1 = from)
         const sentLogsPromise = eth_getLogs(rpcRequest, {
-          address: CUSD_ADDRESS,
+          address: USDm_ADDRESS,
           fromBlock: 1n,
           topics: [TRANSFER_TOPIC, paddedAddress],
         });
 
         // Fetch received transfers (topic2 = to)
         const receivedLogsPromise = eth_getLogs(rpcRequest, {
-          address: CUSD_ADDRESS,
+          address: USDm_ADDRESS,
           fromBlock: 1n,
           topics: [TRANSFER_TOPIC, null, paddedAddress],
         });
@@ -333,7 +333,7 @@ export const useTransactionHistory = () => {
         const personalSavingsAddr = PERSONAL_SAVINGS_ADDRESS?.toLowerCase();
         const circleSavingsAddr = CIRCLE_SAVINGS_ADDRESS?.toLowerCase();
 
-        const rawCusdTransfers = [
+        const rawUSDmTransfers = [
           ...sentTransfers,
           ...receivedTransfers,
         ].filter((event: any) => {
@@ -353,8 +353,8 @@ export const useTransactionHistory = () => {
         // Fetch timestamps for these transfers
         const blockCache = new Map<string, bigint>();
 
-        const cusdTransfers = await Promise.all(
-          rawCusdTransfers.map(async (event: any) => {
+        const USDmTransfers = await Promise.all(
+          rawUSDmTransfers.map(async (event: any) => {
             const blockNumber = event.blockNumber;
             let timestamp = blockCache.get(blockNumber.toString());
 
@@ -412,10 +412,10 @@ export const useTransactionHistory = () => {
           goalAmountsMap.set(goal.goalId, BigInt(goal.goalAmount));
         });
 
-        // Extract unique addresses from cUSD transfers
+        // Extract unique addresses from USDm transfers
         const uniqueAddresses = [
           ...new Set(
-            cusdTransfers
+            USDmTransfers
               .flatMap((event: any) => [
                 event.args.from?.toLowerCase(),
                 event.args.to?.toLowerCase(),
@@ -453,7 +453,7 @@ export const useTransactionHistory = () => {
           circleNamesMap,
           goalNamesMap,
           goalAmountsMap,
-          cusdTransfers,
+          USDmTransfers,
           userProfilesMap,
         };
       } catch (err) {
@@ -472,7 +472,7 @@ export const useTransactionHistory = () => {
 
     // Group transfers by hash to handle fee merging
     const transfersByHash = new Map<string, any[]>();
-    transactionsData.cusdTransfers?.forEach((event: any) => {
+    transactionsData.USDmTransfers?.forEach((event: any) => {
       const hash = event.transactionHash;
       if (!transfersByHash.has(hash)) transfersByHash.set(hash, []);
       transfersByHash.get(hash)?.push(event);
@@ -513,9 +513,9 @@ export const useTransactionHistory = () => {
 
         allTransactions.push({
           id: `${event.transactionHash}-${event.logIndex || 0}`,
-          type: "cusd_send",
+          type: "USDm_send",
           amount: amount,
-          currency: "cUSD",
+          currency: "USDm",
           timestamp: event.timestamp,
           transactionHash: event.transactionHash,
           status: "success",
@@ -540,9 +540,9 @@ export const useTransactionHistory = () => {
 
         allTransactions.push({
           id: `${event.transactionHash}-${event.logIndex || 0}`,
-          type: "cusd_receive",
+          type: "USDm_receive",
           amount: amount,
-          currency: "cUSD",
+          currency: "USDm",
           timestamp: event.timestamp,
           transactionHash: event.transactionHash,
           status: "success",
@@ -566,7 +566,7 @@ export const useTransactionHistory = () => {
         id: contrib.id,
         type: "circle_contribution",
         amount: BigInt(contrib.amount),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(contrib.transaction.blockTimestamp),
         transactionHash: contrib.transaction.transactionHash,
         status: "success",
@@ -586,7 +586,7 @@ export const useTransactionHistory = () => {
         id: payout.id,
         type: "circle_payout",
         amount: BigInt(payout.payoutAmount),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(payout.transaction.blockTimestamp),
         transactionHash: payout.transaction.transactionHash,
         status: "success",
@@ -606,7 +606,7 @@ export const useTransactionHistory = () => {
         id: contrib.id,
         type: "goal_contribution",
         amount: BigInt(contrib.amount),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(contrib.transaction.blockTimestamp),
         transactionHash: contrib.transaction.transactionHash,
         status: "success",
@@ -630,7 +630,7 @@ export const useTransactionHistory = () => {
         id: withdrawal.id,
         type: "goal_withdrawal",
         amount: BigInt(withdrawal.amount),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(withdrawal.transaction.blockTimestamp),
         transactionHash: withdrawal.transaction.transactionHash,
         status: "success",
@@ -657,7 +657,7 @@ export const useTransactionHistory = () => {
         id: completion.id,
         type: "goal_completion",
         amount: goalAmount,
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(completion.transaction.blockTimestamp),
         transactionHash: completion.transaction.transactionHash,
         status: "success",
@@ -676,7 +676,7 @@ export const useTransactionHistory = () => {
         id: late.id,
         type: "late_payment",
         amount: BigInt(late.fee),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(late.transaction.blockTimestamp),
         transactionHash: late.transaction.transactionHash,
         status: "success",
@@ -696,7 +696,7 @@ export const useTransactionHistory = () => {
         id: cw.id,
         type: "collateral_withdrawal",
         amount: BigInt(cw.amount),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(cw.transaction.blockTimestamp),
         transactionHash: cw.transaction.transactionHash,
         status: "success",
@@ -714,7 +714,7 @@ export const useTransactionHistory = () => {
         id: fee.id,
         type: "dead_circle_fee",
         amount: BigInt(fee.deadFee),
-        currency: "cUSD",
+        currency: "USDm",
         timestamp: BigInt(fee.transaction.blockTimestamp),
         transactionHash: fee.transaction.transactionHash,
         status: "success",

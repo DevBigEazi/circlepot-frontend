@@ -6,12 +6,12 @@ import { ThirdwebClient } from "thirdweb";
 import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
-import { CUSD_ABI } from "../abis/Cusd";
+import { USDm_ABI } from "../abis/USDm";
 import {
   SUBGRAPH_URL,
   SUBGRAPH_HEADERS,
   CIRCLE_SAVINGS_ADDRESS,
-  CUSD_ADDRESS,
+  USDm_ADDRESS,
   CHAIN_ID,
 } from "../constants/constants";
 import {
@@ -1019,8 +1019,8 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [CIRCLE_SAVINGS_ADDRESS, totalRequired],
@@ -1083,8 +1083,8 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [CIRCLE_SAVINGS_ADDRESS, collateralAmount],
@@ -1147,8 +1147,8 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [CIRCLE_SAVINGS_ADDRESS, contributionAmount],
@@ -1211,11 +1211,11 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
-          params: [CIRCLE_SAVINGS_ADDRESS, BigInt("500000000000000000")], // 0.5 cUSD fee
+          params: [CIRCLE_SAVINGS_ADDRESS, BigInt("500000000000000000")], // 0.5 USDm fee
         });
 
         return new Promise((resolve, reject) => {

@@ -15,7 +15,7 @@ const VisibilityConfirmModal: React.FC<VisibilityConfirmModalProps> = ({
   colors,
 }) => {
   const newVisibility = currentVisibility === "public" ? "private" : "public";
-  const fee = "0.5"; // 0.5 cUSD fee
+  const fee = "0.5"; // 0.5 USDm fee
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
@@ -134,7 +134,7 @@ const VisibilityConfirmModal: React.FC<VisibilityConfirmModalProps> = ({
                 className="text-lg font-bold"
                 style={{ color: colors.text }}
               >
-                ${fee} cUSD
+                ${fee} USDm
               </span>
             </div>
           </div>

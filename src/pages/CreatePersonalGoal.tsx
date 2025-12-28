@@ -167,7 +167,7 @@ const CreatePersonalGoal: React.FC = () => {
       const targetAmount = parseFloat(goalForm.targetAmount);
       const contribution = parseFloat(goalForm.contribution);
 
-      // Convert amounts to wei (multiply by 10^18 for cUSD)
+      // Convert amounts to wei (multiply by 10^18 for USDm)
       const targetAmountWei = BigInt(Math.floor(targetAmount * 1e18));
       const contributionAmountWei = BigInt(Math.floor(contribution * 1e18));
 
@@ -326,7 +326,7 @@ const CreatePersonalGoal: React.FC = () => {
                 className="block text-sm font-semibold mb-3"
                 style={{ color: colors.text }}
               >
-                Target Amount (cUSD)
+                Target Amount (USDm)
               </label>
               <input
                 type="number"
@@ -368,7 +368,7 @@ const CreatePersonalGoal: React.FC = () => {
                     className="block text-sm font-medium mb-2"
                     style={{ color: colors.text }}
                   >
-                    Amount (cUSD)
+                    Amount (USDm)
                   </label>
                   <input
                     type="number"

@@ -70,7 +70,7 @@ const CreateCircle: React.FC = () => {
     setIsCreating(true);
 
     try {
-      // Convert to BigInt (assuming 18 decimals for cUSD)
+      // Convert to BigInt (assuming 18 decimals for USDm)
       const contributionAmountBigInt = BigInt(
         Math.floor(contributionAmount * 1e18)
       );
@@ -201,10 +201,10 @@ const CreateCircle: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <div className="font-semibold" style={{ color: colors.text }}>
-                    Balance: ${currentBalance.toFixed(2)} cUSD
+                    Balance: ${currentBalance.toFixed(2)} USDm
                   </div>
                   <div className="text-sm" style={{ color: colors.textLight }}>
-                    Required: ${totalRequired.toFixed(2)} cUSD (collateral +
+                    Required: ${totalRequired.toFixed(2)} USDm (collateral +
                     buffer
                     {visibilityFee > 0 ? " + visibility fee" : ""})
                   </div>
@@ -227,7 +227,7 @@ const CreateCircle: React.FC = () => {
                   style={{ color: colors.textLight }}
                 >
                   You need ${(totalRequired - currentBalance).toFixed(2)} more
-                  cUSD to create this circle
+                  USDm to create this circle
                 </div>
               )}
             </div>
@@ -302,7 +302,7 @@ const CreateCircle: React.FC = () => {
                     className="block text-sm font-semibold mb-2"
                     style={{ color: colors.text }}
                   >
-                    Contribution Amount (cUSD) *
+                    Contribution Amount (USDm) *
                   </label>
                   <input
                     type="number"
@@ -426,7 +426,7 @@ const CreateCircle: React.FC = () => {
                       className="text-xs mt-1 flex items-center gap-1"
                       style={{ color: colors.textLight }}
                     >
-                      <span>$0.50 cUSD fee for public circle</span>
+                      <span>$0.50 USDm fee for public circle</span>
                     </div>
                   )}
                 </div>
@@ -666,7 +666,7 @@ const CreateCircle: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Visibility changes:</span>
-                  <span className="font-semibold">$0.50 cUSD (if public)</span>
+                  <span className="font-semibold">$0.50 USDm (if public)</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Creation fees:</span>

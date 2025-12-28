@@ -127,7 +127,7 @@ const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
                 Wallet or Exchanges
               </h3>
               <p className="text-xs mt-0.5" style={{ color: colors.textLight }}>
-                Direct cUSD deposits from external wallets
+                Direct USDm deposits from external wallets
               </p>
             </div>
             <ArrowRight
