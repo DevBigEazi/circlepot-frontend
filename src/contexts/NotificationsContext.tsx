@@ -4,46 +4,47 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type:
-    | "circle_invite"
-    | "circle_joined"
-    | "circle_started"
-    | "circle_voting"
-    | "goal_reminder"
-    | "goal_completed"
-    | "contribution_due"
-    | "payment_received"
-    | "circle_payout"
-    | "payment_late"
-    | "system_update";
-  priority: "high" | "medium" | "low";
-  read: boolean;
-  timeAgo: string;
-  timestamp: number;
-  action?: {
-    label?: string;
-    action: string;
-  };
-}
+import { useActiveAccount } from "thirdweb/react";
+import type {
+  Notification,
+  NotificationPreferences,
+  NotificationType,
+} from "../types/notifications";
+import { DEFAULT_NOTIFICATION_PREFERENCES } from "../types/notifications";
+import {
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications,
+  updateNotificationPreferences,
+  isPushNotificationSupported,
+  getPushSubscriptionStatus,
+} from "../utils/pushNotificationManager";
 
 interface NotificationsContextType {
   notifications: Notification[];
   notificationsEnabled: boolean;
+  pushEnabled: boolean;
+  isPushSupported: boolean;
+  isSubscribed: boolean;
+  preferences: NotificationPreferences;
   unreadCount: number;
+
+  // Notification management
   addNotification: (
     notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
-  toggleNotifications: (enabled: boolean) => void;
   clearNotification: (id: string) => void;
   clearAllNotifications: () => void;
+
+  // Settings management
+  toggleNotifications: (enabled: boolean) => void;
+  togglePushNotifications: () => Promise<void>;
+  updatePreferences: (
+    newPreferences: Partial<NotificationPreferences>
+  ) => Promise<void>;
 }
 
 const NotificationsContext = createContext<
@@ -51,7 +52,7 @@ const NotificationsContext = createContext<
 >(undefined);
 
 const STORAGE_KEY = "Circlepot_notifications";
-const SETTINGS_KEY = "Circlepot_notifications_enabled";
+const PREFERENCES_KEY = "Circlepot_notification_preferences";
 
 // Helper function to calculate time ago
 const getTimeAgo = (timestamp: number): string => {
@@ -71,77 +72,55 @@ const getTimeAgo = (timestamp: number): string => {
 export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const account = useActiveAccount();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [preferences, setPreferences] = useState<NotificationPreferences>(
+    DEFAULT_NOTIFICATION_PREFERENCES
+  );
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const isPushSupported = isPushNotificationSupported();
 
   // Load notifications from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    const settingsStored = localStorage.getItem(SETTINGS_KEY);
-
     if (stored) {
       try {
         const loadedNotifications = JSON.parse(stored);
-
-        // Migrate old notifications to add action routes
         const migratedNotifications = loadedNotifications.map(
-          (n: Notification) => {
-            // If notification already has an action, keep it
-            if (n.action) {
-              return {
-                ...n,
-                timeAgo: getTimeAgo(n.timestamp),
-              };
-            }
-
-            // Add action based on notification type
-            let action = undefined;
-
-            switch (n.type) {
-              case "circle_started":
-              case "contribution_due":
-                action = { label: "View Circle", action: "/browse" };
-                break;
-              case "circle_payout":
-                action = {
-                  label: "View History",
-                  action: "/transactions-history",
-                };
-                break;
-              case "goal_completed":
-              case "goal_reminder":
-                action = { label: "View Goals", action: "/goals" };
-                break;
-              case "payment_received":
-              case "payment_late":
-                action = {
-                  label: "View Transaction",
-                  action: "/transactions-history",
-                };
-                break;
-            }
-
-            return {
-              ...n,
-              timeAgo: getTimeAgo(n.timestamp),
-              action,
-            };
-          }
+          (n: Notification) => ({
+            ...n,
+            timeAgo: getTimeAgo(n.timestamp),
+          })
         );
-
         setNotifications(migratedNotifications);
       } catch (error) {
         setNotifications([]);
       }
-    } else {
-      // Initialize with empty array if no stored data
-      setNotifications([]);
     }
 
-    if (settingsStored !== null) {
-      setNotificationsEnabled(settingsStored === "true");
+    // Load preferences
+    const storedPreferences = localStorage.getItem(PREFERENCES_KEY);
+    if (storedPreferences) {
+      try {
+        const loadedPreferences = JSON.parse(storedPreferences);
+        setPreferences({
+          ...DEFAULT_NOTIFICATION_PREFERENCES,
+          ...loadedPreferences,
+        });
+      } catch (error) {
+        // Handle silently in production
+      }
     }
   }, []);
+
+  // Check push subscription status on mount and account change
+  useEffect(() => {
+    if (account?.address && isPushSupported) {
+      getPushSubscriptionStatus().then(({ isSubscribed }) => {
+        setIsSubscribed(isSubscribed);
+      });
+    }
+  }, [account?.address, isPushSupported]);
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
@@ -150,57 +129,129 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [notifications]);
 
-  // Save settings to localStorage
+  // Save preferences to localStorage
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, String(notificationsEnabled));
-  }, [notificationsEnabled]);
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  }, [preferences]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const addNotification = (
-    notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">
-  ) => {
-    if (!notificationsEnabled) return;
+  const addNotification = useCallback(
+    (
+      notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">
+    ) => {
+      if (!preferences.inAppEnabled) return;
 
-    const timestamp = Date.now();
-    const newNotification: Notification = {
-      ...notification,
-      id: timestamp.toString(),
-      timestamp,
-      timeAgo: getTimeAgo(timestamp),
-      read: false,
-    };
+      // Check if this notification type is enabled
+      const prefKey = getPrefKeyFromType(notification.type);
+      if (prefKey && !preferences[prefKey]) {
+        return; // User has disabled this notification type
+      }
 
-    setNotifications((prev) => [newNotification, ...prev]);
-  };
+      const timestamp = Date.now();
+      const newNotification: Notification = {
+        ...notification,
+        id: timestamp.toString(),
+        timestamp,
+        timeAgo: getTimeAgo(timestamp),
+        read: false,
+      };
 
-  const markAsRead = (id: string) => {
+      setNotifications((prev) => [newNotification, ...prev]);
+    },
+    [preferences]
+  );
+
+  const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  }, []);
 
-  const toggleNotifications = (enabled: boolean) => {
-    setNotificationsEnabled(enabled);
-  };
+  const toggleNotifications = useCallback((enabled: boolean) => {
+    setPreferences((prev) => ({ ...prev, inAppEnabled: enabled }));
+  }, []);
 
-  const clearNotification = (id: string) => {
+  const clearNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
+  }, []);
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
-  };
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  const togglePushNotifications = useCallback(async () => {
+    if (!account?.address) {
+      return;
+    }
+
+    if (!isPushSupported) {
+      return;
+    }
+
+    // Normalize address to lowercase for consistency with Subgraph
+    const normalizedAddress = account.address.toLowerCase();
+
+    try {
+      if (isSubscribed) {
+        // Unsubscribe
+        const success = await unsubscribeFromPushNotifications(
+          normalizedAddress
+        );
+        if (success) {
+          setIsSubscribed(false);
+          setPreferences((prev) => ({ ...prev, pushEnabled: false }));
+        }
+      } else {
+        // Subscribe
+        const subscription = await subscribeToPushNotifications(
+          normalizedAddress,
+          { ...preferences, pushEnabled: true }
+        );
+        if (subscription) {
+          setIsSubscribed(true);
+          setPreferences((prev) => ({ ...prev, pushEnabled: true }));
+        }
+      }
+    } catch (error) {
+      throw error;
+    }
+  }, [account?.address, isSubscribed, isPushSupported, preferences]);
+
+  const updatePreferences = useCallback(
+    async (newPreferences: Partial<NotificationPreferences>) => {
+      const updatedPreferences = { ...preferences, ...newPreferences };
+      setPreferences(updatedPreferences);
+
+      // Update backend if push is enabled
+      if (account?.address && isSubscribed) {
+        try {
+          await updateNotificationPreferences(
+            account.address.toLowerCase(),
+            updatedPreferences
+          );
+        } catch (error) {
+          // Handle silently
+        }
+      }
+    },
+    [account?.address, isSubscribed, preferences]
+  );
 
   return (
     <NotificationsContext.Provider
       value={{
         notifications,
-        notificationsEnabled,
+        notificationsEnabled: preferences.inAppEnabled,
+        pushEnabled: preferences.pushEnabled,
+        isPushSupported,
+        isSubscribed,
+        preferences,
         unreadCount,
         addNotification,
         markAsRead,
@@ -208,6 +259,8 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         toggleNotifications,
         clearNotification,
         clearAllNotifications,
+        togglePushNotifications,
+        updatePreferences,
       }}
     >
       {children}
@@ -224,3 +277,39 @@ export const useNotifications = () => {
   }
   return context;
 };
+
+// Helper to map notification type to preference key
+function getPrefKeyFromType(
+  type: NotificationType
+): keyof NotificationPreferences | null {
+  const mapping: Record<NotificationType, keyof NotificationPreferences> = {
+    circle_member_joined: "circleMemberJoined",
+    circle_member_payout: "circleMemberPayout",
+    circle_member_contributed: "circleMemberContributed",
+    circle_member_withdrew: "circleMemberWithdrew",
+    circle_started: "circleStarted",
+    circle_completed: "circleCompleted",
+    circle_dead: "circleDead",
+    contribution_due: "contributionDue",
+    vote_required: "voteRequired",
+    vote_executed: "voteExecuted",
+    member_forfeited: "memberForfeited",
+    late_payment_warning: "latePaymentWarning",
+    position_assigned: "positionAssigned",
+    goal_deadline_2days: "goalDeadline2Days",
+    goal_deadline_1day: "goalDeadline1Day",
+    goal_completed: "goalCompleted",
+    goal_contribution_due: "goalContributionDue",
+    goal_milestone: "goalMilestone",
+    circle_invite: "circleInvite",
+    invite_accepted: "inviteAccepted",
+    payment_received: "paymentReceived",
+    credit_score_changed: "creditScoreChanged",
+    withdrawal_fee_applied: "withdrawalFeeApplied",
+    collateral_returned: "collateralReturned",
+    system_maintenance: "systemMaintenance",
+    security_alert: "securityAlert",
+  };
+
+  return mapping[type] || null;
+}

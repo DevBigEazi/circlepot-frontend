@@ -2,7 +2,6 @@ import {
   Settings2,
   User,
   Camera,
-  AlertCircle,
   Palette,
   HelpCircle,
   Loader,
@@ -18,16 +17,17 @@ import {
 } from "lucide-react";
 import { BsCurrencyExchange } from "react-icons/bs";
 import { SiThirdweb } from "react-icons/si";
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useThirdwebStorage } from "../hooks/useThirdwebStorage";
+import { toast } from "sonner";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router";
 import { client } from "../thirdwebClient";
 import LogoutModal from "../modals/LogoutModal";
 import { useDisconnect, useActiveWallet } from "thirdweb/react";
-import ErrorDisplay from "../components/ErrorDisplay";
 import { useBiometricContext } from "../contexts/BiometricContext";
 import { useBiometric } from "../hooks/useBiometric";
 import ThemeToggle from "../components/ThemeToggle";
@@ -43,24 +43,19 @@ const Settings: React.FC = () => {
   const wallet = useActiveWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { availableCurrencies } = useCurrencyConverter();
-  const { notificationsEnabled, toggleNotifications } = useNotifications();
+  const { isPushSupported, isSubscribed, togglePushNotifications } =
+    useNotifications();
 
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [disconnectError, setDisconnectError] = useState<string | null>(null);
+  const [isPushLoading, setIsPushLoading] = useState(false);
 
-  const {
-    profile,
-    isLoading,
-    updatePhoto,
-    error: profileError,
-  } = useUserProfile(client);
+  const { profile, isLoading, updatePhoto } = useUserProfile(client);
   const { uploadImage, isUploading, uploadProgress } =
     useThirdwebStorage(client);
   const { enableBiometric, disableBiometric } = useBiometricContext();
   const {
     isSupported: isBiometricSupported,
     isAuthenticating,
-    error: bioError,
     registerBiometric,
     removeBiometric,
   } = useBiometric();
@@ -78,8 +73,6 @@ const Settings: React.FC = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
@@ -162,12 +155,12 @@ const Settings: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError("Image size must be less than 5MB");
+        toast.error("Image size must be less than 5MB");
         return;
       }
 
       if (!file.type.startsWith("image/")) {
-        setError("Please select a valid image file");
+        toast.error("Please select a valid image file");
         return;
       }
 
@@ -176,10 +169,9 @@ const Settings: React.FC = () => {
         const result = e.target?.result as string;
         setPreviewImage(result);
         setSelectedFile(file);
-        setError(null);
       };
       reader.onerror = () => {
-        setError("Failed to read image file");
+        toast.error("Failed to read image file");
       };
       reader.readAsDataURL(file);
     }
@@ -187,9 +179,6 @@ const Settings: React.FC = () => {
 
   const handleSaveProfile = useCallback(async (): Promise<void> => {
     try {
-      setError(null);
-      setSuccess(null);
-
       let profilePhotoUrl: string | null = previewImage;
 
       // Upload new photo to IPFS if a new file was selected
@@ -210,7 +199,7 @@ const Settings: React.FC = () => {
           await updatePhoto(profilePhotoUrl);
         } catch (uploadErr) {
           const err = uploadErr as Error;
-          setError(`Failed to upload photo: ${err.message}`);
+          toast.error(`Failed to upload photo: ${err.message}`);
           return;
         }
       }
@@ -220,14 +209,12 @@ const Settings: React.FC = () => {
         profileImage: profilePhotoUrl,
         lastProfileUpdate: new Date().toISOString(),
       }));
-      setSuccess("Profile photo updated successfully!");
+      toast.success("Profile photo updated successfully!");
       setEditingProfile(false);
       setSelectedFile(null);
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       const error = err as Error;
-      setError(error.message || "Failed to save profile");
+      toast.error(error.message || "Failed to save profile");
     }
   }, [
     previewImage,
@@ -243,8 +230,6 @@ const Settings: React.FC = () => {
     setPreviewImage(userSettings.profileImage);
     setSelectedFile(null);
     setEditingProfile(false);
-    setError(null);
-    setSuccess(null);
   };
 
   const triggerFileInput = (): void => {
@@ -254,20 +239,21 @@ const Settings: React.FC = () => {
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
+    toast.success(
+      `${field.charAt(0).toUpperCase() + field.slice(1)} copied to clipboard`
+    );
     setTimeout(() => setCopiedField(null), 2000);
   };
 
   const handleDisconnect = async () => {
     try {
       setIsDisconnecting(true);
-      setDisconnectError(null);
-
       if (wallet) {
         navigate("/");
         disconnect(wallet);
       }
     } catch (error: any) {
-      setDisconnectError("Failed to disconnect wallet. Please try again.");
+      toast.error("Failed to disconnect wallet. Please try again.");
     } finally {
       setIsDisconnecting(false);
     }
@@ -283,17 +269,34 @@ const Settings: React.FC = () => {
       if (result.success) {
         enableBiometric(); // Updates global state + localStorage
         setUserSettings((prev) => ({ ...prev, biometrics: true })); // Update local state
-        setSuccess("Biometric registered!");
+        toast.success("Biometric registered!");
       } else {
-        setError(result.error || "Failed to register biometric");
+        toast.error(result.error || "Failed to register biometric");
         setUserSettings((prev) => ({ ...prev, biometrics: false })); // Reset on failure
       }
     } else {
       removeBiometric(userSettings.accountId);
       disableBiometric(); // Updates global state + localStorage
       setUserSettings((prev) => ({ ...prev, biometrics: false })); // Update local state
-      setSuccess("Biometric disabled");
-      setTimeout(() => setSuccess(null), 3000);
+      toast.success("Biometric disabled");
+    }
+  };
+
+  const handlePushToggle = async () => {
+    setIsPushLoading(true);
+    const wasSubscribed = isSubscribed;
+    try {
+      await togglePushNotifications();
+      toast.success(
+        wasSubscribed
+          ? "Push notifications disabled"
+          : "Push notifications enabled!"
+      );
+    } catch (err) {
+      const error = err as Error;
+      toast.error(error.message || "Failed to toggle push notifications");
+    } finally {
+      setIsPushLoading(false);
     }
   };
 
@@ -565,7 +568,7 @@ const Settings: React.FC = () => {
                         {isLoading ? (
                           <Loader size={14} className="animate-spin" />
                         ) : (
-                          <p>{!success && "Edit Photo"}</p>
+                          <p>Edit Photo</p>
                         )}
                       </button>
                     )}
@@ -618,50 +621,6 @@ const Settings: React.FC = () => {
                     value={userSettings.userName}
                     field="username"
                   />
-
-                  {(error || profileError || bioError) && (
-                    <div
-                      className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
-                      style={{
-                        backgroundColor: colors.errorBg,
-                        borderColor: colors.errorBorder,
-                      }}
-                    >
-                      <AlertCircle
-                        size={14}
-                        className="flex-shrink-0 mt-0.5"
-                        style={{ color: colors.accent }}
-                      />
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.textLight }}
-                      >
-                        {error || profileError || bioError}
-                      </p>
-                    </div>
-                  )}
-
-                  {success && (
-                    <div
-                      className="rounded-xl p-2 sm:p-3 flex items-start gap-2 border"
-                      style={{
-                        backgroundColor: colors.successBg,
-                        borderColor: colors.successBorder,
-                      }}
-                    >
-                      <Check
-                        size={14}
-                        className="flex-shrink-0 mt-0.5"
-                        style={{ color: colors.primary }}
-                      />
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.textLight }}
-                      >
-                        {success}
-                      </p>
-                    </div>
-                  )}
 
                   {editingProfile && (
                     <div className="flex gap-2 sm:gap-3">
@@ -1005,40 +964,72 @@ const Settings: React.FC = () => {
                     className="text-xs sm:text-sm truncate"
                     style={{ color: colors.textLight }}
                   >
-                    Manage notifications
+                    {isPushSupported
+                      ? "Receive push notifications"
+                      : "Push notifications not supported"}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
+
+              {/* Single Notifications Toggle */}
+              <div className="flex items-center justify-between mb-4">
                 <div className="min-w-0">
                   <div
                     className="font-semibold text-sm"
                     style={{ color: colors.text }}
                   >
-                    Push
+                    Enable Notifications
                   </div>
                   <div className="text-xs" style={{ color: colors.textLight }}>
-                    App notifications
+                    {isPushSupported
+                      ? "Get notified about circle activity, payouts & more"
+                      : "Your browser doesn't support push notifications"}
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
                   <input
                     type="checkbox"
                     className="sr-only peer"
-                    checked={notificationsEnabled}
-                    onChange={(e) => toggleNotifications(e.target.checked)}
+                    checked={isSubscribed}
+                    onChange={() => handlePushToggle()}
+                    disabled={!isPushSupported || isPushLoading}
                   />
                   <div
-                    className="w-11 h-6 rounded-full peer"
+                    className={`w-11 h-6 rounded-full peer ${
+                      !isPushSupported ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                     style={{
-                      backgroundColor: notificationsEnabled
+                      backgroundColor: isSubscribed
                         ? colors.primary
                         : colors.border,
                     }}
                   />
-                  <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5" />
+                  <div
+                    className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 ${
+                      !isPushSupported ? "opacity-50" : ""
+                    }`}
+                  />
                 </label>
               </div>
+
+              {/* Push Loading State */}
+              {isPushLoading && (
+                <div
+                  className="flex items-center gap-2 p-3 rounded-lg mb-4"
+                  style={{ backgroundColor: colors.background }}
+                >
+                  <Loader
+                    size={14}
+                    className="animate-spin"
+                    style={{ color: colors.primary }}
+                  />
+                  <span className="text-xs" style={{ color: colors.textLight }}>
+                    {isSubscribed
+                      ? "Disabling..."
+                      : "Enabling push notifications..."}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Support */}
@@ -1155,15 +1146,6 @@ const Settings: React.FC = () => {
                 </p>
               </div>
             </button>
-            {/* Disconnect Error */}
-            {disconnectError && (
-              <div className="mb-6">
-                <ErrorDisplay
-                  error={{ code: "DISCONNECT_ERROR", message: disconnectError }}
-                  onDismiss={() => setDisconnectError(null)}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
