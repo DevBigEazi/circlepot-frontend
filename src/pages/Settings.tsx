@@ -21,7 +21,7 @@ import { SiThirdweb } from "react-icons/si";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { usePinata } from "../hooks/usePinata";
+import { useThirdwebStorage } from "../hooks/useThirdwebStorage";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router";
 import { client } from "../thirdwebClient";
@@ -54,7 +54,8 @@ const Settings: React.FC = () => {
     updatePhoto,
     error: profileError,
   } = useUserProfile(client);
-  const { uploadImage, isUploading, uploadProgress } = usePinata();
+  const { uploadImage, isUploading, uploadProgress } =
+    useThirdwebStorage(client);
   const { enableBiometric, disableBiometric } = useBiometricContext();
   const {
     isSupported: isBiometricSupported,
