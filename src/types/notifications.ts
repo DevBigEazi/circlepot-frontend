@@ -2,7 +2,7 @@
 export type NotificationType =
     // Circle notifications
     | "circle_member_joined"
-    | "circle_member_payout"
+    | "circle_payout"
     | "circle_member_contributed"
     | "circle_member_withdrew"
     | "circle_started"
@@ -20,17 +20,22 @@ export type NotificationType =
     | "goal_completed"
     | "goal_contribution_due"
     | "goal_milestone"
+    | "goal_reminder"
     // Social notifications
     | "circle_invite"
     | "invite_accepted"
     // Financial notifications
     | "payment_received"
+    | "payment_late"
     | "credit_score_changed"
     | "withdrawal_fee_applied"
     | "collateral_returned"
     // System notifications
     | "system_maintenance"
-    | "security_alert";
+    | "system_update"
+    | "security_alert"
+    | "circle_joined"
+    | "circle_voting";
 
 export type NotificationPriority = "high" | "medium" | "low";
 
@@ -67,7 +72,10 @@ export interface NotificationPreferences {
     voteExecuted: boolean;
     memberForfeited: boolean;
     latePaymentWarning: boolean;
+    paymentLate: boolean;
     positionAssigned: boolean;
+    circleJoined: boolean;
+    circleVoting: boolean;
 
     // Goal notifications
     goalDeadline2Days: boolean;
@@ -75,6 +83,7 @@ export interface NotificationPreferences {
     goalCompleted: boolean;
     goalContributionDue: boolean;
     goalMilestone: boolean;
+    goalReminder: boolean;
 
     // Social notifications
     circleInvite: boolean;
@@ -88,6 +97,7 @@ export interface NotificationPreferences {
 
     // System notifications
     systemMaintenance: boolean;
+    systemUpdate: boolean;
     securityAlert: boolean;
 }
 
@@ -136,8 +146,8 @@ export const NOTIFICATION_CONFIGS: Record<NotificationType, NotificationConfig> 
         defaultAction: "/",
         requiresAction: false,
     },
-    circle_member_payout: {
-        type: "circle_member_payout",
+    circle_payout: {
+        type: "circle_payout",
         defaultPriority: "medium",
         defaultAction: "/transactions-history",
         requiresAction: false,
@@ -240,6 +250,12 @@ export const NOTIFICATION_CONFIGS: Record<NotificationType, NotificationConfig> 
         defaultAction: "/goals",
         requiresAction: false,
     },
+    goal_reminder: {
+        type: "goal_reminder",
+        defaultPriority: "medium",
+        defaultAction: "/goals",
+        requiresAction: false,
+    },
 
     // Social notifications
     circle_invite: {
@@ -261,6 +277,12 @@ export const NOTIFICATION_CONFIGS: Record<NotificationType, NotificationConfig> 
         defaultPriority: "medium",
         defaultAction: "/transactions-history",
         requiresAction: false,
+    },
+    payment_late: {
+        type: "payment_late",
+        defaultPriority: "high",
+        defaultAction: "/transactions-history",
+        requiresAction: true,
     },
     credit_score_changed: {
         type: "credit_score_changed",
@@ -288,10 +310,28 @@ export const NOTIFICATION_CONFIGS: Record<NotificationType, NotificationConfig> 
         defaultAction: "/",
         requiresAction: false,
     },
+    system_update: {
+        type: "system_update",
+        defaultPriority: "low",
+        defaultAction: "/",
+        requiresAction: false,
+    },
     security_alert: {
         type: "security_alert",
         defaultPriority: "high",
         defaultAction: "/settings",
+        requiresAction: true,
+    },
+    circle_joined: {
+        type: "circle_joined",
+        defaultPriority: "medium",
+        defaultAction: "/",
+        requiresAction: false,
+    },
+    circle_voting: {
+        type: "circle_voting",
+        defaultPriority: "medium",
+        defaultAction: "/",
         requiresAction: true,
     },
 };
@@ -314,7 +354,10 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     voteExecuted: true,
     memberForfeited: true,
     latePaymentWarning: true,
+    paymentLate: true,
     positionAssigned: true,
+    circleJoined: true,
+    circleVoting: true,
 
     // Goal notifications
     goalDeadline2Days: true,
@@ -322,6 +365,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     goalCompleted: true,
     goalContributionDue: true,
     goalMilestone: false,
+    goalReminder: true,
 
     // Social notifications
     circleInvite: true,
@@ -335,5 +379,6 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 
     // System notifications
     systemMaintenance: true,
+    systemUpdate: true,
     securityAlert: true,
 };

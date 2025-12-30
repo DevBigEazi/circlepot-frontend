@@ -284,7 +284,7 @@ function getPrefKeyFromType(
 ): keyof NotificationPreferences | null {
   const mapping: Record<NotificationType, keyof NotificationPreferences> = {
     circle_member_joined: "circleMemberJoined",
-    circle_member_payout: "circleMemberPayout",
+    circle_payout: "circleMemberPayout",
     circle_member_contributed: "circleMemberContributed",
     circle_member_withdrew: "circleMemberWithdrew",
     circle_started: "circleStarted",
@@ -301,14 +301,19 @@ function getPrefKeyFromType(
     goal_completed: "goalCompleted",
     goal_contribution_due: "goalContributionDue",
     goal_milestone: "goalMilestone",
+    goal_reminder: "goalReminder",
     circle_invite: "circleInvite",
     invite_accepted: "inviteAccepted",
     payment_received: "paymentReceived",
+    payment_late: "paymentLate",
     credit_score_changed: "creditScoreChanged",
     withdrawal_fee_applied: "withdrawalFeeApplied",
     collateral_returned: "collateralReturned",
     system_maintenance: "systemMaintenance",
+    system_update: "systemUpdate",
     security_alert: "securityAlert",
+    circle_joined: "circleJoined",
+    circle_voting: "circleVoting",
   };
 
   return mapping[type] || null;

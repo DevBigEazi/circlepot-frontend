@@ -1,7 +1,7 @@
 import type { PushSubscriptionData } from "../types/notifications";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-const NOTIFICATION_API_URL = import.meta.env.VITE_NOTIFICATION_API_URL;
+const NOTIFICATION_API_URL = import.meta.env.VITE_NOTIFICATION_API_URL || "http://localhost:3000";
 
 /**
  * Utility function to convert a base64 string to Uint8Array
