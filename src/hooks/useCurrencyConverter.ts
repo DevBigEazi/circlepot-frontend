@@ -250,7 +250,7 @@ export const useCurrencyConverter = () => {
         ) {
           shouldFetch = false;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (shouldFetch) {
@@ -262,9 +262,9 @@ export const useCurrencyConverter = () => {
   }, [fetchAllCurrencyData]);
 
   const convertToLocal = useCallback(
-    (cusdAmount: number, targetCurrency: string): string => {
+    (USDmAmount: number, targetCurrency: string): string => {
       const rate = exchangeRates[targetCurrency] || exchangeRates.USD || 1;
-      const localValue = cusdAmount * rate;
+      const localValue = USDmAmount * rate;
 
       if (localValue >= 1000) {
         return localValue.toLocaleString(undefined, {

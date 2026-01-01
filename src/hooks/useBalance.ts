@@ -3,8 +3,8 @@ import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { client } from "../thirdwebClient";
-import { CUSD_ADDRESS, CHAIN_ID } from "../constants/constants";
-import { CUSD_ABI } from "../abis/Cusd";
+import { USDm_ADDRESS, CHAIN_ID } from "../constants/constants";
+import { USDm_ABI } from "../abis/USDm";
 
 export const useBalance = () => {
     const account = useActiveAccount();
@@ -14,8 +14,8 @@ export const useBalance = () => {
             getContract({
                 client,
                 chain: defineChain(CHAIN_ID),
-                address: CUSD_ADDRESS,
-                abi: CUSD_ABI,
+                address: USDm_ADDRESS,
+                abi: USDm_ABI,
             }),
         []
     );

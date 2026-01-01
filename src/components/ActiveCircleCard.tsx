@@ -16,7 +16,9 @@ interface ActiveCircleCardProps {
   onExecuteVote: (circleId: bigint) => Promise<any>;
   onWithdrawCollateral: (circleId: bigint) => Promise<any>;
   onContribute: (circleId: bigint, amount: bigint) => Promise<any>;
-  onForfeitMember: (circleId: bigint) => Promise<any>;
+  onForfeitMember: (circleId: bigint, lateMembers: string[]) => Promise<any>;
+  getWithdrawalInfo?: (circleId: bigint, userAddress?: string) => any;
+  getLateMembersForCircle: (circleId: bigint) => string[];
   onInviteMembers?: () => void;
 }
 
@@ -32,6 +34,8 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
   onWithdrawCollateral,
   onContribute,
   onForfeitMember,
+  getWithdrawalInfo,
+  getLateMembersForCircle,
   onInviteMembers,
 }) => {
   const account = useActiveAccount();
@@ -285,6 +289,8 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
           onWithdrawCollateral={onWithdrawCollateral}
           onContribute={onContribute}
           onForfeitMember={onForfeitMember}
+          getWithdrawalInfo={getWithdrawalInfo}
+          getLateMembersForCircle={getLateMembersForCircle}
           onInviteMembers={onInviteMembers}
         />
       </div>

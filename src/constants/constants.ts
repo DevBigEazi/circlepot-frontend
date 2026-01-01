@@ -2,7 +2,7 @@
 export const CHAIN_ID = 11142220; // Celo-Sepolia testnet
 
 // Contract Addresses
-export const CUSD_ADDRESS = import.meta.env.VITE_CUSD_ADDRESS;
+export const USDm_ADDRESS = import.meta.env.VITE_USDm_ADDRESS;
 export const PERSONAL_SAVINGS_ADDRESS = import.meta.env
   .VITE_PERSONAL_SAVINGS_ADDRESS;
 export const CIRCLE_SAVINGS_ADDRESS = import.meta.env
@@ -16,4 +16,4 @@ export const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
 
 // Platform Config
 export const PLATFORM_FEE_RECIPIENT = import.meta.env.VITE_PLATFORM_FEE_RECIPIENT; // Dedicated Platform Wallet
-export const WITHDRAWAL_FEE = 0.2; // 0.2 cUSD
+export const WITHDRAWAL_FEE = 0.2; // 0.2 USDm

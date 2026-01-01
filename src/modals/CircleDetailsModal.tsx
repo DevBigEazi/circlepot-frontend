@@ -26,7 +26,9 @@ interface CircleDetailsModalProps {
   onExecuteVote: (circleId: bigint) => Promise<any>;
   onWithdrawCollateral: (circleId: bigint) => Promise<any>;
   onContribute: (circleId: bigint, amount: bigint) => Promise<any>;
-  onForfeitMember: (circleId: bigint) => Promise<any>;
+  onForfeitMember: (circleId: bigint, lateMembers: string[]) => Promise<any>;
+  getWithdrawalInfo?: (circleId: bigint, userAddress?: string) => any;
+  getLateMembersForCircle: (circleId: bigint) => string[];
 }
 
 const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
@@ -42,6 +44,8 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
   onWithdrawCollateral,
   onContribute,
   onForfeitMember,
+  getWithdrawalInfo,
+  getLateMembersForCircle,
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const { updateCircleVisibility } = useCircleSavings(client);
@@ -348,6 +352,8 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
             onWithdrawCollateral={onWithdrawCollateral}
             onContribute={onContribute}
             onForfeitMember={onForfeitMember}
+            getWithdrawalInfo={getWithdrawalInfo}
+            getLateMembersForCircle={getLateMembersForCircle}
           />
         </div>
       </div>

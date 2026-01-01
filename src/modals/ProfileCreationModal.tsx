@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { usePinata } from "../hooks/usePinata";
+import { useThirdwebStorage } from "../hooks/useThirdwebStorage";
 import { useActiveAccount } from "thirdweb/react";
 import { getUserEmail } from "thirdweb/wallets/in-app";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -30,7 +30,8 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   const account = useActiveAccount();
   const { createProfile, checkUsernameAvailability, isLoading } =
     useUserProfile(client);
-  const { uploadImage, isUploading, uploadProgress } = usePinata();
+  const { uploadImage, isUploading, uploadProgress } =
+    useThirdwebStorage(client);
 
   const [userName, setUserName] = useState("");
   const [fullName, setFullName] = useState("");
@@ -207,11 +208,10 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
 
       let errorMessage = err.message || "Failed to create profile";
 
-      if (err.code === "PINATA_UPLOAD_ERROR") {
+      if (err.code === "THIRDWEB_UPLOAD_ERROR") {
         errorMessage = "Failed to upload image to IPFS. Please try again.";
-      } else if (err.code === "PINATA_AUTH_ERROR") {
-        errorMessage =
-          "Invalid Pinata credentials. Please check configuration.";
+      } else if (err.code === "THIRDWEB_CLIENT_ERROR") {
+        errorMessage = "Invalid Thirdweb client. Please check configuration.";
       } else if (err.code === "NETWORK_ERROR") {
         errorMessage =
           "Network error. Please check your connection and try again.";

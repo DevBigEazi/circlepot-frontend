@@ -31,6 +31,8 @@ const Circles: React.FC = () => {
     payouts,
     collateralWithdrawals,
     collateralReturns,
+    getWithdrawalInfo,
+    getLateMembersForCircle,
     forfeitures,
     isLoading,
     startCircle,
@@ -349,6 +351,8 @@ const Circles: React.FC = () => {
                     onWithdrawCollateral={withdrawCollateral}
                     onContribute={contribute}
                     onForfeitMember={forfeitMember}
+                    getWithdrawalInfo={getWithdrawalInfo}
+                    getLateMembersForCircle={getLateMembersForCircle}
                     onInviteMembers={() => handleInviteClick(circle)}
                   />
                 ))}
@@ -579,6 +583,8 @@ const Circles: React.FC = () => {
           onWithdrawCollateral={withdrawCollateral}
           onContribute={contribute}
           onForfeitMember={forfeitMember}
+          getWithdrawalInfo={getWithdrawalInfo}
+          getLateMembersForCircle={getLateMembersForCircle}
         />
       )}
 

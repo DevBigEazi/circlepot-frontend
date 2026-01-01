@@ -1,4 +1,4 @@
-export const CUSD_ABI = [
+export const USDm_ABI = [
   {
     inputs: [
       { internalType: "address", name: "spender", type: "address" },

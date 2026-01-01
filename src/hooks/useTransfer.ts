@@ -3,8 +3,8 @@ import { useActiveAccount, useSendBatchTransaction, useSendTransaction } from "t
 import { prepareContractCall, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { client } from "../thirdwebClient";
-import { CUSD_ADDRESS, CHAIN_ID, PLATFORM_FEE_RECIPIENT, WITHDRAWAL_FEE } from "../constants/constants";
-import { CUSD_ABI } from "../abis/Cusd";
+import { USDm_ADDRESS, CHAIN_ID, PLATFORM_FEE_RECIPIENT, WITHDRAWAL_FEE } from "../constants/constants";
+import { USDm_ABI } from "../abis/USDm";
 
 export const useTransfer = () => {
     const account = useActiveAccount();
@@ -22,8 +22,8 @@ export const useTransfer = () => {
             getContract({
                 client,
                 chain,
-                address: CUSD_ADDRESS,
-                abi: CUSD_ABI,
+                address: USDm_ADDRESS,
+                abi: USDm_ABI,
             }),
         [chain]
     );

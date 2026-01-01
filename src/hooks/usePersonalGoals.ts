@@ -6,7 +6,7 @@ import { ThirdwebClient } from "thirdweb";
 import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
-import { CUSD_ABI } from "../abis/Cusd";
+import { USDm_ABI } from "../abis/USDm";
 import {
   CreateGoalParams,
   GoalContribution,
@@ -17,7 +17,7 @@ import {
   SUBGRAPH_URL,
   SUBGRAPH_HEADERS,
   PERSONAL_SAVINGS_ADDRESS,
-  CUSD_ADDRESS,
+  USDm_ADDRESS,
   CHAIN_ID,
 } from "../constants/constants";
 
@@ -234,8 +234,8 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [PERSONAL_SAVINGS_ADDRESS, params.contributionAmount],
@@ -300,8 +300,8 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [PERSONAL_SAVINGS_ADDRESS, contributionAmount],
