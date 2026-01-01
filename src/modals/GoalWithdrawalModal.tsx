@@ -255,7 +255,8 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
                   className="text-xs leading-relaxed"
                 >
                   Goal target reached! Withdraw your full amount without penalty
-                  and gain 10 reputation points.
+                  and gain 10 reputation points. You can also keep your goal
+                  active to save more.
                 </p>
               </div>
             )}
