@@ -425,7 +425,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             onClick={handleInvite}
             disabled={isInviting || validCount === 0}
             className="flex-1 px-2 py-3 rounded-xl font-semibold text-sm text-white transition shadow-sm hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-1"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             {isInviting ? (
               <>

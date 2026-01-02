@@ -413,7 +413,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                 {userEmail || "No email available"}
               </span>
               {userEmail && (
-                <Check size={16} className="text-green-500 flex-shrink-0" />
+                <Check size={16} className="text-lime-900 flex-shrink-0" />
               )}
             </div>
             <p className="text-xs mt-1" style={{ color: colors.textLight }}>
@@ -445,7 +445,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                   : "No wallet connected"}
               </span>
               {account?.address && (
-                <Check size={16} className="text-green-500 flex-shrink-0" />
+                <Check size={16} className="text-lime-900 flex-shrink-0" />
               )}
             </div>
             <p className="text-xs mt-1" style={{ color: colors.textLight }}>
@@ -560,7 +560,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
             onClick={handleCompleteSetup}
             disabled={!isFormValid || isProcessing || !userEmail}
             className="w-full px-4 py-3 rounded-xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             {isUploading ? (
               <LoadingSpinner size="sm" text="Uploading to IPFS..." />

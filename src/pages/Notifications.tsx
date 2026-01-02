@@ -140,7 +140,7 @@ const Notifications: React.FC = () => {
                 }`}
                 style={
                   activeTab === tab.id
-                    ? { background: colors.gradient }
+                    ? { background: colors.primary }
                     : {
                         backgroundColor: colors.infoBg,
                         color: colors.textLight,

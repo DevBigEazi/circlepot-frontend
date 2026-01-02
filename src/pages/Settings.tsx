@@ -563,7 +563,7 @@ const Settings: React.FC = () => {
                         onClick={() => setEditingProfile(true)}
                         disabled={isLoading}
                         className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-medium text-white text-sm transition disabled:opacity-50"
-                        style={{ background: colors.gradient }}
+                        style={{ background: colors.primary }}
                       >
                         {isLoading ? (
                           <Loader size={14} className="animate-spin" />
@@ -640,7 +640,7 @@ const Settings: React.FC = () => {
                         onClick={handleSaveProfile}
                         disabled={isProcessing}
                         className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 text-sm"
-                        style={{ background: colors.gradient }}
+                        style={{ background: colors.primary }}
                       >
                         {isProcessing ? (
                           <>

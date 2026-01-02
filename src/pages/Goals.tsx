@@ -110,7 +110,7 @@ const Goals: React.FC = () => {
       toast.custom(
         () => (
           <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
+            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm"
             style={{
               backgroundColor: "#dcfce7",
               animation: `slideIn 0.3s ease-out`,

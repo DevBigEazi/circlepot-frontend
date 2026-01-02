@@ -101,19 +101,19 @@ const WithdrawInternal: React.FC = () => {
           className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-lg"
           style={{ backgroundColor: colors.successBg }}
         >
-          <CheckCircle2 size={40} className="text-emerald-500" />
+          <CheckCircle2 size={40} className="text-lime-900" />
         </div>
         <h2 className="text-2xl font-black mb-2" style={{ color: colors.text }}>
           Transfer Successful!
         </h2>
         <p className="mb-8 font-medium" style={{ color: colors.textLight }}>
-          Sent <span className="text-emerald-500 font-bold">{amount} USDm</span>{" "}
+          Sent <span className="text-lime-900 font-bold">{amount} USDm</span>{" "}
           to @{recipient?.username}
         </p>
         <button
           onClick={() => navigate("/")}
           className="w-full max-w-xs py-4 rounded-2xl font-bold text-white shadow-xl"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           Back to Dashboard
         </button>
@@ -195,7 +195,7 @@ const WithdrawInternal: React.FC = () => {
                   <span className="text-sm font-bold opacity-60">USDm</span>
                 </div>
               </div>
-              <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600">
+              <div className="p-3 rounded-2xl bg-lime-200 text-lime-600">
                 <User size={24} />
               </div>
             </div>
@@ -318,7 +318,7 @@ const WithdrawInternal: React.FC = () => {
               type="submit"
               disabled={isTransferring || !recipient || !amount}
               className="w-full py-4 rounded-2xl font-black text-lg text-white shadow-2xl flex items-center justify-center gap-3"
-              style={{ background: colors.gradient }}
+              style={{ background: colors.primary }}
             >
               {isTransferring ? (
                 <Loader2 className="animate-spin" size={26} />

@@ -218,7 +218,7 @@ const JoinCircle: React.FC = () => {
           <button
             onClick={() => navigate("/")}
             className="px-6 py-3 rounded-xl font-semibold text-white transition shadow-sm hover:shadow-md"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             Go to Dashboard
           </button>
@@ -474,7 +474,7 @@ const JoinCircle: React.FC = () => {
                   onClick={handleJoinCircle}
                   disabled={isJoining}
                   className="flex-1 py-3 rounded-xl font-semibold text-white transition shadow-sm hover:shadow-md disabled:opacity-50"
-                  style={{ background: colors.gradient }}
+                  style={{ background: colors.primary }}
                 >
                   {isJoining ? (
                     <span className="flex items-center justify-center gap-2">

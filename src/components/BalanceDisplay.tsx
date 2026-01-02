@@ -23,7 +23,6 @@ interface BalanceDisplayProps {
     text: string;
     textLight: string;
     background: string;
-    gradient: string;
   };
   creditScore?: CreditScore | null;
   isLoading?: boolean;
@@ -255,7 +254,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
         <button
           onClick={() => setShowAddFundsModal(true)}
           className="flex-1 py-3 px-4 rounded-xl font-bold text-white transition-all transform active:scale-95 shadow-md"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           Add Funds
         </button>

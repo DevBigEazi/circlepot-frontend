@@ -177,7 +177,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           <button
             onClick={onInviteMembers}
             className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             <UserPlus className="sm:w-4 sm:h-4 w-3 h-3" />
             <span>Invite</span>
@@ -186,7 +186,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             onClick={handleShareInvite}
             disabled={copied}
             className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: copied ? "#10B981" : colors.gradient }}
+            style={{ background: copied ? "#10B981" : colors.primary }}
           >
             {copied ? (
               <>
@@ -228,7 +228,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           }
           disabled={isLoading}
           className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           {isLoading ? "Processing..." : "Execute Vote Results"}
         </button>
@@ -289,7 +289,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           onClick={handleShareInvite}
           disabled={copied}
           className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: copied ? "#10B981" : colors.gradient }}
+          style={{ background: copied ? "#10B981" : colors.primary }}
         >
           {copied ? (
             <>
@@ -316,7 +316,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               }
               disabled={isLoading}
               className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-              style={{ background: colors.gradient }}
+              style={{ background: colors.primary }}
             >
               {isLoading ? (
                 "Starting..."
@@ -411,7 +411,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           }
           disabled={isLoading}
           className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           {isLoading ? "Processing..." : "Execute Vote Results"}
         </button>
@@ -436,7 +436,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           onClick={() => setIsVoteModalOpen(true)}
           disabled={isLoading}
           className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           <Vote className="w-4 h-4" />
           <span>Vote</span>
@@ -489,7 +489,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             }
             disabled={isLoading}
             className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             {isLoading ? (
               "Processing..."
