@@ -84,7 +84,7 @@ const CircleChatModal: React.FC<CircleChatModalProps> = ({
                 style={{
                   background:
                     msg.sender === currentUser
-                      ? colors.gradient
+                      ? colors.primary
                       : colors.background,
                   color: msg.sender === currentUser ? "#fff" : colors.text,
                 }}
@@ -126,7 +126,7 @@ const CircleChatModal: React.FC<CircleChatModalProps> = ({
             <button
               type="submit"
               className="p-2 rounded-xl text-white transition hover:opacity-90"
-              style={{ background: colors.gradient }}
+              style={{ background: colors.primary }}
             >
               <Send size={20} />
             </button>

@@ -77,7 +77,7 @@ const CirclePayoutHistoryTab: React.FC<CirclePayoutHistoryTabProps> = ({
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-green-600">
+                    <div className="font-bold" style={{color: colors.primary}}>
                       +${(Number(payout.payoutAmount) / 1e18).toFixed(2)}
                     </div>
                     <div className="text-[10px] text-green-500 font-medium">

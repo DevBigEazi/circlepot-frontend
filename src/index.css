@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #35d07f;
-  --color-secondary: #fbcc5c;
-  --color-accent: #2e3338;
+  --color-primary: #5C6F2B;
+  --color-secondary: #DE802B;
+  --color-accent: #2E3338;
   --color-background: #f8f9fa;
-  --color-surface: #ffffff;
+  --color-surface: #F1F5F1;
   --color-text: #2e3338;
   --color-text-light: #6b7280;
   --color-border: #e5e7eb;
@@ -14,23 +14,28 @@
   --gradient-primary: linear-gradient(135deg, #35d07f 0%, #2bb673 100%);
 }
 
-/* Base dark mode support */
+/* Base light mode */
 :root {
   color-scheme: light;
 }
 
+/* Dark mode */
 :root.dark {
   color-scheme: dark;
 }
 
-/* Ensure body has proper background */
+/* Body styling with theme-aware backgrounds */
+html,
 body {
-  @apply bg-white dark:bg-gray-950;
-  @apply text-gray-900 dark:text-gray-100;
+  @apply bg-white dark:bg-slate-950;
+  @apply text-gray-900 dark:text-gray-50;
+  overscroll-behavior: none;
 }
 
 #root {
-  @apply min-h-screen;
+  @apply min-h-screen bg-white dark:bg-slate-950;
+  @apply text-gray-900 dark:text-gray-50;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* PWA Install Prompt Animation */

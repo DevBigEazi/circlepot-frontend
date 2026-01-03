@@ -58,13 +58,15 @@ export default defineConfig({
       clientsClaim: true,
       maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
       navigateFallbackDenylist: [/^\/manifest\.webmanifest$/, /^\/sw\.js$/, /^\/registerSW\.js$/],
+      // Import custom push notification handlers
+      importScripts: ['/sw-push-handlers.js'],
     },
 
     devOptions: {
       enabled: true,
       navigateFallback: 'index.html',
       suppressWarnings: true,
-      type: 'module',
+      type: 'classic',
     },
   })],
 })

@@ -173,7 +173,7 @@ const VisibilityConfirmModal: React.FC<VisibilityConfirmModalProps> = ({
           <button
             onClick={onConfirm}
             className="flex-1 py-3 rounded-xl font-semibold text-white transition hover:opacity-90"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             Confirm & Pay ${fee}
           </button>

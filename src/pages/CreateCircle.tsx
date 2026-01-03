@@ -254,7 +254,7 @@ const CreateCircle: React.FC = () => {
                   setCircleForm({ ...circleForm, name: e.target.value })
                 }
                 maxLength={32}
-                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 border-2 rounded-xl transition"
                 style={{ borderColor: colors.border, color: colors.text }}
               />
               <div className="text-xs mt-1" style={{ color: colors.textLight }}>
@@ -283,7 +283,7 @@ const CreateCircle: React.FC = () => {
                   setCircleForm({ ...circleForm, description: e.target.value })
                 }
                 rows={3}
-                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition resize-none"
+                className="w-full px-4 py-3 border-2 rounded-xl transition resize-none"
                 style={{ borderColor: colors.border, color: colors.text }}
               />
             </div>
@@ -317,7 +317,7 @@ const CreateCircle: React.FC = () => {
                         contribution: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 border-2 rounded-xl transition"
                     style={{ borderColor: colors.border, color: colors.text }}
                   />
                   <div
@@ -343,7 +343,7 @@ const CreateCircle: React.FC = () => {
                         frequency: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 border-2 rounded-xl transition"
                     style={{ borderColor: colors.border, color: colors.text }}
                   >
                     <option value="0">Daily</option>
@@ -378,7 +378,7 @@ const CreateCircle: React.FC = () => {
                         maxMembers: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 border-2 rounded-xl transition"
                     style={{ borderColor: colors.border, color: colors.text }}
                   >
                     <option value="5">5 members</option>
@@ -415,7 +415,7 @@ const CreateCircle: React.FC = () => {
                         visibility: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 border-2 rounded-xl transition"
                     style={{ borderColor: colors.border, color: colors.text }}
                   >
                     <option value="0">Private (Default)</option>
@@ -604,29 +604,29 @@ const CreateCircle: React.FC = () => {
             <div
               className="rounded-2xl p-6 border"
               style={{
-                backgroundColor: colors.warningBg,
-                borderColor: colors.warningBorder,
+                backgroundColor: colors.secondary,
+                borderColor: colors.textLight,
               }}
             >
               <div className="flex items-center gap-3 mb-3">
                 <Crown style={{ color: colors.primary }} size={20} />
                 <span
                   className="font-semibold text-lg"
-                  style={{ color: colors.text }}
+                  style={{ color: colors.surface }}
                 >
                   Creator Benefits
                 </span>
               </div>
               <ul
                 className="text-sm space-y-2"
-                style={{ color: colors.textLight }}
+                style={{ color: colors.background }}
               >
                 <li className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-lime-900"></div>
                   Always receive first payout position
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-lime-900"></div>
                   0% platform fees (members pay 1% for up to $1000 payout and
                   $10 fix fee for above $1000)
                 </li>
@@ -706,7 +706,7 @@ const CreateCircle: React.FC = () => {
                     circleForm.name &&
                     circleForm.contribution &&
                     !isCreating
-                      ? { background: colors.gradient }
+                      ? { background: colors.primary }
                       : {
                           backgroundColor: colors.border,
                           color: colors.textLight,

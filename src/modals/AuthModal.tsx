@@ -175,7 +175,7 @@ const AuthModal: React.FC = () => {
             <button
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="cursor-pointer flex justify-center items-center rounded-xl py-3 font-semibold gap-3 group transition border-2 hover:border-green-500 disabled:opacity-50"
+              className="cursor-pointer flex justify-center items-center rounded-xl py-3 font-semibold gap-3 group transition border-2 hover:border-b-lime-900 disabled:opacity-50"
               style={{ borderColor: colors.border, color: colors.text }}
             >
               <img src={image.google} alt="google logo" className="w-6 h-6" />
@@ -297,7 +297,7 @@ const AuthModal: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-lime-900 focus:border-transparent transition"
                       style={{
                         borderColor: colors.border,
                         backgroundColor: colors.surface,
@@ -312,7 +312,7 @@ const AuthModal: React.FC = () => {
                   onClick={handleEmailSubmit}
                   disabled={isLoading || !email}
                   className="cursor-pointer w-full py-3 text-white font-semibold rounded-xl transition shadow-lg hover:shadow-xl disabled:opacity-50"
-                  style={{ background: colors.gradient }}
+                  style={{ background: colors.primary }}
                 >
                   {isLoading ? (
                     <LoadingSpinner size="sm" text="Sending..." />
@@ -376,7 +376,7 @@ const AuthModal: React.FC = () => {
                       value={codeDigits[i]}
                       onChange={(e) => handleCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                      className="w-full h-12 text-center text-xl font-bold border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                      className="w-full h-12 text-center text-xl font-bold border-2 rounded-xl focus:ring-2 focus:ring-lime-900 focus:border-transparent transition"
                       style={{
                         borderColor: colors.border,
                         backgroundColor: colors.surface,
@@ -391,7 +391,7 @@ const AuthModal: React.FC = () => {
                   onClick={handleEmailSubmit}
                   disabled={isLoading || verificationCode.length !== 6}
                   className="cursor-pointer w-full py-3 text-white font-semibold rounded-xl transition shadow-lg hover:shadow-xl mb-4 disabled:opacity-50"
-                  style={{ background: colors.gradient }}
+                  style={{ background: colors.primary }}
                 >
                   {isLoading ? (
                     <LoadingSpinner size="sm" text="Verifying..." />

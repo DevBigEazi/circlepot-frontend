@@ -94,7 +94,7 @@ const WithdrawExternal: React.FC = () => {
           <button
             onClick={() => navigate("/")}
             className="w-full py-4 rounded-2xl font-bold text-white transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             Back to Home
           </button>
@@ -293,7 +293,7 @@ const WithdrawExternal: React.FC = () => {
               disabled={isTransferring || !address || !amount}
               className="w-full py-5 rounded-2xl font-black text-lg text-white transition-all active:scale-[0.98] shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
               style={{
-                background: colors.gradient,
+                background: colors.primary,
               }}
             >
               {isTransferring ? (

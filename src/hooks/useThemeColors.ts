@@ -9,7 +9,6 @@ interface ThemeColors {
   text: string;
   textLight: string;
   border: string;
-  gradient: string;
   // Info box backgrounds
   infoBg: string;
   successBg: string;
@@ -29,15 +28,14 @@ export const useThemeColors = (): ThemeColors => {
   const { appliedTheme } = useTheme();
 
   const lightColors: ThemeColors = {
-    primary: "#35D07F",
-    secondary: "#FBCC5C",
+    primary: "#5C6F2B", // Vibrant Circlepot Sage
+    secondary: "#DE802B", 
     accent: "#2E3338",
     background: "#F8F9FA",
-    surface: "#FFFFFF",
+    surface: "#F1F5F1",
     text: "#2E3338",
     textLight: "#6B7280",
     border: "#E5E7EB",
-    gradient: "linear-gradient(135deg, #35D07F 0%, #2BB673 100%)",
     // Info box backgrounds
     infoBg: "#F9FAFB",
     successBg: "#ECFDF5",
@@ -54,15 +52,14 @@ export const useThemeColors = (): ThemeColors => {
   };
 
   const darkColors: ThemeColors = {
-    primary: "#35D07F",
-    secondary: "#FBCC5C",
+    primary: "#5C6F2B", // Vibrant Circlepot Green
+    secondary: "#DE802B", // Warm Gold
     accent: "#E5E7EB",
-    background: "#0F172A",
-    surface: "#1E293B",
+    background: "#0F0F11",
+    surface: "#161618",
     text: "#F1F5F9",
     textLight: "#94A3B8",
     border: "#334155",
-    gradient: "linear-gradient(135deg, #35D07F 0%, #2BB673 100%)",
     // Info box backgrounds (darker versions)
     infoBg: "#1E293B",
     successBg: "#022C22",
