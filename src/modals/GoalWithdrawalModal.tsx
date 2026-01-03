@@ -255,7 +255,8 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
                   className="text-xs leading-relaxed"
                 >
                   Goal target reached! Withdraw your full amount without penalty
-                  and gain 10 reputation points.
+                  and gain 10 reputation points. You can also keep your goal
+                  active to save more.
                 </p>
               </div>
             )}
@@ -266,17 +267,6 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
             className="flex flex-col-reverse sm:flex-row gap-2 p-4 sm:p-6 border-t"
             style={{ borderColor: colors.border }}
           >
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="w-full px-4 py-3 sm:py-2 rounded-lg font-medium transition hover:opacity-80 disabled:opacity-50 text-sm sm:text-base"
-              style={{
-                backgroundColor: colors.border,
-                color: colors.text,
-              }}
-            >
-              Cancel
-            </button>
             {isGoalComplete ? (
               <button
                 onClick={onCompleteWithdraw}

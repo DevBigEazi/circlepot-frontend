@@ -15,6 +15,7 @@ import {
 import { ActiveCircle } from "../interfaces/interfaces";
 import { toast } from "sonner";
 import VoteModal from "../modals/VoteModal";
+import WithdrawCollateralModal from "../modals/WithdrawCollateralModal";
 
 interface CircleActionsProps {
   circle: ActiveCircle;
@@ -25,7 +26,9 @@ interface CircleActionsProps {
   onExecuteVote: (circleId: bigint) => Promise<any>;
   onWithdrawCollateral: (circleId: bigint) => Promise<any>;
   onContribute: (circleId: bigint, amount: bigint) => Promise<any>;
-  onForfeitMember: (circleId: bigint) => Promise<any>;
+  onForfeitMember: (circleId: bigint, lateMembers: string[]) => Promise<any>;
+  getLateMembersForCircle: (circleId: bigint) => string[];
+  getWithdrawalInfo?: (circleId: bigint, userAddress?: string) => any;
   onInviteMembers?: () => void;
 }
 
@@ -39,12 +42,20 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   onWithdrawCollateral,
   onContribute,
   onForfeitMember,
+  getLateMembersForCircle,
+  getWithdrawalInfo,
   onInviteMembers,
 }) => {
   const account = useActiveAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+  // Get withdrawal info if function is available
+  const withdrawalInfo = getWithdrawalInfo
+    ? getWithdrawalInfo(circle.rawCircle.circleId, account?.address)
+    : circle; // Fallback to circle data if not provided
 
   if (!account || !circle.rawCircle) return null;
 
@@ -166,7 +177,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           <button
             onClick={onInviteMembers}
             className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             <UserPlus className="sm:w-4 sm:h-4 w-3 h-3" />
             <span>Invite</span>
@@ -175,7 +186,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             onClick={handleShareInvite}
             disabled={copied}
             className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: copied ? "#10B981" : colors.gradient }}
+            style={{ background: copied ? "#10B981" : colors.primary }}
           >
             {copied ? (
               <>
@@ -217,7 +228,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           }
           disabled={isLoading}
           className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           {isLoading ? "Processing..." : "Execute Vote Results"}
         </button>
@@ -278,7 +289,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           onClick={handleShareInvite}
           disabled={copied}
           className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: copied ? "#10B981" : colors.gradient }}
+          style={{ background: copied ? "#10B981" : colors.primary }}
         >
           {copied ? (
             <>
@@ -305,7 +316,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               }
               disabled={isLoading}
               className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-              style={{ background: colors.gradient }}
+              style={{ background: colors.primary }}
             >
               {isLoading ? (
                 "Starting..."
@@ -342,17 +353,13 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         }
       } else {
         // Threshold NOT reached and Ultimatum PASSED -> Withdraw Collateral
-        if (isMember) {
+        // Check if withdrawal is eligible using withdrawalInfo
+        if (isMember && withdrawalInfo?.canWithdraw) {
           return (
             <button
-              onClick={() =>
-                handleAction(
-                  () => onWithdrawCollateral(circleId),
-                  "Withdraw collateral"
-                )
-              }
+              onClick={() => setShowWithdrawModal(true)}
               disabled={isLoading}
-              className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-red-500 hover:bg-red-600"
+              className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
             >
               {isLoading ? (
                 "Withdrawing..."
@@ -360,6 +367,16 @@ const CircleActions: React.FC<CircleActionsProps> = ({
                 <>
                   <AlertTriangle className="w-4 h-4" />
                   <span>Withdraw Collateral</span>
+                  {withdrawalInfo.isCreator &&
+                    withdrawalInfo.creatorDeadFee > 0n && (
+                      <span className="text-[10px] opacity-80">
+                        (Fee: $
+                        {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(
+                          2
+                        )}
+                        )
+                      </span>
+                    )}
                 </>
               )}
             </button>
@@ -394,7 +411,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           }
           disabled={isLoading}
           className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           {isLoading ? "Processing..." : "Execute Vote Results"}
         </button>
@@ -419,7 +436,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           onClick={() => setIsVoteModalOpen(true)}
           disabled={isLoading}
           className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           <Vote className="w-4 h-4" />
           <span>Vote</span>
@@ -472,7 +489,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             }
             disabled={isLoading}
             className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             {isLoading ? (
               "Processing..."
@@ -485,9 +502,13 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           </button>
         ) : canForfeit ? (
           <button
-            onClick={() =>
-              handleAction(() => onForfeitMember(circleId), "Forfeit member")
-            }
+            onClick={() => {
+              const lateMembers = getLateMembersForCircle(circleId);
+              handleAction(
+                () => onForfeitMember(circleId, lateMembers),
+                "Forfeit member"
+              );
+            }}
             disabled={isLoading}
             className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
             title="Forfeit late members (Available after grace period if payout hasn't been distributed)"
@@ -514,7 +535,40 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     );
   }
 
-  return null;
+  // Handler for withdrawal confirmation
+  const handleWithdrawConfirm = async () => {
+    try {
+      await handleAction(
+        () => onWithdrawCollateral(circle.rawCircle.circleId),
+        "Withdraw collateral"
+      );
+      setShowWithdrawModal(false);
+    } catch (error) {
+      // Error already handled by handleAction
+    }
+  };
+
+  return (
+    <>
+      {/* Withdrawal Modal */}
+      {showWithdrawModal && withdrawalInfo && (
+        <WithdrawCollateralModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          onConfirm={handleWithdrawConfirm}
+          colors={colors}
+          circleName={circle.name}
+          collateralLocked={withdrawalInfo.collateralLocked || 0n}
+          creatorDeadFee={withdrawalInfo.creatorDeadFee || 0n}
+          netAmount={withdrawalInfo.netWithdrawalAmount || 0n}
+          isCreator={withdrawalInfo.isCreator || false}
+          withdrawalReason={withdrawalInfo.reason || "below_threshold"}
+          isLoading={isLoading}
+        />
+      )}
+      {null}
+    </>
+  );
 };
 
 export default CircleActions;

@@ -55,7 +55,7 @@ const VoteModal: React.FC<VoteModalProps> = ({
             }}
             disabled={isLoading}
             className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-            style={{ backgroundColor: "#22c55e" }} // Green-500
+            style={{ backgroundColor: colors.primary }}
           >
             <CheckCircle className="w-5 h-5" />
             <span>Vote to Start</span>
@@ -67,7 +67,7 @@ const VoteModal: React.FC<VoteModalProps> = ({
             }}
             disabled={isLoading}
             className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-            style={{ backgroundColor: "#ef4444" }}
+            style={{ backgroundColor: colors.primary }}
           >
             <UserX className="w-5 h-5" />
             <span>Vote to Withdraw</span>

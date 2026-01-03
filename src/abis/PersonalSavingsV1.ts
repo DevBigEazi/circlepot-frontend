@@ -235,7 +235,7 @@ export const PERSONAL_SAVING_ABI = [
   },
   {
     inputs: [],
-    name: "cUSDToken",
+    name: "USDmToken",
     outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
@@ -305,7 +305,7 @@ export const PERSONAL_SAVING_ABI = [
   },
   {
     inputs: [
-      { internalType: "address", name: "_cUSDToken", type: "address" },
+      { internalType: "address", name: "_USDmToken", type: "address" },
       { internalType: "address", name: "_treasury", type: "address" },
       { internalType: "address", name: "_reputationContract", type: "address" },
       { internalType: "address", name: "initialOwner", type: "address" },
@@ -397,7 +397,7 @@ export const PERSONAL_SAVING_ABI = [
   },
   {
     inputs: [
-      { internalType: "address", name: "_cUSDToken", type: "address" },
+      { internalType: "address", name: "_USDmToken", type: "address" },
       { internalType: "address", name: "_treasury", type: "address" },
       { internalType: "address", name: "_reputationContract", type: "address" },
       { internalType: "uint8", name: "_version", type: "uint8" },

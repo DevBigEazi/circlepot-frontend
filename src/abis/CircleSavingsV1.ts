@@ -199,7 +199,12 @@ export const CIRCLE_SAVINGS_ABI = [
         name: "member",
         type: "address",
       },
-      { indexed: true, internalType: "uint256", name: "amt", type: "uint256" },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
     ],
     name: "CollateralReturned",
     type: "event",
@@ -277,6 +282,31 @@ export const CIRCLE_SAVINGS_ABI = [
       },
     ],
     name: "ContributionMade",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "circleId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "creator",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "DeadCircleFeeDeducted",
     type: "event",
   },
   {
@@ -479,7 +509,7 @@ export const CIRCLE_SAVINGS_ABI = [
       {
         indexed: false,
         internalType: "enum CircleSavingsV1.Visibility",
-        name: "newVisibilty",
+        name: "newVisibility",
         type: "uint8",
       },
     ],
@@ -569,6 +599,20 @@ export const CIRCLE_SAVINGS_ABI = [
   },
   {
     inputs: [],
+    name: "FIXED_FEE_AMOUNT",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "FIXED_FEE_THRESHOLD",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "LATE_FEE_BPS",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
@@ -605,6 +649,20 @@ export const CIRCLE_SAVINGS_ABI = [
   {
     inputs: [],
     name: "PLATFORM_FEE_BPS",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "PRIVATE_CIRCLE_DEAD_FEE",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "PUBLIC_CIRCLE_DEAD_FEE",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
@@ -666,7 +724,7 @@ export const CIRCLE_SAVINGS_ABI = [
   },
   {
     inputs: [],
-    name: "cUSDToken",
+    name: "USDmToken",
     outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
@@ -791,6 +849,11 @@ export const CIRCLE_SAVINGS_ABI = [
       { internalType: "uint256", name: "createdAt", type: "uint256" },
       { internalType: "uint256", name: "startedAt", type: "uint256" },
       { internalType: "uint256", name: "totalPot", type: "uint256" },
+      {
+        internalType: "uint256",
+        name: "contributionsThisRound",
+        type: "uint256",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -843,7 +906,21 @@ export const CIRCLE_SAVINGS_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "uint256", name: "_circleId", type: "uint256" }],
+    inputs: [],
+    name: "fixedFeeThreshold",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_circleId", type: "uint256" },
+      {
+        internalType: "address[]",
+        name: "_membersToForfeit",
+        type: "address[]",
+      },
+    ],
     name: "forfeitMember",
     outputs: [],
     stateMutability: "nonpayable",
@@ -886,6 +963,11 @@ export const CIRCLE_SAVINGS_ABI = [
           { internalType: "uint256", name: "createdAt", type: "uint256" },
           { internalType: "uint256", name: "startedAt", type: "uint256" },
           { internalType: "uint256", name: "totalPot", type: "uint256" },
+          {
+            internalType: "uint256",
+            name: "contributionsThisRound",
+            type: "uint256",
+          },
         ],
         internalType: "struct CircleSavingsV1.Circle",
         name: "circle",
@@ -956,13 +1038,6 @@ export const CIRCLE_SAVINGS_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "_user", type: "address" }],
-    name: "getUserCircles",
-    outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [{ internalType: "uint256", name: "_circleId", type: "uint256" }],
     name: "getVoteInfo",
     outputs: [
@@ -982,7 +1057,7 @@ export const CIRCLE_SAVINGS_ABI = [
   },
   {
     inputs: [
-      { internalType: "address", name: "_cUSDToken", type: "address" },
+      { internalType: "address", name: "_USDmToken", type: "address" },
       { internalType: "address", name: "_treasury", type: "address" },
       { internalType: "address", name: "_reputationContract", type: "address" },
       { internalType: "address", name: "initialOwner", type: "address" },
@@ -1139,6 +1214,15 @@ export const CIRCLE_SAVINGS_ABI = [
   },
   {
     inputs: [
+      { internalType: "uint256", name: "_newThreshold", type: "uint256" },
+    ],
+    name: "updateFeeThreshold",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
         internalType: "address",
         name: "_newReputationContract",
@@ -1159,7 +1243,7 @@ export const CIRCLE_SAVINGS_ABI = [
   },
   {
     inputs: [
-      { internalType: "address", name: "_cUSDToken", type: "address" },
+      { internalType: "address", name: "_USDmToken", type: "address" },
       { internalType: "address", name: "_treasury", type: "address" },
       { internalType: "address", name: "_reputationContract", type: "address" },
       { internalType: "uint8", name: "_version", type: "uint8" },

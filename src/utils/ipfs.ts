@@ -2,7 +2,7 @@
  * IPFS URL utilities
  */
 
-const PINATA_GATEWAY = import.meta.env.VITE_GATEWAY_URL;
+const IPFS_GATEWAY = import.meta.env.VITE_GATEWAY_URL;
 
 /**
  * Handles various IPFS URL formats and ensures proper gateway usage
@@ -15,7 +15,7 @@ export function normalizeIpfsUrl(url: string): string {
     return url;
   }
 
-  // Handle gateway URLs missing protocol (e.g., "gateway.pinata.cloud/ipfs/hash")
+  // Handle gateway URLs missing protocol (e.g., "gateway.cloud/ipfs/hash")
   if (url.includes('.cloud/ipfs/') || url.includes('.mypinata.cloud/ipfs/') || url.includes('pinata.cloud/ipfs/')) {
     const normalizedUrl = `https://${url}`;
     return normalizedUrl;
@@ -24,19 +24,19 @@ export function normalizeIpfsUrl(url: string): string {
   // Handle ipfs:// protocol
   if (url.startsWith('ipfs://')) {
     const hash = url.replace('ipfs://', '');
-    const normalizedUrl = `${PINATA_GATEWAY}/ipfs/${hash}`;
+    const normalizedUrl = `${IPFS_GATEWAY}/ipfs/${hash}`;
     return normalizedUrl;
   }
 
   // Handle raw IPFS hash (starts with Qm or bafy)
   if (url.match(/^(Qm[a-zA-Z0-9]{44}|bafy[a-zA-Z0-9]+)$/)) {
-    const normalizedUrl = `${PINATA_GATEWAY}/ipfs/${url}`;
+    const normalizedUrl = `${IPFS_GATEWAY}/ipfs/${url}`;
     return normalizedUrl;
   }
 
   // If it starts with /ipfs/, prepend gateway
   if (url.startsWith('/ipfs/')) {
-    const normalizedUrl = `${PINATA_GATEWAY}${url}`;
+    const normalizedUrl = `${IPFS_GATEWAY}${url}`;
     return normalizedUrl;
   }
 
@@ -50,7 +50,7 @@ export function normalizeIpfsUrl(url: string): string {
 export function extractIpfsHash(url: string): string | null {
   if (!url) return null;
 
-  // From gateway URL: https://gateway.pinata.cloud/ipfs/QmHash
+  // From gateway URL: https://gateway.cloud/ipfs/QmHash
   const gatewayMatch = url.match(/\/ipfs\/([^/?#]+)/);
   if (gatewayMatch) {
     return gatewayMatch[1];
@@ -74,17 +74,17 @@ export function extractIpfsHash(url: string): string | null {
  */
 export function isValidIpfsHash(hash: string): boolean {
   if (!hash) return false;
-  
+
   // CIDv0 (base58, starts with Qm)
   if (hash.match(/^Qm[a-zA-Z0-9]{44}$/)) {
     return true;
   }
-  
+
   // CIDv1 (base32, starts with bafy/bafk/bafr)
   if (hash.match(/^baf[a-z0-9]+$/)) {
     return true;
   }
-  
+
   return false;
 }
 

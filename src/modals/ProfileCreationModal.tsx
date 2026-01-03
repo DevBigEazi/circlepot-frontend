@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { usePinata } from "../hooks/usePinata";
+import { useThirdwebStorage } from "../hooks/useThirdwebStorage";
 import { useActiveAccount } from "thirdweb/react";
 import { getUserEmail } from "thirdweb/wallets/in-app";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -30,7 +30,8 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   const account = useActiveAccount();
   const { createProfile, checkUsernameAvailability, isLoading } =
     useUserProfile(client);
-  const { uploadImage, isUploading, uploadProgress } = usePinata();
+  const { uploadImage, isUploading, uploadProgress } =
+    useThirdwebStorage(client);
 
   const [userName, setUserName] = useState("");
   const [fullName, setFullName] = useState("");
@@ -207,11 +208,10 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
 
       let errorMessage = err.message || "Failed to create profile";
 
-      if (err.code === "PINATA_UPLOAD_ERROR") {
+      if (err.code === "THIRDWEB_UPLOAD_ERROR") {
         errorMessage = "Failed to upload image to IPFS. Please try again.";
-      } else if (err.code === "PINATA_AUTH_ERROR") {
-        errorMessage =
-          "Invalid Pinata credentials. Please check configuration.";
+      } else if (err.code === "THIRDWEB_CLIENT_ERROR") {
+        errorMessage = "Invalid Thirdweb client. Please check configuration.";
       } else if (err.code === "NETWORK_ERROR") {
         errorMessage =
           "Network error. Please check your connection and try again.";
@@ -413,7 +413,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                 {userEmail || "No email available"}
               </span>
               {userEmail && (
-                <Check size={16} className="text-green-500 flex-shrink-0" />
+                <Check size={16} className="text-lime-900 flex-shrink-0" />
               )}
             </div>
             <p className="text-xs mt-1" style={{ color: colors.textLight }}>
@@ -445,7 +445,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                   : "No wallet connected"}
               </span>
               {account?.address && (
-                <Check size={16} className="text-green-500 flex-shrink-0" />
+                <Check size={16} className="text-lime-900 flex-shrink-0" />
               )}
             </div>
             <p className="text-xs mt-1" style={{ color: colors.textLight }}>
@@ -560,7 +560,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
             onClick={handleCompleteSetup}
             disabled={!isFormValid || isProcessing || !userEmail}
             className="w-full px-4 py-3 rounded-xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             {isUploading ? (
               <LoadingSpinner size="sm" text="Uploading to IPFS..." />

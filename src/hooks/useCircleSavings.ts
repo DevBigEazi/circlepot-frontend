@@ -6,12 +6,12 @@ import { ThirdwebClient } from "thirdweb";
 import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavingsV1";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
-import { CUSD_ABI } from "../abis/Cusd";
+import { USDm_ABI } from "../abis/USDm";
 import {
   SUBGRAPH_URL,
   SUBGRAPH_HEADERS,
   CIRCLE_SAVINGS_ADDRESS,
-  CUSD_ADDRESS,
+  USDm_ADDRESS,
   CHAIN_ID,
 } from "../constants/constants";
 import {
@@ -311,6 +311,15 @@ const circlesByIdsQuery = gql`
       createdAt
       startedAt
       updatedAt
+      
+      # Vote tracking for withdrawal eligibility
+      voteWithdrawWon
+      lastVoteExecuted {
+        id
+        withdrawWon
+        startVoteTotal
+        withdrawVoteTotal
+      }
     }
     # Fetch ALL members for these circles to calculate positions correctly
     circleJoineds(
@@ -462,6 +471,15 @@ const singleCircleQuery = gql`
       createdAt
       startedAt
       updatedAt
+      
+      # Vote tracking for withdrawal eligibility
+      voteWithdrawWon
+      lastVoteExecuted {
+        id
+        withdrawWon
+        startVoteTotal
+        withdrawVoteTotal
+      }
     }
 
     # Get all members who joined
@@ -944,6 +962,7 @@ export const useCircleSavings = (
         circleStarted: res.circleStarted,
         startVoteTotal: BigInt(res.startVoteTotal),
         withdrawVoteTotal: BigInt(res.withdrawVoteTotal),
+        withdrawWon: res.withdrawWon,
         timestamp: BigInt(res.transaction.blockTimestamp),
         transactionHash: res.transaction.transactionHash,
       }));
@@ -1000,8 +1019,8 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [CIRCLE_SAVINGS_ADDRESS, totalRequired],
@@ -1064,8 +1083,8 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [CIRCLE_SAVINGS_ADDRESS, collateralAmount],
@@ -1128,8 +1147,8 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
           params: [CIRCLE_SAVINGS_ADDRESS, contributionAmount],
@@ -1192,11 +1211,11 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: CUSD_ADDRESS,
-            abi: CUSD_ABI,
+            address: USDm_ADDRESS,
+            abi: USDm_ABI,
           }),
           method: "approve",
-          params: [CIRCLE_SAVINGS_ADDRESS, BigInt("500000000000000000")], // 0.5 cUSD fee
+          params: [CIRCLE_SAVINGS_ADDRESS, BigInt("500000000000000000")], // 0.5 USDm fee
         });
 
         return new Promise((resolve, reject) => {
@@ -1458,22 +1477,143 @@ export const useCircleSavings = (
     [account?.address, contract, sendTransaction, refetchCircles]
   );
 
-  // Forfeit member (only next recipient can call)
+  // helper function to identify late members
+  /**
+   * Calculate withdrawal eligibility and amounts for a circle member
+   * Based on contract WithdrawCollateral function logic
+   */
+  const getWithdrawalInfo = useCallback(
+    (circleId: bigint, userAddress?: string) => {
+      const circle = circles.find((c) => c.circleId === circleId);
+      if (!circle) return null;
+
+      const address = userAddress || account?.address;
+      if (!address) return null;
+
+      const isCreator =
+        circle.creator?.id?.toLowerCase() === address.toLowerCase();
+
+      // Member must be in the circle
+      const member = joinedCircles.find(
+        (j) =>
+          j.circleId === circleId &&
+          j.id.toLowerCase() === address.toLowerCase()
+      );
+
+      if (!member) return null;
+
+      // Circle must be in CREATED (1) or DEAD (5) state
+      if (circle.state !== 1 && circle.state !== 5) {
+        return {
+          canWithdraw: false,
+          reason: undefined,
+          isCreator,
+          creatorDeadFee: 0n,
+          netWithdrawalAmount: 0n,
+          collateralLocked: 0n,
+        };
+      }
+
+      let canWithdraw = false;
+      let reason: "vote_failed" | "below_threshold" | undefined;
+
+      // Scenario 1: Vote failed (withdraw won)
+      if (circle.voteWithdrawWon === true) {
+        canWithdraw = true;
+        reason = "vote_failed";
+      }
+      // Scenario 2: Below threshold after ultimatum
+      else {
+        // Calculate ultimatum period
+        // Daily/Weekly: 7 days, Monthly: 14 days
+        const ultimatumPeriod =
+          circle.frequency <= 1 ? 7 * 24 * 60 * 60 : 14 * 24 * 60 * 60;
+        const now = Math.floor(Date.now() / 1000);
+        const ultimatumPassed =
+          now > Number(circle.createdAt) + ultimatumPeriod;
+
+        // Check if below 60% threshold
+        const belowThreshold =
+          Number(circle.currentMembers) < (Number(circle.maxMembers) * 60) / 100;
+
+        if (ultimatumPassed && belowThreshold) {
+          canWithdraw = true;
+          reason = "below_threshold";
+        }
+      }
+
+      // Calculate fees and amounts
+      let creatorDeadFee = 0n;
+      // Use collateral from circle data (maxMembers * contributionAmount * 1.01)
+      const collateralLocked = circle.collateralAmount || 0n;
+      let netAmount = collateralLocked;
+
+      if (isCreator && canWithdraw) {
+        // Private circle: $1 fee, Public circle: $0.50 fee
+        creatorDeadFee =
+          circle.visibility === 0
+            ? 1000000000000000000n // $1 in wei (18 decimals)
+            : 500000000000000000n; // $0.50 in wei
+
+        netAmount =
+          collateralLocked > creatorDeadFee
+            ? collateralLocked - creatorDeadFee
+            : 0n;
+      }
+
+      return {
+        canWithdraw,
+        reason,
+        isCreator,
+        creatorDeadFee,
+        netWithdrawalAmount: netAmount,
+        collateralLocked,
+      };
+    },
+    [circles, joinedCircles, account?.address]
+  );
+
+  const getLateMembersForCircle = useCallback(
+    (circleId: bigint): string[] => {
+      const circle = circles.find((c) => c.circleId === circleId);
+      if (!circle || circle.state !== 3) return []; // 3 = ACTIVE state
+      const currentRound = circle.currentRound;
+
+      // Get all members who joined this circle
+      const circleMembers = joinedCircles
+        .filter((j) => j.circleId === circleId)
+        .map((j) => j.id);
+      // Get members who contributed this round
+      const contributedMembers = contributions
+        .filter((c) => c.circleId === circleId && c.round === currentRound)
+        .map((c) => c.id);
+      // Get the recipient for current round (they're exempt)
+      const recipient = positions.find(
+        (p) => p.circleId === circleId && p.position === currentRound
+      )?.user?.id;
+      // Find late members (haven't contributed and aren't the recipient)
+      const lateMembers = circleMembers.filter(
+        (memberId) =>
+          !contributedMembers.includes(memberId) && memberId !== recipient
+      );
+      return lateMembers;
+    },
+    [circles, joinedCircles, contributions, positions]
+  );
+
+  // Forfeit member (any member can call)
   const forfeitMember = useCallback(
-    async (circleId: bigint) => {
+    async (circleId: bigint, lateMembers: string[]) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
-
       try {
         setError(null);
-
         const forfeitTransaction = prepareContractCall({
           contract,
           method: "forfeitMember",
-          params: [circleId],
+          params: [circleId, lateMembers], // lateMembers array (will change the abi to clear the error)
         });
-
         return new Promise((resolve, reject) => {
           sendTransaction(forfeitTransaction, {
             onSuccess: (receipt) => {
@@ -1615,6 +1755,8 @@ export const useCircleSavings = (
     castVote,
     executeVote,
     withdrawCollateral,
+    getWithdrawalInfo,
+    getLateMembersForCircle,
     forfeitMember,
     getCircleById,
     updateCircleVisibility,

@@ -101,7 +101,7 @@ const Browse: React.FC = () => {
               placeholder="Search circles by name, description, or creator..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+              className="w-full pl-12 pr-4 py-3 border-2 rounded-xl transition"
               style={{
                 borderColor: colors.border,
                 backgroundColor: colors.surface,
@@ -129,7 +129,7 @@ const Browse: React.FC = () => {
                 }`}
                 style={
                   activeFilter === filter
-                    ? { background: colors.gradient }
+                    ? { background: colors.primary }
                     : {
                         backgroundColor: colors.infoBg,
                         color: colors.textLight,
@@ -412,7 +412,7 @@ const Browse: React.FC = () => {
                             onClick={() => handleJoinCircleClick(circle)}
                             disabled={isJoining || isTransactionPending}
                             className="px-4 sm:px-6 py-2 rounded-lg font-semibold text-xs sm:text-base text-white transition shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ background: colors.gradient }}
+                            style={{ background: colors.primary }}
                           >
                             {isJoining ? "Joining..." : "Join Circle"}
                           </button>

@@ -503,7 +503,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
               className="flex-1 py-3 rounded-xl font-semibold text-sm sm:text-base transition text-white shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               style={
                 (step < 3 || (step === 3 && agreedToTerms)) && !isJoining
-                  ? { background: colors.gradient }
+                  ? { background: colors.primary }
                   : { backgroundColor: colors.border, color: colors.textLight }
               }
             >

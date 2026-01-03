@@ -167,7 +167,7 @@ const CreatePersonalGoal: React.FC = () => {
       const targetAmount = parseFloat(goalForm.targetAmount);
       const contribution = parseFloat(goalForm.contribution);
 
-      // Convert amounts to wei (multiply by 10^18 for cUSD)
+      // Convert amounts to wei (multiply by 10^18 for USDm)
       const targetAmountWei = BigInt(Math.floor(targetAmount * 1e18));
       const contributionAmountWei = BigInt(Math.floor(contribution * 1e18));
 
@@ -302,7 +302,7 @@ const CreatePersonalGoal: React.FC = () => {
                   })
                 }
                 disabled={isCreating || isContractLoading}
-                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 transition disabled:opacity-50"
                 style={{
                   borderColor: colors.border,
                   backgroundColor: colors.background,
@@ -326,7 +326,7 @@ const CreatePersonalGoal: React.FC = () => {
                 className="block text-sm font-semibold mb-3"
                 style={{ color: colors.text }}
               >
-                Target Amount (cUSD)
+                Target Amount (USDm)
               </label>
               <input
                 type="number"
@@ -339,7 +339,7 @@ const CreatePersonalGoal: React.FC = () => {
                   setGoalForm({ ...goalForm, targetAmount: e.target.value })
                 }
                 disabled={isCreating || isContractLoading}
-                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 transition disabled:opacity-50"
                 style={{
                   borderColor: colors.border,
                   backgroundColor: colors.background,
@@ -368,7 +368,7 @@ const CreatePersonalGoal: React.FC = () => {
                     className="block text-sm font-medium mb-2"
                     style={{ color: colors.text }}
                   >
-                    Amount (cUSD)
+                    Amount (USDm)
                   </label>
                   <input
                     type="number"
@@ -380,7 +380,7 @@ const CreatePersonalGoal: React.FC = () => {
                       setGoalForm({ ...goalForm, contribution: e.target.value })
                     }
                     disabled={isCreating || isContractLoading}
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 transition disabled:opacity-50"
                     style={{
                       borderColor: colors.border,
                       backgroundColor: colors.background,
@@ -408,7 +408,7 @@ const CreatePersonalGoal: React.FC = () => {
                       })
                     }
                     disabled={isCreating || isContractLoading}
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 transition disabled:opacity-50"
                     style={{
                       borderColor: colors.border,
                       backgroundColor: colors.background,
@@ -445,7 +445,7 @@ const CreatePersonalGoal: React.FC = () => {
                   setGoalForm({ ...goalForm, deadline: e.target.value })
                 }
                 disabled={true}
-                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition disabled:opacity-50"
+                className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 transition disabled:opacity-50"
                 style={{
                   borderColor: colors.border,
                   backgroundColor: colors.background,
@@ -637,7 +637,7 @@ const CreatePersonalGoal: React.FC = () => {
                 }`}
                 style={
                   isFormValid
-                    ? { background: colors.gradient }
+                    ? { background: colors.primary }
                     : {
                         backgroundColor: colors.border,
                         color: colors.textLight,

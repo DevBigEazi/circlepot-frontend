@@ -44,9 +44,9 @@ const TransactionsHistory: React.FC = () => {
         return AlertCircle;
       case "collateral_withdrawal":
         return DollarSign;
-      case "cusd_send":
+      case "USDm_send":
         return Send;
-      case "cusd_receive":
+      case "USDm_receive":
         return Download;
       // Future transaction types (placeholders)
       case "bank_withdrawal" as any:
@@ -71,13 +71,13 @@ const TransactionsHistory: React.FC = () => {
       case "goal_withdrawal":
       case "goal_completion":
       case "collateral_withdrawal":
-      case "cusd_receive":
+      case "USDm_receive":
         return "bg-green-100 text-green-600";
       case "circle_contribution":
       case "goal_contribution":
         return "bg-orange-100 text-orange-600";
       case "late_payment":
-      case "cusd_send":
+      case "USDm_send":
       case "dead_circle_fee":
         return "bg-red-100 text-red-600";
       default:
@@ -104,10 +104,10 @@ const TransactionsHistory: React.FC = () => {
         return "Dead Circle Fee";
       case "collateral_withdrawal":
         return "Collateral Refund";
-      case "cusd_send":
-        return "Sent cUSD";
-      case "cusd_receive":
-        return "Received cUSD";
+      case "USDm_send":
+        return "Sent USDm";
+      case "USDm_receive":
+        return "Received USDm";
       default:
         return transaction.type;
     }
@@ -120,7 +120,7 @@ const TransactionsHistory: React.FC = () => {
       "goal_withdrawal",
       "goal_completion",
       "collateral_withdrawal",
-      "cusd_receive",
+      "USDm_receive",
     ].includes(type);
   };
 
@@ -259,7 +259,7 @@ const TransactionsHistory: React.FC = () => {
                             className="text-sm"
                             style={{ color: colors.textLight }}
                           >
-                            Fee: {formatAmount(transaction.fee)} cUSD
+                            Fee: {formatAmount(transaction.fee)} USDm
                           </div>
                         )}
                     </div>
@@ -312,7 +312,7 @@ const TransactionsHistory: React.FC = () => {
                               Penalty:
                             </span>
                             <span className="text-red-600 font-medium">
-                              {formatAmount(transaction.penalty)} cUSD
+                              {formatAmount(transaction.penalty)} USDm
                             </span>
                           </div>
                         )}

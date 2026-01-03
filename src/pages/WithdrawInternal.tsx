@@ -101,19 +101,19 @@ const WithdrawInternal: React.FC = () => {
           className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-lg"
           style={{ backgroundColor: colors.successBg }}
         >
-          <CheckCircle2 size={40} className="text-emerald-500" />
+          <CheckCircle2 size={40} className="text-lime-900" />
         </div>
         <h2 className="text-2xl font-black mb-2" style={{ color: colors.text }}>
           Transfer Successful!
         </h2>
         <p className="mb-8 font-medium" style={{ color: colors.textLight }}>
-          Sent <span className="text-emerald-500 font-bold">{amount} cUSD</span>{" "}
+          Sent <span className="text-lime-900 font-bold">{amount} USDm</span>{" "}
           to @{recipient?.username}
         </p>
         <button
           onClick={() => navigate("/")}
           className="w-full max-w-xs py-4 rounded-2xl font-bold text-white shadow-xl"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           Back to Dashboard
         </button>
@@ -137,12 +137,14 @@ const WithdrawInternal: React.FC = () => {
       <div className="flex-1 pb-20 pt-4 px-4 overflow-y-auto">
         <div className="max-w-xl mx-auto space-y-6">
           {/* Instruction Card */}
-          <div className="p-5 rounded-[1.5rem] border-2 border-dashed flex gap-4 items-start"
+          <div
+            className="p-5 rounded-[1.5rem] border-2 border-dashed flex gap-4 items-start"
             style={{
               backgroundColor: colors.primary + "10",
               borderColor: colors.primary + "30",
-            }}>
-<div className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0">
+            }}
+          >
+            <div className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0">
               <Info size={20} style={{ color: colors.primary }} />
             </div>
             <div className="space-y-1">
@@ -159,8 +161,10 @@ const WithdrawInternal: React.FC = () => {
                 Search for recipients using their{" "}
                 <span className="text-primary">Username</span>,
                 <span className="text-primary"> Email</span>, or{" "}
-                <span className="text-primary"> Account ID</span>. Transfers to other Circlepot users are{" "}
-              <strong>always instant and 100% free</strong>. No withdrawal fees required!
+                <span className="text-primary"> Account ID</span>. Transfers to
+                other Circlepot users are{" "}
+                <strong>always instant and 100% free</strong>. No withdrawal
+                fees required!
               </p>
             </div>
           </div>
@@ -188,10 +192,10 @@ const WithdrawInternal: React.FC = () => {
                   >
                     {formattedBalance}
                   </h2>
-                  <span className="text-sm font-bold opacity-60">cUSD</span>
+                  <span className="text-sm font-bold opacity-60">USDm</span>
                 </div>
               </div>
-              <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600">
+              <div className="p-3 rounded-2xl bg-lime-200 text-lime-600">
                 <User size={24} />
               </div>
             </div>
@@ -291,7 +295,7 @@ const WithdrawInternal: React.FC = () => {
                   }}
                 />
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-lg opacity-30">
-                  cUSD
+                  USDm
                 </div>
               </div>
             </div>
@@ -314,7 +318,7 @@ const WithdrawInternal: React.FC = () => {
               type="submit"
               disabled={isTransferring || !recipient || !amount}
               className="w-full py-4 rounded-2xl font-black text-lg text-white shadow-2xl flex items-center justify-center gap-3"
-              style={{ background: colors.gradient }}
+              style={{ background: colors.primary }}
             >
               {isTransferring ? (
                 <Loader2 className="animate-spin" size={26} />

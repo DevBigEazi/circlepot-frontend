@@ -88,13 +88,13 @@ export interface ActiveCircle {
   currentPosition: number;
   totalPositions: number;
   status:
-    | "active"
-    | "completed"
-    | "pending"
-    | "voting"
-    | "created"
-    | "dead"
-    | "unknown"; // Maps to CircleState enum
+  | "active"
+  | "completed"
+  | "pending"
+  | "voting"
+  | "created"
+  | "dead"
+  | "unknown"; // Maps to CircleState enum
   payoutAmount: string;
   nextPayout: string;
   contribution: string;
@@ -117,6 +117,12 @@ export interface ActiveCircle {
   forfeitedAmount?: bigint;
   forfeitedContributionPortion?: bigint;
   latePayCount?: number;
+
+  // Withdrawal eligibility fields
+  canWithdrawCollateral?: boolean;
+  withdrawalReason?: 'vote_failed' | 'below_threshold';
+  creatorDeadFee?: bigint; // Fee for creators (0 for non-creators)
+  netWithdrawalAmount?: bigint; // Amount after fee deduction
 }
 
 export interface Circle {
@@ -138,6 +144,15 @@ export interface Circle {
     id: string;
     username: string;
     fullName: string;
+  };
+
+  // Vote tracking for withdrawal eligibility
+  voteWithdrawWon?: boolean;
+  lastVoteExecuted?: {
+    id: string;
+    withdrawWon: boolean;
+    startVoteTotal: bigint;
+    withdrawVoteTotal: bigint;
   };
 }
 
@@ -208,6 +223,7 @@ export interface VoteExecuted {
   circleStarted: boolean;
   startVoteTotal: bigint;
   withdrawVoteTotal: bigint;
+  withdrawWon?: boolean; // True if withdraw side won (< 51% start votes)
   timestamp: bigint;
   transactionHash: string;
 }

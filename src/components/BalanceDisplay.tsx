@@ -8,7 +8,7 @@ import { Skeleton } from "./Skeleton";
 
 interface BalanceDisplayProps {
   currentBalances: {
-    cUSD: number;
+    USDm: number;
   };
   circleCommitted?: number;
   circleCollateral?: number;
@@ -23,7 +23,6 @@ interface BalanceDisplayProps {
     text: string;
     textLight: string;
     background: string;
-    gradient: string;
   };
   creditScore?: CreditScore | null;
   isLoading?: boolean;
@@ -58,9 +57,9 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   const { selectedCurrency } = useCurrency();
   const { convertToLocal, getCurrencyInfo } = useCurrencyConverter();
 
-  // Total balance includes cUSD + committed in circles + committed in personal savings
+  // Total balance includes USDm + committed in circles + committed in personal savings
   const totalBalance =
-    currentBalances.cUSD + circleCommitted + personalSavingsCommitted;
+    currentBalances.USDm + circleCommitted + personalSavingsCommitted;
   const currentCurrency = getCurrencyInfo(selectedCurrency);
 
   if (isLoading) {
@@ -151,13 +150,13 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
                       <span style={{ color: colors.textLight }}>
-                        Available cUSD:
+                        Available USDm:
                       </span>
                       <span
                         className="font-medium"
                         style={{ color: colors.text }}
                       >
-                        ${currentBalances.cUSD.toFixed(2)}
+                        ${currentBalances.USDm.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
@@ -219,7 +218,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
               className="text-xl sm:text-3xl font-bold"
               style={{ color: colors.text }}
             >
-              {showBalance ? `$${totalBalance.toFixed(2)} cUSD` : "••••••"}
+              {showBalance ? `$${totalBalance.toFixed(2)} USDm` : "••••••"}
             </h1>
             <button
               onClick={() => setShowBalance(!showBalance)}
@@ -230,7 +229,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
               {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          {/* Show Original cUSD below local currency if not USD */}
+          {/* Show Original USDm below local currency if not USD */}
           {selectedCurrency !== "USD" && (
             <p className="text-lg mt-1" style={{ color: colors.textLight }}>
               {showBalance
@@ -246,8 +245,8 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
           className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5"
           style={{ backgroundColor: colors.background, color: colors.primary }}
         >
-          <img src={image.cUSD} alt="cUSD" className="w-4 h-4 rounded-full" />
-          cUSD
+          <img src={image.USDm} alt="USDm" className="w-4 h-4 rounded-full" />
+          USDm
         </div>
       </div>
 
@@ -255,7 +254,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
         <button
           onClick={() => setShowAddFundsModal(true)}
           className="flex-1 py-3 px-4 rounded-xl font-bold text-white transition-all transform active:scale-95 shadow-md"
-          style={{ background: colors.gradient }}
+          style={{ background: colors.primary }}
         >
           Add Funds
         </button>

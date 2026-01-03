@@ -69,7 +69,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
           <div
             className="p-6 rounded-full"
             style={{
-              background: colors.gradient,
+              background: colors.primary,
             }}
           >
             {isAuthenticating ? (
@@ -127,7 +127,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
             disabled={isAuthenticating || attempts >= 3}
             className="w-full py-4 rounded-xl font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              background: colors.gradient,
+              background: colors.primary,
             }}
           >
             {isAuthenticating ? (

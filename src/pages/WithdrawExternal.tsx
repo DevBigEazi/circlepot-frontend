@@ -56,7 +56,7 @@ const WithdrawExternal: React.FC = () => {
 
     if (balance && totalRequired > balance) {
       toast.error(
-        `Insufficient balance. You need ${amount} + ${withdrawalFee} cUSD fee.`
+        `Insufficient balance. You need ${amount} + ${withdrawalFee} USDm fee.`
       );
       return;
     }
@@ -94,7 +94,7 @@ const WithdrawExternal: React.FC = () => {
           <button
             onClick={() => navigate("/")}
             className="w-full py-4 rounded-2xl font-bold text-white transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
-            style={{ background: colors.gradient }}
+            style={{ background: colors.primary }}
           >
             Back to Home
           </button>
@@ -145,7 +145,7 @@ const WithdrawExternal: React.FC = () => {
                   Open your external wallet and tap <strong>Deposit</strong>.
                 </li>
                 <li>
-                  Select <strong>cUSD</strong> as the token.
+                  Select <strong>USDm</strong> as the token.
                 </li>
                 <li>
                   Select the <strong>Celo Network</strong> (Critical!).
@@ -204,7 +204,7 @@ const WithdrawExternal: React.FC = () => {
                   className="text-lg font-medium"
                   style={{ color: colors.textLight }}
                 >
-                  cUSD
+                  USDm
                 </span>
               </div>
             </div>
@@ -271,7 +271,7 @@ const WithdrawExternal: React.FC = () => {
                     className="text-xs leading-relaxed"
                     style={{ color: colors.textLight }}
                   >
-                    <strong>{withdrawalFee} cUSD</strong> withdrawal fee is
+                    <strong>{withdrawalFee} USDm</strong> withdrawal fee is
                     charged on all external withdrawals.
                   </p>
                 </div>
@@ -293,7 +293,7 @@ const WithdrawExternal: React.FC = () => {
               disabled={isTransferring || !address || !amount}
               className="w-full py-5 rounded-2xl font-black text-lg text-white transition-all active:scale-[0.98] shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
               style={{
-                background: colors.gradient,
+                background: colors.primary,
               }}
             >
               {isTransferring ? (
