@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useActiveAccount } from "thirdweb/react";
 import {
-  Play,
   Vote,
   AlertTriangle,
   DollarSign,
@@ -20,7 +19,6 @@ import WithdrawCollateralModal from "../modals/WithdrawCollateralModal";
 interface CircleActionsProps {
   circle: ActiveCircle;
   colors: any;
-  onStartCircle: (circleId: bigint) => Promise<any>;
   onInitiateVoting: (circleId: bigint) => Promise<any>;
   onCastVote: (circleId: bigint, choice: 1 | 2) => Promise<any>;
   onExecuteVote: (circleId: bigint) => Promise<any>;
@@ -35,7 +33,6 @@ interface CircleActionsProps {
 const CircleActions: React.FC<CircleActionsProps> = ({
   circle,
   colors,
-  onStartCircle,
   onInitiateVoting,
   onCastVote,
   onExecuteVote,
@@ -219,6 +216,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       latestVotingEvt &&
       latestVoteResult.circleId === latestVotingEvt.circleId;
 
+    // Check if withdraw won the vote
+    const withdrawWonVote = latestVoteResult?.withdrawWon === true;
+
     // If voting has ended but not executed, show Execute Vote button
     if (votingHasEnded && !voteHasBeenExecuted) {
       return (
@@ -231,6 +231,38 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           style={{ background: colors.primary }}
         >
           {isLoading ? "Processing..." : "Execute Vote Results"}
+        </button>
+      );
+    }
+
+    // If vote has been executed and withdraw won, show withdraw button immediately
+    if (
+      voteHasBeenExecuted &&
+      withdrawWonVote &&
+      isMember &&
+      withdrawalInfo?.canWithdraw
+    ) {
+      return (
+        <button
+          onClick={() => setShowWithdrawModal(true)}
+          disabled={isLoading}
+          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
+        >
+          {isLoading ? (
+            "Withdrawing..."
+          ) : (
+            <>
+              <AlertTriangle className="w-4 h-4" />
+              <span>Withdraw Collateral</span>
+              {withdrawalInfo.isCreator &&
+                withdrawalInfo.creatorDeadFee > 0n && (
+                  <span className="text-[10px] opacity-80">
+                    (Fee: $
+                    {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(2)})
+                  </span>
+                )}
+            </>
+          )}
         </button>
       );
     }
@@ -271,64 +303,31 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             isOpen={isVoteModalOpen}
             onClose={() => setIsVoteModalOpen(false)}
             isLoading={isLoading}
-            onVoteStart={() =>
-              handleAction(() => onCastVote(circleId, 1), "Vote to start")
-            }
-            onVoteWithdraw={() =>
-              handleAction(() => onCastVote(circleId, 2), "Vote to withdraw")
-            }
+            onVoteStart={async () => {
+              await handleAction(
+                () => onCastVote(circleId, 1),
+                "Vote to start"
+              );
+              setIsVoteModalOpen(false);
+            }}
+            onVoteWithdraw={async () => {
+              await handleAction(
+                () => onCastVote(circleId, 2),
+                "Vote to withdraw"
+              );
+              setIsVoteModalOpen(false);
+            }}
           />
         </div>
       );
     }
 
-    // For public circles, show share button if circle is not full and user can share
-    if (!circleFull && canShareInvite) {
-      return (
-        <button
-          onClick={handleShareInvite}
-          disabled={copied}
-          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: copied ? "#10B981" : colors.primary }}
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Share2 className="w-4 h-4" />
-              <span>Share Invite</span>
-            </>
-          )}
-        </button>
-      );
-    }
-
+    // Check ultimatum and threshold for voting initiation or withdrawal
     if (ultimatumPassed) {
       if (thresholdReached) {
-        if (isCreator) {
-          return (
-            <button
-              onClick={() =>
-                handleAction(() => onStartCircle(circleId), "Start circle")
-              }
-              disabled={isLoading}
-              className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-              style={{ background: colors.primary }}
-            >
-              {isLoading ? (
-                "Starting..."
-              ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  <span>Start Circle</span>
-                </>
-              )}
-            </button>
-          );
-        } else if (isMember) {
+        // Show "Initiate Vote" for all members (including creator)
+        // The circle will auto-start when vote is executed if start wins
+        if (isMember) {
           return (
             <button
               onClick={() =>
@@ -383,6 +382,30 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           );
         }
       }
+    }
+
+    // For public circles, show share button if circle is not full and user can share
+    if (!circleFull && canShareInvite) {
+      return (
+        <button
+          onClick={handleShareInvite}
+          disabled={copied}
+          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+          style={{ background: copied ? "#10B981" : colors.primary }}
+        >
+          {copied ? (
+            <>
+              <Check className="w-4 h-4" />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-4 h-4" />
+              <span>Share Invite</span>
+            </>
+          )}
+        </button>
+      );
     }
 
     return null;
@@ -446,12 +469,17 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           isOpen={isVoteModalOpen}
           onClose={() => setIsVoteModalOpen(false)}
           isLoading={isLoading}
-          onVoteStart={() =>
-            handleAction(() => onCastVote(circleId, 1), "Vote to start")
-          }
-          onVoteWithdraw={() =>
-            handleAction(() => onCastVote(circleId, 2), "Vote to withdraw")
-          }
+          onVoteStart={async () => {
+            await handleAction(() => onCastVote(circleId, 1), "Vote to start");
+            setIsVoteModalOpen(false);
+          }}
+          onVoteWithdraw={async () => {
+            await handleAction(
+              () => onCastVote(circleId, 2),
+              "Vote to withdraw"
+            );
+            setIsVoteModalOpen(false);
+          }}
         />
       </div>
     );

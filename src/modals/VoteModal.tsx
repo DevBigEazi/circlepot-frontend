@@ -1,5 +1,5 @@
-import React from "react";
-import { X, CheckCircle, UserX } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, CheckCircle, UserX, Loader2 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 
 interface VoteModalProps {
@@ -18,8 +18,29 @@ const VoteModal: React.FC<VoteModalProps> = ({
   isLoading,
 }) => {
   const colors = useThemeColors();
+  const [votingFor, setVotingFor] = useState<"start" | "withdraw" | null>(null);
+
+  // Reset votingFor state when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setVotingFor(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleVoteStart = () => {
+    setVotingFor("start");
+    onVoteStart();
+  };
+
+  const handleVoteWithdraw = () => {
+    setVotingFor("withdraw");
+    onVoteWithdraw();
+  };
+
+  const isVotingStart = isLoading && votingFor === "start";
+  const isVotingWithdraw = isLoading && votingFor === "withdraw";
 
   return (
     <div
@@ -36,7 +57,8 @@ const VoteModal: React.FC<VoteModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg transition hover:opacity-80"
+            disabled={isLoading}
+            className="p-2 rounded-lg transition hover:opacity-80 disabled:opacity-50"
             style={{ backgroundColor: colors.background }}
           >
             <X size={20} style={{ color: colors.text }} />
@@ -50,27 +72,41 @@ const VoteModal: React.FC<VoteModalProps> = ({
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => {
-              onVoteStart();
-            }}
+            onClick={handleVoteStart}
             disabled={isLoading}
-            className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
             style={{ backgroundColor: colors.primary }}
           >
-            <CheckCircle className="w-5 h-5" />
-            <span>Vote to Start</span>
+            {isVotingStart ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Voting to Start...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>Vote to Start</span>
+              </>
+            )}
           </button>
 
           <button
-            onClick={() => {
-              onVoteWithdraw();
-            }}
+            onClick={handleVoteWithdraw}
             disabled={isLoading}
-            className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
             style={{ backgroundColor: colors.primary }}
           >
-            <UserX className="w-5 h-5" />
-            <span>Vote to Withdraw</span>
+            {isVotingWithdraw ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Voting to Withdraw...</span>
+              </>
+            ) : (
+              <>
+                <UserX className="w-5 h-5" />
+                <span>Vote to Withdraw</span>
+              </>
+            )}
           </button>
         </div>
       </div>

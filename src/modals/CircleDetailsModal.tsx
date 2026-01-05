@@ -20,7 +20,6 @@ interface CircleDetailsModalProps {
   onJoinCircle: (circle: ActiveCircle) => void;
   onRequestInvite: () => void;
   client: ThirdwebClient;
-  onStartCircle: (circleId: bigint) => Promise<any>;
   onInitiateVoting: (circleId: bigint) => Promise<any>;
   onCastVote: (circleId: bigint, choice: 1 | 2) => Promise<any>;
   onExecuteVote: (circleId: bigint) => Promise<any>;
@@ -37,7 +36,6 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
   colors,
   onJoinCircle,
   client,
-  onStartCircle,
   onInitiateVoting,
   onCastVote,
   onExecuteVote,
@@ -345,7 +343,6 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
           <CircleActions
             circle={circle}
             colors={colors}
-            onStartCircle={onStartCircle}
             onInitiateVoting={onInitiateVoting}
             onCastVote={onCastVote}
             onExecuteVote={onExecuteVote}

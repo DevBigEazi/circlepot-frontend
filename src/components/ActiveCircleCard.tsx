@@ -10,7 +10,6 @@ interface ActiveCircleCardProps {
   colors: any;
   onViewDetails: (circle: ActiveCircle) => void;
   onChat: (circle: ActiveCircle) => void;
-  onStartCircle: (circleId: bigint) => Promise<any>;
   onInitiateVoting: (circleId: bigint) => Promise<any>;
   onCastVote: (circleId: bigint, choice: 1 | 2) => Promise<any>;
   onExecuteVote: (circleId: bigint) => Promise<any>;
@@ -27,7 +26,6 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
   colors,
   onViewDetails,
   onChat,
-  onStartCircle,
   onInitiateVoting,
   onCastVote,
   onExecuteVote,
@@ -107,7 +105,102 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
         </span>
       </div>
 
-      {/* Round and Contribution Deadline - Only for Active Circles */}
+      {/* Ultimatum Timer - For CREATED state (subtle indicator) */}
+      {circle.status === "created" &&
+        circle.rawCircle &&
+        (() => {
+          const createdAt = Number(circle.rawCircle.createdAt);
+          const frequency = circle.rawCircle.frequency;
+          const ultimatumPeriod = frequency <= 1 ? 604800 : 1209600; // 7 days or 14 days
+          const ultimatumDeadline = BigInt(createdAt + ultimatumPeriod);
+          const ultimatumPassed = now > createdAt + ultimatumPeriod;
+
+          if (ultimatumPassed) return null; // Don't show if already passed
+
+          return (
+            <div
+              className="mb-2 p-2 rounded-lg border-l-2"
+              style={{
+                backgroundColor: colors.accentBg,
+                borderLeftColor: colors.textLight,
+                opacity: 0.7,
+              }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div
+                  className="text-[10px] sm:text-xs opacity-70"
+                  style={{ color: colors.textLight }}
+                >
+                  Voting available in
+                </div>
+                <div style={{ color: colors.text }}>
+                  <CountdownTimer
+                    deadline={ultimatumDeadline}
+                    colors={colors}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* Voting Timer - For VOTING state */}
+      {circle.status === "voting" &&
+        circle.votingEvents &&
+        circle.votingEvents.length > 0 &&
+        (() => {
+          const latestVoting = circle.votingEvents[0];
+          const votingEndAt = BigInt(latestVoting.votingEndAt);
+          const votingEnded = now > Number(latestVoting.votingEndAt);
+
+          // Check if user has voted
+          const userVote = circle.votes?.find(
+            (v: any) =>
+              v.voter.id.toLowerCase() === account?.address?.toLowerCase()
+          );
+          const hasVoted = !!userVote;
+
+          return (
+            <div
+              className="mb-3 p-2 sm:p-3 rounded-lg border"
+              style={{
+                backgroundColor: colors.accentBg,
+                borderColor: colors.border,
+              }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div
+                    className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
+                    style={{ color: colors.textLight }}
+                  >
+                    {votingEnded ? "Voting Ended" : "Voting Ends In"}
+                  </div>
+                  {hasVoted && (
+                    <div className="text-[10px] font-semibold text-green-600 flex items-center gap-1">
+                      <span>✓</span>
+                      <span>
+                        You voted:{" "}
+                        {userVote.choice === 1 ? "Start" : "Withdraw"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div style={{ color: colors.text }}>
+                  {votingEnded ? (
+                    <div className="text-xs sm:text-sm font-semibold text-orange-500">
+                      Execute Vote
+                    </div>
+                  ) : (
+                    <CountdownTimer deadline={votingEndAt} colors={colors} />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* Round and Contribution Deadline - For Active Circles */}
       {circle.status === "active" && (
         <div
           className="mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg border"
@@ -149,16 +242,17 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                   className="text-[10px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5"
                   style={{ color: colors.textLight }}
                 >
-                  {isRecipient
-                    ? now > Number(circle.contributionDeadline)
-                      ? "Forfeit Available"
-                      : "Time until Forfeit"
+                  {now > Number(circle.contributionDeadline)
+                    ? "Forfeit Available"
+                    : hasContributed && isRecipient
+                    ? "Time until Forfeit"
                     : "Contribution Deadline"}
                 </div>
                 <div style={{ color: colors.text }}>
                   <CountdownTimer
                     deadline={circle.contributionDeadline}
                     colors={colors}
+                    showLateTime={now > Number(circle.contributionDeadline)}
                   />
                 </div>
                 {hasContributed && isRecipient && (
@@ -282,7 +376,6 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
         <CircleActions
           circle={circle}
           colors={colors}
-          onStartCircle={onStartCircle}
           onInitiateVoting={onInitiateVoting}
           onCastVote={onCastVote}
           onExecuteVote={onExecuteVote}
