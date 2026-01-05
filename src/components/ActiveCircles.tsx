@@ -34,7 +34,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     getLateMembersForCircle,
     forfeitures,
     isLoading,
-    startCircle,
     initiateVoting,
     castVote,
     executeVote,
@@ -212,7 +211,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
                 colors={colors}
                 onViewDetails={handleViewDetails}
                 onChat={handleChatClick}
-                onStartCircle={startCircle}
                 onInitiateVoting={initiateVoting}
                 onCastVote={castVote}
                 onExecuteVote={executeVote}
@@ -249,7 +247,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
             setShowCircleDetails(false);
           }}
           client={client}
-          onStartCircle={startCircle}
           onInitiateVoting={initiateVoting}
           onCastVote={castVote}
           onExecuteVote={executeVote}

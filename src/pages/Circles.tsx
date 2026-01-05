@@ -35,7 +35,6 @@ const Circles: React.FC = () => {
     getLateMembersForCircle,
     forfeitures,
     isLoading,
-    startCircle,
     initiateVoting,
     castVote,
     executeVote,
@@ -344,7 +343,6 @@ const Circles: React.FC = () => {
                     colors={colors}
                     onViewDetails={handleViewDetails}
                     onChat={handleChatClick}
-                    onStartCircle={startCircle}
                     onInitiateVoting={initiateVoting}
                     onCastVote={castVote}
                     onExecuteVote={executeVote}
@@ -362,7 +360,7 @@ const Circles: React.FC = () => {
 
           {/* History Section */}
           {historyCircles.length > 0 && (
-            <div className="mt-12 mb-10">
+            <div className="mt-12 sm:mt-10 mb-16">
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle
                   style={{ color: colors.text }}
@@ -576,7 +574,6 @@ const Circles: React.FC = () => {
             setShowCircleDetails(false);
           }}
           client={client}
-          onStartCircle={startCircle}
           onInitiateVoting={initiateVoting}
           onCastVote={castVote}
           onExecuteVote={executeVote}
