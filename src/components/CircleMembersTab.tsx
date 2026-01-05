@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Users } from "lucide-react";
+import { Users, CheckCircle } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import { request, gql } from "graphql-request";
@@ -12,7 +12,7 @@ interface CircleMembersTabProps {
 }
 
 const GET_CIRCLE_MEMBERS = gql`
-  query GetCircleMembers($circleId: String!) {
+  query GetCircleMembers($circleId: String!, $currentRound: String!) {
     circleJoineds(
       where: { circleId: $circleId }
       orderBy: transaction__blockTimestamp
@@ -26,6 +26,11 @@ const GET_CIRCLE_MEMBERS = gql`
         photo
       }
     }
+    contributionMades(where: { circleId: $circleId, round: $currentRound }) {
+      user {
+        id
+      }
+    }
   }
 `;
 
@@ -34,41 +39,62 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
   colors,
 }) => {
   const account = useActiveAccount();
+  const currentRound = circle.rawCircle?.currentRound || 1n;
+  const isActiveCircle = circle.status === "active";
+
   const { data: membersData, isLoading } = useQuery({
-    queryKey: ["circleMembers", circle.rawCircle?.circleId?.toString()],
+    queryKey: [
+      "circleMembers",
+      circle.rawCircle?.circleId?.toString(),
+      currentRound.toString(),
+    ],
     queryFn: async () => {
       if (!circle.rawCircle?.circleId) return null;
       const result = await request(SUBGRAPH_URL, GET_CIRCLE_MEMBERS, {
         circleId: circle.rawCircle.circleId.toString(),
+        currentRound: currentRound.toString(),
       });
-      return result.circleJoineds;
+      return result;
     },
     enabled: !!circle.rawCircle?.circleId,
   });
 
   const members = useMemo(() => {
-    if (!membersData) return [];
-    return membersData.map((join: any) => join.user);
+    if (!membersData?.circleJoineds) return [];
+    return membersData.circleJoineds.map((join: any) => join.user);
+  }, [membersData]);
+
+  const contributedMembers = useMemo(() => {
+    if (!membersData?.contributionMades) return new Set();
+    return new Set(
+      membersData.contributionMades.map((c: any) => c.user.id.toLowerCase())
+    );
   }, [membersData]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div
-        className="rounded-xl p-6 border"
+        className="rounded-xl p-3 sm:p-6 border"
         style={{
           backgroundColor: colors.surface,
           borderColor: colors.border,
         }}
       >
         <h3
-          className="font-bold text-lg mb-4 flex items-center gap-2"
+          className="font-bold text-sm sm:text-lg mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2"
           style={{ color: colors.text }}
         >
-          <Users size={20} style={{ color: colors.primary }} />
-          Circle Members ({members.length}/{circle.totalPositions})
+          <Users
+            size={16}
+            className="sm:w-5 sm:h-5"
+            style={{ color: colors.primary }}
+          />
+          <span className="truncate">
+            Members ({members.length}/{circle.totalPositions})
+          </span>
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {Array.from({ length: circle.totalPositions }, (_, i) => i + 1).map(
             (position, i) => {
               const member = members[i];
@@ -77,25 +103,30 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
                 account?.address &&
                 member.id?.toLowerCase() === account.address.toLowerCase();
 
+              const hasContributed =
+                member && contributedMembers.has(member.id.toLowerCase());
+              const isRecipient = position === Number(currentRound);
+
               return (
                 <div
                   key={position}
-                  className="flex items-center justify-between p-3 rounded-lg border"
+                  className="flex flex-col gap-2 p-2 sm:p-3 rounded-lg border"
                   style={{
                     backgroundColor: colors.surface,
                     borderColor: colors.border,
                   }}
                 >
-                  <div className="flex items-center gap-3">
+                  {/* Member Info Row */}
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0"
                       style={{ backgroundColor: colors.primary }}
                     >
                       {position}
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div
-                        className="font-semibold"
+                        className="font-semibold text-xs sm:text-sm truncate"
                         style={{ color: colors.text }}
                       >
                         {isLoading ? (
@@ -111,17 +142,16 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
                         )}
                       </div>
                       <div
-                        className="text-xs"
+                        className="text-[10px] sm:text-xs truncate"
                         style={{ color: colors.textLight }}
                       >
                         {isLoading ? (
                           <span className="animate-pulse">...</span>
                         ) : member ? (
                           <>
-                            <span className="mr-2">
+                            <span className="mr-1">
                               @{member.username || "no-username"}
                             </span>
-                            <span>ID: {member.accountId}</span>
                           </>
                         ) : (
                           "Waiting for member"
@@ -129,10 +159,43 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
                       </div>
                     </div>
                   </div>
-                  {member && member.id === circle.rawCircle?.creator?.id && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                      Creator
-                    </span>
+
+                  {/* Badges Row - Stack on very small screens */}
+                  {(isActiveCircle ||
+                    (member &&
+                      member.id === circle.rawCircle?.creator?.id)) && (
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 ml-9 sm:ml-11">
+                      {/* Contribution Status - Only show for active circles */}
+                      {isActiveCircle && member && (
+                        <>
+                          {isRecipient ? (
+                            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-purple-500 text-white font-semibold whitespace-nowrap">
+                              Recipient
+                            </span>
+                          ) : hasContributed ? (
+                            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-green-500 text-white font-semibold flex items-center gap-0.5 sm:gap-1 whitespace-nowrap">
+                              <CheckCircle
+                                size={10}
+                                className="sm:w-3 sm:h-3"
+                              />
+                              <span>Contributed</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-orange-500 text-white font-semibold whitespace-nowrap">
+                              Pending
+                            </span>
+                          )}
+                        </>
+                      )}
+
+                      {/* Creator Badge */}
+                      {member &&
+                        member.id === circle.rawCircle?.creator?.id && (
+                          <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-blue-500 text-white font-semibold whitespace-nowrap">
+                            Creator
+                          </span>
+                        )}
+                    </div>
                   )}
                 </div>
               );
