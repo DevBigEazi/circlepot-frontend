@@ -26,6 +26,16 @@ const GET_CIRCLE_MEMBERS = gql`
         photo
       }
     }
+    positionAssigneds(
+      where: { circleId: $circleId }
+      orderBy: position
+      orderDirection: asc
+    ) {
+      user {
+        id
+      }
+      position
+    }
     contributionMades(where: { circleId: $circleId, round: $currentRound }) {
       user {
         id
@@ -61,7 +71,27 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
 
   const members = useMemo(() => {
     if (!membersData?.circleJoineds) return [];
-    return membersData.circleJoineds.map((join: any) => join.user);
+
+    const joinedUsers = membersData.circleJoineds.map((join: any) => join.user);
+    const positions = membersData.positionAssigneds || [];
+
+    // If circle has started and positions are assigned, sort by position
+    if (positions.length > 0) {
+      // Create a map of userId to position
+      const positionMap = new Map(
+        positions.map((p: any) => [p.user.id.toLowerCase(), Number(p.position)])
+      );
+
+      // Sort users by their assigned position
+      return [...joinedUsers].sort((a: any, b: any) => {
+        const posA = Number(positionMap.get(a.id.toLowerCase()) ?? 999);
+        const posB = Number(positionMap.get(b.id.toLowerCase()) ?? 999);
+        return posA - posB;
+      });
+    }
+
+    // Before circle starts, use join order
+    return joinedUsers;
   }, [membersData]);
 
   const contributedMembers = useMemo(() => {
