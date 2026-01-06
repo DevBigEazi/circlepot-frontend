@@ -306,7 +306,10 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
           </div>
         </div>
 
-        <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="relative h-2 w-ful rounded-full overflow-hidden"
+          style={{ backgroundColor: colors.border }}
+        >
           <div
             className="absolute top-0 left-0 h-full transition-all duration-1000 ease-out"
             style={{
