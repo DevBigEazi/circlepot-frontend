@@ -156,50 +156,81 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     } catch (error) {}
   };
 
-  // Determine if user can share invite
-  // Public circles: All members can share
-  // Private circles: Only creator can share
-  const canShareInvite = visibility === 1 ? isMember : isCreator;
+  const renderInviteShareButtons = () => {
+    const circleFull = Number(currentMembers) >= Number(maxMembers);
+    if (circleFull) return null;
+
+    // For Private Circles (visibility === 0): Only creator can Invite and Share
+    if (visibility === 0) {
+      if (isCreator && onInviteMembers) {
+        return (
+          <div className="flex gap-2 flex-1">
+            <button
+              onClick={onInviteMembers}
+              className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+              style={{ background: colors.primary }}
+            >
+              <UserPlus className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span>Invite</span>
+            </button>
+            <button
+              onClick={handleShareInvite}
+              disabled={copied}
+              className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+              style={{ background: copied ? colors.secondary : colors.primary }}
+            >
+              {copied ? (
+                <>
+                  <Check className="sm:w-4 sm:h-4 w-3 h-3" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="sm:w-4 sm:h-4 w-3 h-3" />
+                  <span>Share</span>
+                </>
+              )}
+            </button>
+          </div>
+        );
+      }
+      return null;
+    }
+
+    // For Public Circles (visibility === 1): Both creator and members can Share only
+    if (visibility === 1 && (isCreator || isMember)) {
+      return (
+        <button
+          onClick={handleShareInvite}
+          disabled={copied}
+          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+          style={{ background: copied ? colors.secondary : colors.primary }}
+        >
+          {copied ? (
+            <>
+              <Check className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span>Share</span>
+            </>
+          )}
+        </button>
+      );
+    }
+
+    return null;
+  };
 
   // Render buttons based on state
   // State: CREATED (1)
   if (state === 1) {
     const thresholdReached = Number(currentMembers) >= Number(maxMembers) * 0.6;
-    const circleFull = Number(currentMembers) >= Number(maxMembers);
 
-    // For private circles, show both Invite and Share buttons for creator
-    if (!circleFull && visibility === 0 && isCreator && onInviteMembers) {
-      return (
-        <div className="flex gap-2 flex-1">
-          <button
-            onClick={onInviteMembers}
-            className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.primary }}
-          >
-            <UserPlus className="sm:w-4 sm:h-4 w-3 h-3" />
-            <span>Invite</span>
-          </button>
-          <button
-            onClick={handleShareInvite}
-            disabled={copied}
-            className="flex-1 px-2.5 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: copied ? "#10B981" : colors.primary }}
-          >
-            {copied ? (
-              <>
-                <Check className="sm:w-4 sm:h-4 w-3 h-3" />
-                <span>Copied!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="sm:w-4 sm:h-4 w-3 h-3" />
-                <span>Share</span>
-              </>
-            )}
-          </button>
-        </div>
-      );
-    }
+    // Logic should prioritize phase-specific actions (Voting/Ultimatum)
+    // Initial and post-vote share buttons are handled by fall-through
 
     // Check if there is an active voting session that the subgraph state might have missed
     // or if we simply want to treat a certain condition as voting.
@@ -276,15 +307,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       const hasVoted = !!userVote;
 
       if (hasVoted) {
-        return (
-          <div
-            className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-2"
-            style={{ borderColor: colors.border, color: colors.textLight }}
-          >
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span>Voted: {userVote.choice === 1 ? "Start" : "Withdraw"}</span>
-          </div>
-        );
+        return renderInviteShareButtons();
       }
 
       return (
@@ -384,28 +407,10 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       }
     }
 
-    // For public circles, show share button if circle is not full and user can share
-    if (!circleFull && canShareInvite) {
-      return (
-        <button
-          onClick={handleShareInvite}
-          disabled={copied}
-          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: copied ? "#10B981" : colors.primary }}
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Share2 className="w-4 h-4" />
-              <span>Share Invite</span>
-            </>
-          )}
-        </button>
-      );
+    // For public circles or general members, show buttons if applicable
+    const generalInviteButtons = renderInviteShareButtons();
+    if (generalInviteButtons) {
+      return generalInviteButtons;
     }
 
     return null;
@@ -442,15 +447,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     }
 
     if (hasVoted) {
-      return (
-        <div
-          className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-2"
-          style={{ borderColor: colors.border, color: colors.textLight }}
-        >
-          <CheckCircle className="w-4 h-4 text-green-500" />
-          <span>Voted: {userVote.choice === 1 ? "Start" : "Withdraw"}</span>
-        </div>
-      );
+      return renderInviteShareButtons();
     }
 
     return (

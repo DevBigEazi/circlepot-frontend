@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
-import { Target, Users } from "lucide-react";
+import { Target, Users, Handshake } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
 import QuickAction from "../components/QuickAction";
@@ -61,7 +61,7 @@ const Create: React.FC = () => {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Create Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* Create Personal Goal Option */}
           <button
             onClick={handleNavigatePersonalGoal}
@@ -197,6 +197,77 @@ const Create: React.FC = () => {
               </div>
             </div>
           </button>
+
+          {/* Create Non-collateralized Circle (Coming Soon) */}
+          <div
+            className="p-6 rounded-2xl border-2 transition-all relative overflow-hidden text-left"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              opacity: 0.7,
+            }}
+          >
+            {/* Coming Soon Badge */}
+            <div
+              className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase tracking-wider shadow-sm"
+              style={{
+                backgroundColor: colors.secondary,
+                color: "white",
+              }}
+            >
+              Coming Soon
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div
+                className="p-4 rounded-2xl mb-4"
+                style={{ backgroundColor: `${colors.primary}15` }}
+              >
+                <Handshake size={40} style={{ color: colors.primary }} />
+              </div>
+              <h3
+                className="text-lg font-bold mb-2"
+                style={{ color: colors.text }}
+              >
+                Zero Collateral
+              </h3>
+              <p
+                className="text-center text-sm mb-4"
+                style={{ color: colors.textLight }}
+              >
+                Join savings circles based on your reputation score
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <span
+                  className="text-xs px-2 py-1 rounded-lg"
+                  style={{
+                    backgroundColor: colors.primary + "20",
+                    color: colors.primary,
+                  }}
+                >
+                  No Deposit
+                </span>
+                <span
+                  className="text-xs px-2 py-1 rounded-lg"
+                  style={{
+                    backgroundColor: colors.primary + "20",
+                    color: colors.primary,
+                  }}
+                >
+                  Reputation
+                </span>
+                <span
+                  className="text-xs px-2 py-1 rounded-lg"
+                  style={{
+                    backgroundColor: colors.primary + "20",
+                    color: colors.primary,
+                  }}
+                >
+                  Trust Score
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <QuickAction />
