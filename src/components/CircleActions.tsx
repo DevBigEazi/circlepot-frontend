@@ -92,6 +92,19 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   // For now, we'll assume the button is enabled if the backend allows it (we can't easily check grace period on frontend without round deadline).
   // However, `forfeitMember` is only for the NEXT recipient.
 
+  // Handler for withdrawal confirmation
+  const handleWithdrawConfirm = async () => {
+    try {
+      await handleAction(
+        () => onWithdrawCollateral(circle.rawCircle.circleId),
+        "Withdraw collateral"
+      );
+      setShowWithdrawModal(false);
+    } catch (error) {
+      // Error already handled by handleAction
+    }
+  };
+
   const handleAction = async (
     action: () => Promise<any>,
     actionName: string
@@ -225,6 +238,42 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   };
 
   // Render buttons based on state
+  // State: COMPLETED (4) or DEAD (5)
+  if (state === 4 || state === 5) {
+    if (
+      state === 5 &&
+      isMember &&
+      withdrawalInfo?.canWithdraw &&
+      !circle.hasWithdrawn
+    ) {
+      return (
+        <button
+          onClick={() => setShowWithdrawModal(true)}
+          disabled={isLoading}
+          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
+        >
+          {isLoading ? (
+            "Withdrawing..."
+          ) : (
+            <>
+              <AlertTriangle className="w-4 h-4" />
+              <span className="hidden sm:inline">Withdraw Collateral</span>
+              <span className="sm:hidden">Withdraw</span>
+              {withdrawalInfo.isCreator &&
+                withdrawalInfo.creatorDeadFee > 0n && (
+                  <span className="text-[10px] opacity-80 hidden sm:inline">
+                    (Fee: $
+                    {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(2)})
+                  </span>
+                )}
+            </>
+          )}
+        </button>
+      );
+    }
+    return null;
+  }
+
   // State: CREATED (1)
   if (state === 1) {
     const thresholdReached = Number(currentMembers) >= Number(maxMembers) * 0.6;
@@ -242,10 +291,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
 
     // Check if vote has been executed by looking for voteResults
     const latestVoteResult = circle.voteResults?.[0];
-    const voteHasBeenExecuted =
-      latestVoteResult &&
-      latestVotingEvt &&
-      latestVoteResult.circleId === latestVotingEvt.circleId;
+    const voteHasBeenExecuted = !!latestVoteResult;
 
     // Check if withdraw won the vote
     const withdrawWonVote = latestVoteResult?.withdrawWon === true;
@@ -267,34 +313,50 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     }
 
     // If vote has been executed and withdraw won, show withdraw button immediately
-    if (
-      voteHasBeenExecuted &&
-      withdrawWonVote &&
-      isMember &&
-      withdrawalInfo?.canWithdraw
-    ) {
+    if (voteHasBeenExecuted && withdrawWonVote && isMember) {
       return (
-        <button
-          onClick={() => setShowWithdrawModal(true)}
-          disabled={isLoading}
-          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
-        >
-          {isLoading ? (
-            "Withdrawing..."
-          ) : (
-            <>
-              <AlertTriangle className="w-4 h-4" />
-              <span>Withdraw Collateral</span>
-              {withdrawalInfo.isCreator &&
-                withdrawalInfo.creatorDeadFee > 0n && (
-                  <span className="text-[10px] opacity-80">
-                    (Fee: $
-                    {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(2)})
-                  </span>
-                )}
-            </>
+        <>
+          <button
+            onClick={() => setShowWithdrawModal(true)}
+            disabled={isLoading}
+            className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
+          >
+            {isLoading ? (
+              "Withdrawing..."
+            ) : (
+              <>
+                <AlertTriangle className="w-4 h-4" />
+                <span className="hidden sm:inline">Withdraw Collateral</span>
+                <span className="sm:hidden">Withdraw</span>
+                {withdrawalInfo?.isCreator &&
+                  withdrawalInfo.creatorDeadFee > 0n && (
+                    <span className="text-[10px] opacity-80 hidden sm:inline">
+                      (Fee: $
+                      {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(
+                        2
+                      )}
+                      )
+                    </span>
+                  )}
+              </>
+            )}
+          </button>
+          {showWithdrawModal && withdrawalInfo && (
+            <WithdrawCollateralModal
+              isOpen={showWithdrawModal}
+              onClose={() => setShowWithdrawModal(false)}
+              onConfirm={handleWithdrawConfirm}
+              colors={colors}
+              circleName={circle.name}
+              collateralLocked={withdrawalInfo.collateralLocked || 0n}
+              creatorDeadFee={withdrawalInfo.creatorDeadFee || 0n}
+              netAmount={withdrawalInfo.netWithdrawalAmount || 0n}
+              isCreator={withdrawalInfo.isCreator || false}
+              withdrawalReason={withdrawalInfo.reason || "vote_failed"}
+              isLoading={isLoading}
+            />
           )}
-        </button>
+        </>
       );
     }
 
@@ -388,10 +450,11 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               ) : (
                 <>
                   <AlertTriangle className="w-4 h-4" />
-                  <span>Withdraw Collateral</span>
+                  <span className="hidden sm:inline">Withdraw Collateral</span>
+                  <span className="sm:hidden">Withdraw</span>
                   {withdrawalInfo.isCreator &&
                     withdrawalInfo.creatorDeadFee > 0n && (
-                      <span className="text-[10px] opacity-80">
+                      <span className="text-[10px] opacity-80 hidden sm:inline">
                         (Fee: $
                         {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(
                           2
@@ -490,16 +553,99 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     const contributionDeadlineWithGrace = circle.contributionDeadline;
     const deadlineElapsed = now > Number(contributionDeadlineWithGrace);
 
+    // Check if current user is the recipient for this round
+    const isRecipient = circle.currentPosition === currentRound;
+
     // Check if user has received payout for the current round
     const hasReceivedPayout =
       circle.payouts?.some(
         (payout: any) => Number(payout.round) === currentRound
       ) || false;
 
+    // For the recipient:
+    // - They don't need to contribute
+    // - After grace period, they should see forfeit button
+    // - Before grace period or after payout, they see status
+    if (isRecipient) {
+      // If grace period has elapsed and payout hasn't been received, show forfeit
+      if (deadlineElapsed && !hasReceivedPayout) {
+        return (
+          <div className="flex gap-2 flex-1">
+            <button
+              onClick={() => {
+                const lateMembers = getLateMembersForCircle(circleId);
+                handleAction(
+                  () => onForfeitMember(circleId, lateMembers),
+                  "Forfeit member"
+                );
+              }}
+              disabled={isLoading}
+              className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
+              title="Forfeit late members (Available after grace period)"
+            >
+              {isLoading ? (
+                "Processing..."
+              ) : (
+                <>
+                  <UserX className="w-4 h-4" />
+                  <span className="inline">Forfeit</span>
+                </>
+              )}
+            </button>
+          </div>
+        );
+      }
+
+      // Otherwise show status (waiting for payout or payout received)
+      // Only show "Awaiting Payout" if the recipient has also contributed
+      if (hasContributed) {
+        return (
+          <div className="flex gap-2 flex-1">
+            <div
+              className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1"
+              style={{ borderColor: colors.border, color: colors.textLight }}
+            >
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span>
+                {hasReceivedPayout ? "Payout Received" : "Awaiting Payout"}
+              </span>
+            </div>
+          </div>
+        );
+      }
+
+      // If recipient hasn't contributed, show contribute button
+      return (
+        <div className="flex gap-2 flex-1">
+          <button
+            onClick={() =>
+              handleAction(
+                () => onContribute(circleId, contributionAmount),
+                "Contribution"
+              )
+            }
+            disabled={isLoading}
+            className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+            style={{ background: colors.primary }}
+          >
+            {isLoading ? (
+              "Processing..."
+            ) : (
+              <>
+                <DollarSign className="w-4 h-4" />
+                <span>Contribute</span>
+              </>
+            )}
+          </button>
+        </div>
+      );
+    }
+
+    // For non-recipients, use the original logic
     // Show forfeit button only if:
     // 1. Contribution deadline (WITH grace period) has elapsed
     // 2. User has already contributed (to ensure they are an active player)
-    // 3. User has NOT received payout for this round (if they were the recipient)
+    // 3. User has NOT received payout for this round (should always be false for non-recipients)
     const canForfeit = deadlineElapsed && hasContributed && !hasReceivedPayout;
 
     return (
@@ -560,40 +706,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     );
   }
 
-  // Handler for withdrawal confirmation
-  const handleWithdrawConfirm = async () => {
-    try {
-      await handleAction(
-        () => onWithdrawCollateral(circle.rawCircle.circleId),
-        "Withdraw collateral"
-      );
-      setShowWithdrawModal(false);
-    } catch (error) {
-      // Error already handled by handleAction
-    }
-  };
-
-  return (
-    <>
-      {/* Withdrawal Modal */}
-      {showWithdrawModal && withdrawalInfo && (
-        <WithdrawCollateralModal
-          isOpen={showWithdrawModal}
-          onClose={() => setShowWithdrawModal(false)}
-          onConfirm={handleWithdrawConfirm}
-          colors={colors}
-          circleName={circle.name}
-          collateralLocked={withdrawalInfo.collateralLocked || 0n}
-          creatorDeadFee={withdrawalInfo.creatorDeadFee || 0n}
-          netAmount={withdrawalInfo.netWithdrawalAmount || 0n}
-          isCreator={withdrawalInfo.isCreator || false}
-          withdrawalReason={withdrawalInfo.reason || "below_threshold"}
-          isLoading={isLoading}
-        />
-      )}
-      {null}
-    </>
-  );
+  return null;
 };
 
 export default CircleActions;

@@ -1,85 +1,85 @@
 {
-    "version": 2,
-    "buildCommand": "npm run build",
-    "devCommand": "npm run dev",
-    "builds": [
-      {
-        "src": "package.json",
-        "use": "@vercel/static-build",
-        "config": {
-          "distDir": "dist"
-        }
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
       }
-    ],
-    "routes": [
-      {
-        "src": "/manifest.webmanifest",
-        "headers": {
-          "Content-Type": "application/manifest+json",
-          "Cache-Control": "public, max-age=0, must-revalidate"
-        },
-        "dest": "/manifest.webmanifest"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/manifest.webmanifest",
+      "headers": {
+        "Content-Type": "application/manifest+json",
+        "Cache-Control": "public, max-age=0, must-revalidate"
       },
-      {
-        "src": "/sw.js",
-        "headers": {
-          "Content-Type": "application/javascript",
-          "Cache-Control": "public, max-age=0, must-revalidate",
-          "Service-Worker-Allowed": "/"
-        },
-        "dest": "/sw.js"
+      "dest": "/manifest.webmanifest"
+    },
+    {
+      "src": "/sw.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "Service-Worker-Allowed": "/"
       },
-      {
-        "src": "/registerSW.js",
-        "headers": {
-          "Content-Type": "application/javascript",
-          "Cache-Control": "public, max-age=0, must-revalidate"
-        },
-        "dest": "/registerSW.js"
+      "dest": "/sw.js"
+    },
+    {
+      "src": "/registerSW.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=0, must-revalidate"
       },
-      {
-        "src": "/workbox-(.+).js",
-        "headers": {
-          "Content-Type": "application/javascript",
-          "Cache-Control": "public, max-age=31536000, immutable"
-        },
-        "dest": "/workbox-$1.js"
+      "dest": "/registerSW.js"
+    },
+    {
+      "src": "/workbox-(.+).js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=31536000, immutable"
       },
-      {
-        "src": "/(pwa-.*\\.png|apple-touch-icon.*\\.png|maskable-icon.*\\.png)",
-        "headers": {
-          "Content-Type": "image/png",
-          "Cache-Control": "public, max-age=31536000, immutable"
-        },
-        "dest": "/$1"
+      "dest": "/workbox-$1.js"
+    },
+    {
+      "src": "/(pwa-.*\\.png|apple-touch-icon.*\\.png|maskable-icon.*\\.png)",
+      "headers": {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=0, must-revalidate"
       },
-      {
-        "src": "/assets/(.*)",
-        "dest": "/assets/$1"
+      "dest": "/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/favicon.svg",
+      "dest": "/favicon.svg"
+    },
+    {
+      "src": "/logo.jpg",
+      "dest": "/logo.jpg"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block"
       },
-      {
-        "src": "/favicon.ico",
-        "dest": "/favicon.ico"
-      },
-      {
-        "src": "/favicon.svg",
-        "dest": "/favicon.svg"
-      },
-      {
-        "src": "/logo.jpg",
-        "dest": "/logo.jpg"
-      },
-      {
-        "handle": "filesystem"
-      },
-      {
-        "src": "/.*",
-        "headers": {
-          "X-Content-Type-Options": "nosniff",
-          "X-Frame-Options": "DENY",
-          "X-XSS-Protection": "1; mode=block"
-        },
-        "dest": "/index.html"
-      }
-    ]
-  }
+      "dest": "/index.html"
+    }
+  ]
+}

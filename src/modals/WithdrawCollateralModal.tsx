@@ -67,10 +67,10 @@ const WithdrawCollateralModal: React.FC<WithdrawCollateralModalProps> = ({
 
         {/* Warning */}
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4">
-          <p className="text-sm text-orange-900 dark:text-orange-200 font-medium mb-2">
+          <p className="text-sm dark:text-orange-200 font-medium mb-2" style={{color: colors.text}}>
             ⚠️ This will mark the circle as DEAD
           </p>
-          <p className="text-xs text-orange-700 dark:text-orange-300">
+          <p className="text-xs dark:text-orange-300" style={{color: colors.textLight}}>
             Reason: {reasonText}
           </p>
         </div>

@@ -77,7 +77,9 @@ const CircleRulesTab: React.FC<CircleRulesTabProps> = ({
                 • Other positions assigned by reputation (higher = better
                 position)
               </li>
-              <li>• Payout amount: ${circle.payoutAmount} per round</li>
+              {circle.status !== "dead" && (
+                <li>• Payout amount: ${circle.payoutAmount} per round</li>
+              )}
               <li>
                 • Platform fee: 1% for up to $1000 payout, and $10 fix fee for
                 above $1000 (creators pay 0%)

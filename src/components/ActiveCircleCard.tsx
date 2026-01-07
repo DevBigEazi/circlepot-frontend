@@ -81,14 +81,19 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
             >
               Position #{circle.currentPosition} of {circle.totalPositions}
             </p>
+          ) : circle.status === "dead" ? (
+            <p
+              className="text-xs sm:text-sm"
+              style={{ color: colors.textLight }}
+            >
+              Circle Dead
+            </p>
           ) : (
             <p
               className="text-xs sm:text-sm"
               style={{ color: colors.textLight }}
             >
-              {circle.currentPosition === 1
-                ? `Position #${circle.currentPosition} of ${circle.totalPositions}`
-                : "Position Pending"}
+              Position Pending
             </p>
           )}
         </div>
@@ -96,6 +101,10 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
           className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
             circle.status === "active"
               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
+              : circle.status === "dead"
+              ? "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+              : circle.status === "completed"
+              ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
               : "bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300"
           }`}
         >
@@ -289,38 +298,39 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
         </div>
       )}
 
-      {/* Circle Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
-        <div>
-          <div
-            className="text-xl sm:text-2xl font-bold"
-            style={{ color: colors.primary }}
-          >
-            ${circle.payoutAmount}
+      {circle.status !== "dead" && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <div>
+            <div
+              className="text-xl sm:text-2xl font-bold"
+              style={{ color: colors.primary }}
+            >
+              ${circle.payoutAmount}
+            </div>
+            <div
+              className="text-[10px] sm:text-xs"
+              style={{ color: colors.textLight }}
+            >
+              Payout Amount
+            </div>
           </div>
-          <div
-            className="text-[10px] sm:text-xs"
-            style={{ color: colors.textLight }}
-          >
-            Payout Amount
+          <div>
+            {/* Next Payout */}
+            <div
+              className="text-xs sm:text-sm font-semibold"
+              style={{ color: colors.text }}
+            >
+              {circle.nextPayout}
+            </div>
+            <div
+              className="text-[10px] sm:text-xs"
+              style={{ color: colors.textLight }}
+            >
+              Est. Next Payout Date
+            </div>
           </div>
         </div>
-        <div>
-          {/* Next Payout */}
-          <div
-            className="text-xs sm:text-sm font-semibold"
-            style={{ color: colors.text }}
-          >
-            {circle.nextPayout}
-          </div>
-          <div
-            className="text-[10px] sm:text-xs"
-            style={{ color: colors.textLight }}
-          >
-            Est. Next Payout Date
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Member Info */}
       <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -335,9 +345,9 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
           className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
           style={{ backgroundColor: "#10B98115", color: "#10B981" }}
         >
-          active
+          Collateralized
         </span>
-        {circle.isForfeited && (
+        {(circle.latePayCount || 0) > 0 && (
           <span
             className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full whitespace-nowrap border"
             style={{

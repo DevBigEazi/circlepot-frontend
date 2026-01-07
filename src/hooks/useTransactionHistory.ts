@@ -690,26 +690,47 @@ export const useTransactionHistory = () => {
       });
     });
 
-    // Process collateral withdrawals
+    // Create a map of dead circle fees by transaction hash for merging
+    const deadCircleFeesByHash = new Map<string, any>();
+    transactionsData.deadCircleFeeDeducteds?.forEach((fee: any) => {
+      deadCircleFeesByHash.set(fee.transaction.transactionHash, fee);
+    });
+
+    // Process collateral withdrawals and merge with dead circle fees if applicable
     transactionsData.collateralWithdrawns?.forEach((cw: any) => {
+      const txHash = cw.transaction.transactionHash;
+      const deadCircleFee = deadCircleFeesByHash.get(txHash);
+
+      // If there's a dead circle fee in the same transaction, merge it
+      const feeAmount = deadCircleFee ? BigInt(deadCircleFee.deadFee) : 0n;
+      const hasDeadCircleFee = feeAmount > 0n;
+
       allTransactions.push({
         id: cw.id,
         type: "collateral_withdrawal",
         amount: BigInt(cw.amount),
         currency: "USDm",
         timestamp: BigInt(cw.transaction.blockTimestamp),
-        transactionHash: cw.transaction.transactionHash,
+        transactionHash: txHash,
         status: "success",
-        fee: 0n,
+        fee: feeAmount,
         circleName:
           transactionsData.circleNamesMap.get(cw.circleId) || "Unknown Circle",
         circleId: BigInt(cw.circleId),
-        note: "Collateral refund",
+        note: hasDeadCircleFee
+          ? `Collateral refund (Dead circle fee: ${(Number(feeAmount) / 1e18).toFixed(2)} USDm deducted)`
+          : "Collateral refund",
       });
+
+      // Mark this fee as processed so we don't create a duplicate transaction
+      if (deadCircleFee) {
+        deadCircleFeesByHash.delete(txHash);
+      }
     });
 
-    // Process dead circle fees
-    transactionsData.deadCircleFeeDeducteds?.forEach((fee: any) => {
+    // Process any remaining dead circle fees that weren't merged
+    // (This shouldn't normally happen, but handles edge cases)
+    deadCircleFeesByHash.forEach((fee: any) => {
       allTransactions.push({
         id: fee.id,
         type: "dead_circle_fee",

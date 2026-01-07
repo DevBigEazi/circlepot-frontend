@@ -30,6 +30,8 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     contributions,
     payouts,
     collateralWithdrawals,
+    collateralReturns,
+    latePayments,
     getWithdrawalInfo,
     getLateMembersForCircle,
     forfeitures,
@@ -63,7 +65,9 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
       contributions,
       payouts,
       collateralWithdrawals,
-      forfeitures
+      forfeitures,
+      collateralReturns,
+      latePayments
     );
   }, [
     circles,
@@ -76,7 +80,9 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     contributions,
     payouts,
     collateralWithdrawals,
+    collateralReturns,
     forfeitures,
+    latePayments,
   ]);
 
   // Filter circles:
@@ -118,10 +124,17 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     return filteredCircles
       .reduce((sum, circle) => {
         // Use the actual collateral amount that the user deposited
-        // This is contribution * maxMembers * 1.01 (includes 1% buffer)
-        const collateralAmount = circle.rawCircle?.collateralAmount
+        // and subtract any deductions from late payments/forfeitures
+        const initialCollateral = circle.rawCircle?.collateralAmount
           ? Number(circle.rawCircle.collateralAmount) / 1e18
           : 0;
+
+        const deductions =
+          (Number(circle.forfeitedAmount || 0n) +
+            Number(circle.forfeitedContributionPortion || 0n)) /
+          1e18;
+
+        const collateralAmount = Math.max(0, initialCollateral - deductions);
 
         // Add the total amount contributed by the user to this circle
         const contributedAmount = circle.userTotalContributed

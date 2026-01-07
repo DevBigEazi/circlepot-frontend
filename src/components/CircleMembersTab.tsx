@@ -41,6 +41,11 @@ const GET_CIRCLE_MEMBERS = gql`
         id
       }
     }
+    memberForfeiteds(where: { circleId: $circleId, round: $currentRound }) {
+      forfeitedUser {
+        id
+      }
+    }
   }
 `;
 
@@ -67,6 +72,10 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
       return result;
     },
     enabled: !!circle.rawCircle?.circleId,
+    refetchInterval: isActiveCircle ? 5000 : false, // Refetch every 5s for active circles
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always consider data stale
   });
 
   const members = useMemo(() => {
@@ -95,11 +104,24 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
   }, [membersData]);
 
   const contributedMembers = useMemo(() => {
-    if (!membersData?.contributionMades) return new Set();
-    return new Set(
-      membersData.contributionMades.map((c: any) => c.user.id.toLowerCase())
-    );
-  }, [membersData]);
+    const contributed = new Set<string>();
+
+    // Add members who manually contributed
+    if (membersData?.contributionMades) {
+      membersData.contributionMades.forEach((c: any) => {
+        contributed.add(c.user.id.toLowerCase());
+      });
+    }
+
+    // Add members who were forfeited (their collateral was deducted, counts as contributed)
+    if (membersData?.memberForfeiteds) {
+      membersData.memberForfeiteds.forEach((f: any) => {
+        contributed.add(f.forfeitedUser.id.toLowerCase());
+      });
+    }
+
+    return contributed;
+  }, [membersData, isActiveCircle, circle.rawCircle?.circleId, currentRound]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
