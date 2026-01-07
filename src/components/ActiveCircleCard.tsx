@@ -345,7 +345,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
           className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
           style={{ backgroundColor: "#10B98115", color: "#10B981" }}
         >
-          active
+          Collateralized
         </span>
         {(circle.latePayCount || 0) > 0 && (
           <span
