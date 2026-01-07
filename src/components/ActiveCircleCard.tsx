@@ -347,7 +347,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
         >
           Collateralized
         </span>
-        {(circle.latePayCount || 0) > 0 && (
+        {(circle.forfeitCount || 0) > 0 && (
           <span
             className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full whitespace-nowrap border"
             style={{
@@ -356,8 +356,8 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
               borderColor: "#FFEDD5",
             }}
           >
-            {circle.latePayCount} Late Pay Record
-            {circle.latePayCount !== 1 ? "s" : ""}
+            {circle.forfeitCount} Forfeit Record
+            {circle.forfeitCount !== 1 ? "s" : ""}
           </span>
         )}
       </div>
