@@ -428,7 +428,7 @@ const Circles: React.FC = () => {
                   if (hasWithdrawn && !isForfeited) {
                     // Show withdrawn if not forfeited (already covered)
                     statusInfo.push({
-                      label: "Withdrawn",
+                      label: "Withdrawn (Circle Dead)",
                       icon: (
                         <AlertOctagon
                           size={16}
