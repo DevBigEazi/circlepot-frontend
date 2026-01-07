@@ -424,7 +424,7 @@ const AuthModal: React.FC = () => {
                       className="text-xs font-semibold"
                       style={{ color: colors.text }}
                     >
-                      Account Creation
+                      Account Confirmation
                     </span>
                   </div>
                   <p className="text-xs" style={{ color: colors.textLight }}>
