@@ -57,6 +57,8 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
     circle.rawCircle?.creator?.id &&
     account.address.toLowerCase() === circle.rawCircle.creator.id.toLowerCase();
 
+  const isMember = circle.currentPosition > 0;
+
   // Initialize local visibility from circle data
   useEffect(() => {
     if (circle.rawCircle?.visibility !== undefined) {
@@ -136,6 +138,11 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
         return { text: "Active", color: "bg-green-100 text-green-700" };
       case "COMPLETED":
         return { text: "Completed", color: "bg-gray-100 text-gray-700" };
+      case "DEAD":
+        return {
+          text: "Circle Dead",
+          color: "bg-red-100 text-red-700",
+        };
       case "WITHDRAWN":
         return { text: "Withdrawn", color: "bg-gray-100 text-gray-700" };
       default:
@@ -168,20 +175,30 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
 
   const circleState = getCircleState(circle.status || "created");
 
+  // Calculate deductions from late payments/forfeitures
+  const deductions =
+    (Number(circle.forfeitedAmount || 0n) +
+      Number(circle.forfeitedContributionPortion || 0n)) /
+    1e18;
+
   // Collateral Locked: Based on maxMembers (what was originally proposed and locked)
   const maxMembers = Number(
     circle.rawCircle?.maxMembers || circle.totalPositions
   );
-  const collateralLocked = calculateCollateral(circle.contribution, maxMembers);
+  const collateralLocked = circle.hasWithdrawn
+    ? 0
+    : Math.max(
+        0,
+        calculateCollateral(circle.contribution, maxMembers) - deductions
+      );
 
   // Collateral Required: Based on currentMembers (what's actually needed for the circle)
   const currentMembers = Number(
     circle.rawCircle?.currentMembers || circle.totalPositions
   );
-  const collateralRequired = calculateCollateral(
-    circle.contribution,
-    currentMembers
-  );
+  const collateralRequired = circle.hasWithdrawn
+    ? 0
+    : calculateCollateral(circle.contribution, currentMembers);
 
   const minMembersToStart = getMinMembersToStart(maxMembers);
   const ultimatumPeriod = getUltimatumPeriod(circle.frequency);
@@ -304,55 +321,65 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div
-          className="p-4 sm:p-6 border-t shrink-0 flex gap-3 flex-wrap"
-          style={{ borderColor: colors.border }}
-        >
-          {isCreator && circle.status !== "completed" && (
-            <button
-              onClick={handleVisibilityButtonClick}
-              disabled={isUpdatingVisibility}
-              className="px-4 rounded-xl font-semibold border flex-1 py-1.5 sm:py-2 text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
-              style={{
-                borderColor: colors.primary,
-                color: colors.primary,
-                opacity: isUpdatingVisibility ? 0.6 : 1,
-              }}
-            >
-              {isUpdatingVisibility
-                ? "Updating..."
-                : `Make ${circleType === "public" ? "Private" : "Public"}`}
-            </button>
-          )}
-          {circle.status !== "completed" && (
-            <button
-              onClick={() => {
-                setShowCircleDetails(false);
-                if (onJoinCircle) onJoinCircle(circle);
-              }}
-              className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
-              style={{
-                backgroundColor: colors.accentBg,
-                color: colors.text,
-              }}
-            >
-              <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Chat</span>
-            </button>
-          )}
-          <CircleActions
-            circle={circle}
-            colors={colors}
-            onInitiateVoting={onInitiateVoting}
-            onCastVote={onCastVote}
-            onExecuteVote={onExecuteVote}
-            onWithdrawCollateral={onWithdrawCollateral}
-            onContribute={onContribute}
-            onForfeitMember={onForfeitMember}
-            getWithdrawalInfo={getWithdrawalInfo}
-            getLateMembersForCircle={getLateMembersForCircle}
-          />
-        </div>
+        {(((circle.status as string) !== "completed" &&
+          (circle.status as string) !== "dead") ||
+          (circle.status === "dead" &&
+            isMember &&
+            circle.rawCircle?.state === 5 &&
+            !circle.hasWithdrawn)) && (
+          <div
+            className="p-4 sm:p-6 border-t shrink-0 flex gap-3 flex-wrap"
+            style={{ borderColor: colors.border }}
+          >
+            {isCreator &&
+              (circle.status as string) !== "completed" &&
+              (circle.status as string) !== "dead" && (
+                <button
+                  onClick={handleVisibilityButtonClick}
+                  disabled={isUpdatingVisibility}
+                  className="px-4 rounded-xl font-semibold border flex-1 py-1.5 sm:py-2 text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
+                  style={{
+                    borderColor: colors.primary,
+                    color: colors.primary,
+                    opacity: isUpdatingVisibility ? 0.6 : 1,
+                  }}
+                >
+                  {isUpdatingVisibility
+                    ? "Updating..."
+                    : `Make ${circleType === "public" ? "Private" : "Public"}`}
+                </button>
+              )}
+            {(circle.status as string) !== "completed" &&
+              (circle.status as string) !== "dead" && (
+                <button
+                  onClick={() => {
+                    setShowCircleDetails(false);
+                    if (onJoinCircle) onJoinCircle(circle);
+                  }}
+                  className="flex-1 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition flex items-center justify-center gap-1 sm:gap-2"
+                  style={{
+                    backgroundColor: colors.accentBg,
+                    color: colors.text,
+                  }}
+                >
+                  <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Chat</span>
+                </button>
+              )}
+            <CircleActions
+              circle={circle}
+              colors={colors}
+              onInitiateVoting={onInitiateVoting}
+              onCastVote={onCastVote}
+              onExecuteVote={onExecuteVote}
+              onWithdrawCollateral={onWithdrawCollateral}
+              onContribute={onContribute}
+              onForfeitMember={onForfeitMember}
+              getWithdrawalInfo={getWithdrawalInfo}
+              getLateMembersForCircle={getLateMembersForCircle}
+            />
+          </div>
+        )}
       </div>
 
       {/* Visibility Confirmation Modal */}

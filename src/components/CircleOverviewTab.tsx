@@ -65,25 +65,27 @@ const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
           </div>
         </div>
 
-        <div
-          className="rounded-xl p-4 text-center border"
-          style={{
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          }}
-        >
-          <TrendingUp
-            className="mx-auto mb-2"
-            size={24}
-            style={{ color: colors.secondary }}
-          />
-          <div className="font-bold text-lg" style={{ color: colors.text }}>
-            ${circle.payoutAmount}
+        {circle.status !== "dead" && (
+          <div
+            className="rounded-xl p-4 text-center border"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            }}
+          >
+            <TrendingUp
+              className="mx-auto mb-2"
+              size={24}
+              style={{ color: colors.secondary }}
+            />
+            <div className="font-bold text-lg" style={{ color: colors.text }}>
+              ${circle.payoutAmount}
+            </div>
+            <div className="text-xs" style={{ color: colors.textLight }}>
+              Payout Amount
+            </div>
           </div>
-          <div className="text-xs" style={{ color: colors.textLight }}>
-            Payout Amount
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Circle Description */}
@@ -131,10 +133,12 @@ const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
                 {circle.totalPositions}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span style={{ color: colors.textLight }}>Next Payout:</span>
-              <span style={{ color: colors.text }}>{circle.nextPayout}</span>
-            </div>
+            {circle.status !== "dead" && (
+              <div className="flex justify-between">
+                <span style={{ color: colors.textLight }}>Next Payout:</span>
+                <span style={{ color: colors.text }}>{circle.nextPayout}</span>
+              </div>
+            )}
           </div>
         </div>
 
