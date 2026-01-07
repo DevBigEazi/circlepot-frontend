@@ -65,7 +65,8 @@ const Circles: React.FC = () => {
       contributions,
       payouts,
       collateralWithdrawals,
-      forfeitures
+      forfeitures,
+      collateralReturns
     );
   }, [
     circles,
@@ -79,6 +80,7 @@ const Circles: React.FC = () => {
     payouts,
     collateralWithdrawals,
     forfeitures,
+    collateralReturns,
   ]);
 
   // Categorize circles
@@ -96,10 +98,11 @@ const Circles: React.FC = () => {
       // Check if user is a member
       const isMember = circle.currentPosition > 0;
 
-      // Check if user was forfeited
+      // Check if user was forfeited or has late pay record
       const isForfeited = circle.isForfeited;
+      const hasLatePay = (circle.latePayCount || 0) > 0;
 
-      return isCreator || isMember || isForfeited;
+      return isCreator || isMember || isForfeited || hasLatePay;
     });
 
     const active = involvedCircles.filter((c) => {
@@ -118,8 +121,8 @@ const Circles: React.FC = () => {
       // 2. Withdrawn (Circle status OR User specific withdrawal OR Dead)
       if (c.status === "dead" || c.hasWithdrawn) return true;
 
-      // 3. Forfeited record (Show in history even if still active)
-      if (c.isForfeited) return true;
+      // 3. Forfeited or Late record (Show in history even if still active)
+      if (c.isForfeited || (c.latePayCount || 0) > 0) return true;
 
       // 4. Payout Received by current user
       // Track in history even if still active, as a record of success
@@ -144,13 +147,23 @@ const Circles: React.FC = () => {
   const totalBalance = useMemo(() => {
     return activeCircles
       .reduce((sum, circle) => {
-        const collateralAmount = circle.rawCircle?.collateralAmount
+        const initialCollateral = circle.rawCircle?.collateralAmount
           ? Number(circle.rawCircle.collateralAmount) / 1e18
           : 0;
 
-        const contributedAmount = circle.userTotalContributed
-          ? Number(circle.userTotalContributed) / 1e18
-          : 0;
+        const deductions =
+          (Number(circle.forfeitedAmount || 0n) +
+            Number(circle.forfeitedContributionPortion || 0n)) /
+          1e18;
+
+        const collateralAmount = Math.max(0, initialCollateral - deductions);
+
+        const contributedAmount =
+          circle.status === "dead"
+            ? 0
+            : circle.userTotalContributed
+            ? Number(circle.userTotalContributed) / 1e18
+            : 0;
 
         return sum + collateralAmount + contributedAmount;
       }, 0)
@@ -383,10 +396,11 @@ const Circles: React.FC = () => {
                   const hasWithdrawn =
                     circle.hasWithdrawn || circle.status === "dead";
                   const isForfeited = circle.isForfeited;
+                  const hasLatePay = (circle.latePayCount || 0) > 0;
 
                   const statusInfo = [];
                   let detailsText;
-                  if (isForfeited) {
+                  if (hasLatePay) {
                     statusInfo.push({
                       label: "Late Penalty",
                       icon: (
@@ -461,8 +475,8 @@ const Circles: React.FC = () => {
                           })}
                         </span>
                       )}
-                      {isForfeited && (
-                        <span className="text-xs md:text-sm text-orange-600">
+                      {hasLatePay && (
+                        <span className="text-xs md:text-sm text-orange-600 font-medium">
                           {circle.latePayCount} Late Pay Record
                           {circle.latePayCount !== 1 ? "s" : ""}
                         </span>
@@ -539,13 +553,18 @@ const Circles: React.FC = () => {
                               <span>{info.label}</span>
                             </div>
                           ))}
-                          {isForfeited && (
-                            <span className="text-[10px] md:text-xs font-bold text-orange-500 mr-1">
-                              Loss: $
+                          {hasLatePay && (
+                            <span className="text-[10px] md:text-xs font-bold text-orange-500 mr-1 whitespace-nowrap">
+                              Deduction from collateral: $
                               {(
-                                Number(circle.forfeitedAmount || 0n) / 1e18
+                                (Number(circle.forfeitedAmount || 0n) +
+                                  Number(
+                                    circle.forfeitedContributionPortion || 0n
+                                  )) /
+                                1e18
                               ).toLocaleString("en-US", {
                                 maximumFractionDigits: 2,
+                                minimumFractionDigits: 2,
                               })}
                             </span>
                           )}

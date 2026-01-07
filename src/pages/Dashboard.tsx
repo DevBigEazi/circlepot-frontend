@@ -38,6 +38,8 @@ const Dashboard: React.FC = () => {
     voteResults,
     positions,
     collateralWithdrawals,
+    collateralReturns,
+    latePayments,
     forfeitures,
     isLoading: isCirclesLoading,
   } = useCircleSavings(client);
@@ -59,7 +61,9 @@ const Dashboard: React.FC = () => {
         contributions,
         payouts,
         collateralWithdrawals,
-        forfeitures
+        forfeitures,
+        collateralReturns,
+        latePayments
       ),
     [
       circles,
@@ -71,6 +75,10 @@ const Dashboard: React.FC = () => {
       positions,
       contributions,
       payouts,
+      collateralWithdrawals,
+      forfeitures,
+      collateralReturns,
+      latePayments,
     ]
   );
 
@@ -108,21 +116,38 @@ const Dashboard: React.FC = () => {
       contributions,
       payouts,
       collateralWithdrawals,
-      forfeitures
+      forfeitures,
+      collateralReturns
     );
 
     return activeCircles.reduce(
       (acc, circle) => {
+        // If circle is finished or user already withdrew, skip everything
+        if (circle.status === "completed" || circle.hasWithdrawn) {
+          return acc;
+        }
+
         // Use the actual collateral amount that the user deposited
-        // This is contribution * maxMembers * 1.01 (includes 1% buffer)
-        const collateralAmount = circle.rawCircle?.collateralAmount
+        // and subtract any deductions from late payments/forfeitures
+        const initialCollateral = circle.rawCircle?.collateralAmount
           ? Number(circle.rawCircle.collateralAmount) / 1e18
           : 0;
 
-        // Add the total amount contributed by the user to this circle
-        const contributedAmount = circle.userTotalContributed
-          ? Number(circle.userTotalContributed) / 1e18
-          : 0;
+        const deductions =
+          (Number(circle.forfeitedAmount || 0n) +
+            Number(circle.forfeitedContributionPortion || 0n)) /
+          1e18;
+
+        const collateralAmount = Math.max(0, initialCollateral - deductions);
+
+        // For dead circles, contributions are lost, so only collateral is "committed"
+        // For other active states, both are committed
+        const contributedAmount =
+          circle.status === "dead"
+            ? 0
+            : circle.userTotalContributed
+            ? Number(circle.userTotalContributed) / 1e18
+            : 0;
 
         return {
           total: acc.total + collateralAmount + contributedAmount,
@@ -144,6 +169,8 @@ const Dashboard: React.FC = () => {
     payouts,
     collateralWithdrawals,
     forfeitures,
+    collateralReturns,
+    latePayments,
   ]);
 
   // Calculate total committed in personal savings
