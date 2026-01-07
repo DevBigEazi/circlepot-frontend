@@ -116,7 +116,7 @@ export interface ActiveCircle {
   isForfeitedThisRound?: boolean;
   forfeitedAmount?: bigint;
   forfeitedContributionPortion?: bigint;
-  latePayCount?: number;
+  forfeitCount?: number;
 
   // Withdrawal eligibility fields
   canWithdrawCollateral?: boolean;

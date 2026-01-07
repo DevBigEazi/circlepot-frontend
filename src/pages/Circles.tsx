@@ -98,11 +98,11 @@ const Circles: React.FC = () => {
       // Check if user is a member
       const isMember = circle.currentPosition > 0;
 
-      // Check if user was forfeited or has late pay record
+      // Check if user was forfeited or has forfeit record
       const isForfeited = circle.isForfeited;
-      const hasLatePay = (circle.latePayCount || 0) > 0;
+      const hasForfeit = (circle.forfeitCount || 0) > 0;
 
-      return isCreator || isMember || isForfeited || hasLatePay;
+      return isCreator || isMember || isForfeited || hasForfeit;
     });
 
     const active = involvedCircles.filter((c) => {
@@ -121,8 +121,8 @@ const Circles: React.FC = () => {
       // 2. Withdrawn (Circle status OR User specific withdrawal OR Dead)
       if (c.status === "dead" || c.hasWithdrawn) return true;
 
-      // 3. Forfeited or Late record (Show in history even if still active)
-      if (c.isForfeited || (c.latePayCount || 0) > 0) return true;
+      // 3. Forfeited record (Show in history even if still active)
+      if (c.isForfeited || (c.forfeitCount || 0) > 0) return true;
 
       // 4. Payout Received by current user
       // Track in history even if still active, as a record of success
@@ -308,10 +308,10 @@ const Circles: React.FC = () => {
                 className="text-xs md:text-sm mb-2"
                 style={{ color: colors.textLight }}
               >
-                Late Pen.
+                Forfeits
               </div>
               <div className="text-xl md:text-2xl font-bold text-orange-500">
-                {allCircles.reduce((sum, c) => sum + (c.latePayCount || 0), 0)}
+                {allCircles.reduce((sum, c) => sum + (c.forfeitCount || 0), 0)}
               </div>
             </div>
           </div>
@@ -396,13 +396,13 @@ const Circles: React.FC = () => {
                   const hasWithdrawn =
                     circle.hasWithdrawn || circle.status === "dead";
                   const isForfeited = circle.isForfeited;
-                  const hasLatePay = (circle.latePayCount || 0) > 0;
+                  const hasForfeit = (circle.forfeitCount || 0) > 0;
 
                   const statusInfo = [];
                   let detailsText;
-                  if (hasLatePay) {
+                  if (hasForfeit) {
                     statusInfo.push({
-                      label: "Late Penalty",
+                      label: "Forfeited",
                       icon: (
                         <AlertOctagon
                           size={16}
@@ -475,10 +475,10 @@ const Circles: React.FC = () => {
                           })}
                         </span>
                       )}
-                      {hasLatePay && (
+                      {hasForfeit && (
                         <span className="text-xs md:text-sm text-orange-600 font-medium">
-                          {circle.latePayCount} Late Pay Record
-                          {circle.latePayCount !== 1 ? "s" : ""}
+                          {circle.forfeitCount} Forfeiture Record
+                          {circle.forfeitCount !== 1 ? "s" : ""}
                         </span>
                       )}
                       {circle.status === "completed" &&
@@ -553,7 +553,7 @@ const Circles: React.FC = () => {
                               <span>{info.label}</span>
                             </div>
                           ))}
-                          {hasLatePay && (
+                          {hasForfeit && (
                             <span className="text-[10px] md:text-xs font-bold text-orange-500 mr-1 whitespace-nowrap">
                               Deduction from collateral: $
                               {(

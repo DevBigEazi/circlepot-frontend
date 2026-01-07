@@ -14,8 +14,7 @@ export const transformCircleToActiveCircle = (
     payouts: any[] = [],
     collateralWithdrawals: any[] = [],
     forfeitures: any[] = [],
-    collateralReturns: any[] = [],
-    latePayments: any[] = []
+    collateralReturns: any[] = []
 ): ActiveCircle => {
     // Find members for this circle
     const circleMembers = joinedCircles
@@ -88,6 +87,16 @@ export const transformCircleToActiveCircle = (
         circle.maxMembers // Collateral is always based on maxMembers (what you committed to)
     );
 
+    const userAddressLower = userAddress?.toLowerCase();
+
+    // Helper to check if a user record matches the current user
+    const isUserMatch = (user: any) => {
+        if (!user || !userAddressLower) return false;
+        // Handle both object {id: "0x..."} and string "0x..." formats
+        const address = typeof user === 'string' ? user : (user.id || "");
+        return address.toLowerCase() === userAddressLower;
+    };
+
     // Check if user has contributed or was forfeited for the current round
     let hasContributed = false;
     let isForfeitedThisRound = false;
@@ -96,23 +105,27 @@ export const transformCircleToActiveCircle = (
     if (userAddress) {
         // Calculate total contributed by user for this circle
         userTotalContributed = contributions
-            .filter(c => c.circleId === circle.circleId)
+            .filter(c =>
+                BigInt(c.circleId).toString() === BigInt(circle.circleId).toString() &&
+                isUserMatch(c.user)
+            )
             .reduce((sum, c) => sum + c.amount, 0n);
 
         if (circle.state === 3) { // ACTIVE
-            const currentRound = circle.currentRound || 1n;
+            const currentRound = BigInt(circle.currentRound || 1n);
 
             // Check manual contribution
             const contributedThisRound = contributions.some(c =>
-                c.circleId === circle.circleId &&
-                c.round === currentRound
+                BigInt(c.circleId).toString() === BigInt(circle.circleId).toString() &&
+                BigInt(c.round) === currentRound &&
+                isUserMatch(c.user)
             );
 
             // Check if forfeited this round
             const forfeitedThisRoundEvent = forfeitures.find(f =>
-                f.circleId === circle.circleId &&
-                f.forfeitedUser?.id?.toLowerCase() === userAddress.toLowerCase() &&
-                f.round === currentRound
+                BigInt(f.circleId).toString() === BigInt(circle.circleId).toString() &&
+                isUserMatch(f.forfeitedUser) &&
+                BigInt(f.round) === currentRound
             );
 
             isForfeitedThisRound = !!forfeitedThisRoundEvent;
@@ -123,15 +136,15 @@ export const transformCircleToActiveCircle = (
     // Check if user has withdrawn collateral or it has been returned
     const userCollateralWithdrawals = userAddress
         ? collateralWithdrawals.filter(cw =>
-            cw.circleId === circle.circleId &&
-            cw.user?.id?.toLowerCase() === userAddress.toLowerCase()
+            BigInt(cw.circleId).toString() === BigInt(circle.circleId).toString() &&
+            isUserMatch(cw.user)
         )
         : [];
 
     const userCollateralReturns = userAddress
         ? collateralReturns.filter(cr =>
-            cr.circleId === circle.circleId &&
-            cr.user?.id?.toLowerCase() === userAddress.toLowerCase()
+            BigInt(cr.circleId).toString() === BigInt(circle.circleId).toString() &&
+            isUserMatch(cr.user)
         )
         : [];
 
@@ -140,48 +153,29 @@ export const transformCircleToActiveCircle = (
     // Check if user has been forfeited at any point and count events
     const userForfeitures = userAddress
         ? forfeitures.filter(f =>
-            f.circleId === circle.circleId &&
-            f.forfeitedUser?.id?.toLowerCase() === userAddress.toLowerCase()
+            BigInt(f.circleId).toString() === BigInt(circle.circleId).toString() &&
+            isUserMatch(f.forfeitedUser)
         )
         : [];
 
     const isForfeited = userForfeitures.length > 0;
 
-    // Calculate actual financial loss (penalty fees and missed contributions)
+    // Calculate actual financial loss (missed contributions and penalty fees from collateral)
     let forfeitedPenaltyTotal = 0n;
     let forfeitedContributionTotal = 0n;
 
     // We track deductions by round to avoid double counting if multiple events exist
-    const roundDeductions = new Map<bigint, { penalty: bigint, contribution: bigint }>();
+    const roundDeductions = new Map<string, { penalty: bigint, contribution: bigint }>();
 
-    // Check for late payments (where user paid late and deduction happened)
-    const userLatePayments = userAddress
-        ? latePayments.filter(lp =>
-            lp.circleId === circle.circleId &&
-            (lp.user?.id?.toLowerCase() === userAddress.toLowerCase())
-        )
-        : [];
-
-    // 1. Process late payments (paid late, so only a penalty fee is deducted from collateral)
-    userLatePayments.forEach(lp => {
-        const round = BigInt(lp.round);
-        const fee = BigInt(lp.fee || 0);
-
-        if (!roundDeductions.has(round)) {
-            roundDeductions.set(round, { penalty: fee, contribution: 0n });
-        }
-    });
-
-    // 2. Process forfeitures (missed contribution, so BOTH contribution and penalty are deducted)
+    // Process forfeitures (missed contribution, so BOTH contribution and penalty are deducted)
     userForfeitures.forEach((f) => {
-        const round = BigInt(f.round);
+        const round = BigInt(f.round).toString();
         const deduction = BigInt(f.deductionAmount || 0);
         const contributionAmount = BigInt(circle.contributionAmount || 0);
 
         const penaltyPortion = deduction > contributionAmount ? deduction - contributionAmount : 0n;
         const contributionPortion = deduction >= contributionAmount ? contributionAmount : deduction;
 
-        // Forfeiture deductuion always takes precedence/overwrites late record for the same round
         roundDeductions.set(round, { penalty: penaltyPortion, contribution: contributionPortion });
     });
 
@@ -193,10 +187,10 @@ export const transformCircleToActiveCircle = (
 
     const forfeitedAmount = forfeitedPenaltyTotal;
     const forfeitedContributionPortion = forfeitedContributionTotal;
-    const latePayCount = roundDeductions.size;
+    const forfeitCount = roundDeductions.size;
 
     const circleCollateralWithdrawals = collateralWithdrawals.filter(
-        cw => cw.circleId === circle.circleId
+        cw => BigInt(cw.circleId).toString() === BigInt(circle.circleId).toString()
     );
     const isDead = circleCollateralWithdrawals.length > 0;
     const actualState = isDead ? 5 : circle.state; // 5 = DEAD state
@@ -237,7 +231,7 @@ export const transformCircleToActiveCircle = (
         isForfeitedThisRound: isForfeitedThisRound,
         forfeitedAmount: forfeitedAmount,
         forfeitedContributionPortion: forfeitedContributionPortion,
-        latePayCount: latePayCount,
+        forfeitCount: forfeitCount,
         rawCircle: {
             ...circle,
             circleId: circle.circleId,
@@ -271,8 +265,7 @@ export const transformCircles = (
     payouts: any[] = [],
     collateralWithdrawals: any[] = [],
     forfeitures: any[] = [],
-    collateralReturns: any[] = [],
-    latePayments: any[] = []
+    collateralReturns: any[] = []
 ): ActiveCircle[] => {
     return circles
         .map((circle) =>
@@ -288,8 +281,7 @@ export const transformCircles = (
                 payouts,
                 collateralWithdrawals,
                 forfeitures,
-                collateralReturns,
-                latePayments
+                collateralReturns
             )
         )
         .sort(
