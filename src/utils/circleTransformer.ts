@@ -26,12 +26,28 @@ export const transformCircleToActiveCircle = (
             fullName: j.id.substring(0, 6) + "...",
         }));
 
-    // Find user's position
-    const userPosition = userAddress
+    // Filter events for this circle
+    const circleVotingEvents = votingEvents.filter(e => e.circleId === circle.circleId);
+    const circleVotes = votes.filter(v => v.circleId === circle.circleId);
+    const circleVoteResults = voteResults.filter(r => r.circleId === circle.circleId);
+    const circlePositions = positions.filter(p => p.circleId === circle.circleId);
+    const circlePayouts = payouts.filter(p => p.circleId === circle.circleId);
+
+    // Find user's assigned position if it exists
+    const userAssignedPosition = circlePositions.find(
+        (p: any) => p.user?.id?.toLowerCase() === userAddress?.toLowerCase()
+    );
+
+    // Find join order position as fallback
+    const userJoinPosition = userAddress
         ? circleMembers.findIndex(
             (m) => m.id.toLowerCase() === userAddress.toLowerCase()
         ) + 1
         : 0;
+
+    const userPosition = userAssignedPosition
+        ? Number(userAssignedPosition.position)
+        : (userJoinPosition > 0 ? userJoinPosition : 1);
 
     const contributionFormatted = formatBigInt(circle.contributionAmount);
 
@@ -51,13 +67,6 @@ export const transformCircleToActiveCircle = (
         const platformFee = (totalPot * 100n) / 10000n;
         payoutAmountBigInt = totalPot - platformFee;
     }
-
-    // Filter events for this circle
-    const circleVotingEvents = votingEvents.filter(e => e.circleId === circle.circleId);
-    const circleVotes = votes.filter(v => v.circleId === circle.circleId);
-    const circleVoteResults = voteResults.filter(r => r.circleId === circle.circleId);
-    const circlePositions = positions.filter(p => p.circleId === circle.circleId);
-    const circlePayouts = payouts.filter(p => p.circleId === circle.circleId);
 
     // Find the latest payout to use as basis for next round deadline
     const lastPayout = circlePayouts.length > 0
@@ -197,7 +206,7 @@ export const transformCircleToActiveCircle = (
         name: circle.circleName,
         contribution: contributionFormatted,
         frequency: circle.frequency,
-        totalPositions: Number(circle.currentMembers),
+        totalPositions: Number(effectiveMembers),
         currentPosition: userPosition > 0 ? userPosition : 1,
         payoutAmount: payoutAmount,
         nextPayout: nextPayout,
