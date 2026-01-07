@@ -367,6 +367,7 @@ const circlesByIdsQuery = gql`
       circleStarted
       startVoteTotal
       withdrawVoteTotal
+      withdrawWon
       transaction {
         blockTimestamp
         transactionHash
@@ -439,6 +440,40 @@ const circlesByIdsQuery = gql`
       circleId
       round
       payoutAmount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+    # All collateral withdrawals for these circles
+    collateralWithdrawns(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+      }
+      circleId
+      amount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+    # All collateral returns for these circles
+    collateralReturneds(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+      }
+      circleId
+      amount
       transaction {
         blockTimestamp
         transactionHash
@@ -530,6 +565,7 @@ const singleCircleQuery = gql`
       circleStarted
       startVoteTotal
       withdrawVoteTotal
+      withdrawWon
       transaction {
         blockTimestamp
         transactionHash
@@ -682,6 +718,8 @@ export const useCircleSavings = (
         let joinedCirclesVotingEvents = [];
         let joinedCirclesVoteResults = [];
         let joinedCirclesPayouts = [];
+        let joinedCirclesCollateralWithdrawals = [];
+        let joinedCirclesCollateralReturns = [];
         if (joinedCircleIds.length > 0) {
           const circlesResult: any = await request(
             SUBGRAPH_URL,
@@ -694,6 +732,8 @@ export const useCircleSavings = (
           joinedCirclesVotingEvents = circlesResult.votingInitiateds;
           joinedCirclesVoteResults = circlesResult.voteExecuteds;
           joinedCirclesPayouts = circlesResult.payoutDistributeds;
+          joinedCirclesCollateralWithdrawals = circlesResult.collateralWithdrawns;
+          joinedCirclesCollateralReturns = circlesResult.collateralReturneds;
           // No need to calculate currentRound - subgraph now tracks it directly
         }
 
@@ -704,6 +744,8 @@ export const useCircleSavings = (
           joinedCirclesVotingEvents,
           joinedCirclesVoteResults,
           joinedCirclesPayouts,
+          joinedCirclesCollateralWithdrawals,
+          joinedCirclesCollateralReturns,
         };
       } catch (err) {
         throw err;
@@ -879,6 +921,7 @@ export const useCircleSavings = (
       ).map((late: any) => ({
         id: late.id,
         circleId: BigInt(late.circleId),
+        user: late.user,
         round: BigInt(late.round),
         fee: BigInt(late.fee),
         timestamp: BigInt(late.transaction.blockTimestamp),
@@ -915,12 +958,25 @@ export const useCircleSavings = (
       );
       setInvitations(processedInvitations);
 
-      // Process collateral withdrawals
-      const processedCollateralWithdrawals = (
-        circlesData.collateralWithdrawns || []
+      // Process collateral withdrawals - combine user withdrawals and all circle withdrawals
+      const allWithdrawalsMap = new Map();
+
+      // Add user withdrawals first
+      circlesData.collateralWithdrawns?.forEach((cw: any) =>
+        allWithdrawalsMap.set(cw.id, cw)
+      );
+
+      // Add joined circles withdrawals
+      circlesData.joinedCirclesCollateralWithdrawals?.forEach((cw: any) =>
+        allWithdrawalsMap.set(cw.id, cw)
+      );
+
+      const processedCollateralWithdrawals = Array.from(
+        allWithdrawalsMap.values()
       ).map((cw: any) => ({
         id: cw.id,
         circleId: BigInt(cw.circleId),
+        user: cw.user,
         amount: BigInt(cw.amount),
         timestamp: BigInt(cw.transaction.blockTimestamp),
         transactionHash: cw.transaction.transactionHash,

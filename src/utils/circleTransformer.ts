@@ -13,7 +13,9 @@ export const transformCircleToActiveCircle = (
     contributions: any[] = [],
     payouts: any[] = [],
     collateralWithdrawals: any[] = [],
-    forfeitures: any[] = []
+    forfeitures: any[] = [],
+    collateralReturns: any[] = [],
+    latePayments: any[] = []
 ): ActiveCircle => {
     // Find members for this circle
     const circleMembers = joinedCircles
@@ -109,13 +111,22 @@ export const transformCircleToActiveCircle = (
         }
     }
 
-    // Check if user has withdrawn collateral
-    const hasWithdrawn = userAddress
-        ? collateralWithdrawals.some(cw =>
+    // Check if user has withdrawn collateral or it has been returned
+    const userCollateralWithdrawals = userAddress
+        ? collateralWithdrawals.filter(cw =>
             cw.circleId === circle.circleId &&
             cw.user?.id?.toLowerCase() === userAddress.toLowerCase()
         )
-        : false;
+        : [];
+
+    const userCollateralReturns = userAddress
+        ? collateralReturns.filter(cr =>
+            cr.circleId === circle.circleId &&
+            cr.user?.id?.toLowerCase() === userAddress.toLowerCase()
+        )
+        : [];
+
+    const hasWithdrawn = userCollateralWithdrawals.length > 0 || userCollateralReturns.length > 0;
 
     // Check if user has been forfeited at any point and count events
     const userForfeitures = userAddress
@@ -126,26 +137,60 @@ export const transformCircleToActiveCircle = (
         : [];
 
     const isForfeited = userForfeitures.length > 0;
-    const latePayCount = userForfeitures.length;
 
-    // Calculate actual financial loss (only the penalty fees) and the contribution portion
-    // Loss = Total Deduction - Contribution Portion
+    // Calculate actual financial loss (penalty fees and missed contributions)
     let forfeitedPenaltyTotal = 0n;
     let forfeitedContributionTotal = 0n;
 
-    userForfeitures.forEach((f) => {
-        const deduction = BigInt(f.deductionAmount || 0);
-        const contributionPortion = deduction > BigInt(circle.contributionAmount || 0)
-            ? BigInt(circle.contributionAmount || 0)
-            : deduction;
-        const penaltyFee = deduction - contributionPortion;
+    // We track deductions by round to avoid double counting if multiple events exist
+    const roundDeductions = new Map<bigint, { penalty: bigint, contribution: bigint }>();
 
-        forfeitedPenaltyTotal += penaltyFee;
-        forfeitedContributionTotal += contributionPortion;
+    // Check for late payments (where user paid late and deduction happened)
+    const userLatePayments = userAddress
+        ? latePayments.filter(lp =>
+            lp.circleId === circle.circleId &&
+            (lp.user?.id?.toLowerCase() === userAddress.toLowerCase())
+        )
+        : [];
+
+    // 1. Process late payments (paid late, so only a penalty fee is deducted from collateral)
+    userLatePayments.forEach(lp => {
+        const round = BigInt(lp.round);
+        const fee = BigInt(lp.fee || 0);
+
+        if (!roundDeductions.has(round)) {
+            roundDeductions.set(round, { penalty: fee, contribution: 0n });
+        }
+    });
+
+    // 2. Process forfeitures (missed contribution, so BOTH contribution and penalty are deducted)
+    userForfeitures.forEach((f) => {
+        const round = BigInt(f.round);
+        const deduction = BigInt(f.deductionAmount || 0);
+        const contributionAmount = BigInt(circle.contributionAmount || 0);
+
+        const penaltyPortion = deduction > contributionAmount ? deduction - contributionAmount : 0n;
+        const contributionPortion = deduction >= contributionAmount ? contributionAmount : deduction;
+
+        // Forfeiture deductuion always takes precedence/overwrites late record for the same round
+        roundDeductions.set(round, { penalty: penaltyPortion, contribution: contributionPortion });
+    });
+
+    // Sum all unique round deductions
+    roundDeductions.forEach((d) => {
+        forfeitedPenaltyTotal += d.penalty;
+        forfeitedContributionTotal += d.contribution;
     });
 
     const forfeitedAmount = forfeitedPenaltyTotal;
     const forfeitedContributionPortion = forfeitedContributionTotal;
+    const latePayCount = roundDeductions.size;
+
+    const circleCollateralWithdrawals = collateralWithdrawals.filter(
+        cw => cw.circleId === circle.circleId
+    );
+    const isDead = circleCollateralWithdrawals.length > 0;
+    const actualState = isDead ? 5 : circle.state; // 5 = DEAD state
 
     return {
         id: circle.id,
@@ -156,7 +201,7 @@ export const transformCircleToActiveCircle = (
         currentPosition: userPosition > 0 ? userPosition : 1,
         payoutAmount: payoutAmount,
         nextPayout: nextPayout,
-        status: getStateText(circle.state),
+        status: getStateText(actualState), // Use actualState instead of circle.state
         membersList: circleMembers,
         currentRound: circle.currentRound || 1n,
         contributionDeadline: calculateContributionDeadline(
@@ -196,7 +241,7 @@ export const transformCircleToActiveCircle = (
             currentMembers: circle.currentMembers,
             currentRound: circle.currentRound,
             visibility: circle.visibility,
-            state: circle.state,
+            state: actualState, // Use actualState instead of circle.state
             createdAt: circle.createdAt,
             startedAt: circle.startedAt,
             creator: circle.creator,
@@ -216,7 +261,9 @@ export const transformCircles = (
     contributions: any[] = [],
     payouts: any[] = [],
     collateralWithdrawals: any[] = [],
-    forfeitures: any[] = []
+    forfeitures: any[] = [],
+    collateralReturns: any[] = [],
+    latePayments: any[] = []
 ): ActiveCircle[] => {
     return circles
         .map((circle) =>
@@ -231,7 +278,9 @@ export const transformCircles = (
                 contributions,
                 payouts,
                 collateralWithdrawals,
-                forfeitures
+                forfeitures,
+                collateralReturns,
+                latePayments
             )
         )
         .sort(
