@@ -31,7 +31,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     payouts,
     collateralWithdrawals,
     collateralReturns,
-    latePayments,
     getWithdrawalInfo,
     getLateMembersForCircle,
     forfeitures,
@@ -66,8 +65,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
       payouts,
       collateralWithdrawals,
       forfeitures,
-      collateralReturns,
-      latePayments
+      collateralReturns
     );
   }, [
     circles,
@@ -82,7 +80,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     collateralWithdrawals,
     collateralReturns,
     forfeitures,
-    latePayments,
   ]);
 
   // Filter circles:

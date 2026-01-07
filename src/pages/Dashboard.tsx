@@ -39,7 +39,6 @@ const Dashboard: React.FC = () => {
     positions,
     collateralWithdrawals,
     collateralReturns,
-    latePayments,
     forfeitures,
     isLoading: isCirclesLoading,
   } = useCircleSavings(client);
@@ -62,8 +61,7 @@ const Dashboard: React.FC = () => {
         payouts,
         collateralWithdrawals,
         forfeitures,
-        collateralReturns,
-        latePayments
+        collateralReturns
       ),
     [
       circles,
@@ -78,7 +76,6 @@ const Dashboard: React.FC = () => {
       collateralWithdrawals,
       forfeitures,
       collateralReturns,
-      latePayments,
     ]
   );
 
@@ -170,7 +167,6 @@ const Dashboard: React.FC = () => {
     collateralWithdrawals,
     forfeitures,
     collateralReturns,
-    latePayments,
   ]);
 
   // Calculate total committed in personal savings
