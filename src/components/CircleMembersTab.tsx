@@ -120,15 +120,6 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
       });
     }
 
-    // Debug logging
-    if (isActiveCircle && membersData) {
-      console.log("Circle:", circle.rawCircle?.circleId?.toString());
-      console.log("Current Round:", currentRound.toString());
-      console.log("Contributions:", membersData.contributionMades?.length || 0);
-      console.log("Forfeitures:", membersData.memberForfeiteds?.length || 0);
-      console.log("Contributed Members:", Array.from(contributed));
-    }
-
     return contributed;
   }, [membersData, isActiveCircle, circle.rawCircle?.circleId, currentRound]);
 
