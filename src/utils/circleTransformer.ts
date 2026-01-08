@@ -149,7 +149,9 @@ export const transformCircleToActiveCircle = (
         )
         : [];
 
-    const hasWithdrawn = userCollateralWithdrawals.length > 0 || userCollateralReturns.length > 0;
+    // Separate flags for different withdrawal types
+    const hasWithdrawn = userCollateralWithdrawals.length > 0; // Withdrew from DEAD circle
+    const hasReceivedCollateral = userCollateralReturns.length > 0; // Received from COMPLETED circle
 
     // Check if user has been forfeited at any point and count events
     const userForfeitures = userAddress
@@ -190,11 +192,32 @@ export const transformCircleToActiveCircle = (
     const forfeitedContributionPortion = forfeitedContributionTotal;
     const forfeitCount = roundDeductions.size;
 
+    // Determine if circle is dead or completed
+    // CollateralWithdrawn = Circle died before starting (members withdrew before circle started)
+    // CollateralReturned = Circle completed successfully (collateral returned after completion)
     const circleCollateralWithdrawals = collateralWithdrawals.filter(
         cw => BigInt(cw.circleId).toString() === BigInt(circle.circleId).toString()
     );
-    const isDead = circleCollateralWithdrawals.length > 0;
-    const actualState = isDead ? 5 : circle.state; // 5 = DEAD state
+    const circleCollateralReturns = collateralReturns.filter(
+        cr => BigInt(cr.circleId).toString() === BigInt(circle.circleId).toString()
+    );
+
+    const hasWithdrawals = circleCollateralWithdrawals.length > 0;
+    const hasReturns = circleCollateralReturns.length > 0;
+
+    // Determine actual state:
+    // Priority 1: If circle state is COMPLETED (4), keep it COMPLETED
+    // Priority 2: If has collateral returns, circle completed successfully -> COMPLETED
+    // Priority 3: If has withdrawals but no returns -> circle died before start -> DEAD
+    // Priority 4: Otherwise, use the circle's current state from contract
+    let actualState = circle.state;
+    if (circle.state === 4 || hasReturns) {
+        // Circle completed successfully
+        actualState = 4; // COMPLETED
+    } else if (hasWithdrawals && !hasReturns) {
+        // Circle died before starting
+        actualState = 5; // DEAD
+    }
 
     return {
         id: circle.id,
@@ -228,6 +251,7 @@ export const transformCircleToActiveCircle = (
         hasContributed: hasContributed,
         userTotalContributed: userTotalContributed,
         hasWithdrawn: hasWithdrawn,
+        hasReceivedCollateral: hasReceivedCollateral,
         isForfeited: isForfeited,
         isForfeitedThisRound: isForfeitedThisRound,
         forfeitedAmount: forfeitedAmount,

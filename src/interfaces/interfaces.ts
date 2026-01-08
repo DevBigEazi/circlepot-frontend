@@ -111,7 +111,8 @@ export interface ActiveCircle {
   payouts?: any[];
   hasContributed?: boolean;
   userTotalContributed?: bigint;
-  hasWithdrawn?: boolean;
+  hasWithdrawn?: boolean; // Withdrew from a DEAD circle
+  hasReceivedCollateral?: boolean; // Received collateral from a COMPLETED circle
   isForfeited?: boolean;
   isForfeitedThisRound?: boolean;
   forfeitedAmount?: bigint;
