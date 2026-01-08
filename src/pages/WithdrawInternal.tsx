@@ -107,8 +107,8 @@ const WithdrawInternal: React.FC = () => {
           Transfer Successful!
         </h2>
         <p className="mb-8 font-medium" style={{ color: colors.textLight }}>
-          Sent <span className="text-lime-900 font-bold">{amount} USDm</span>{" "}
-          to @{recipient?.username}
+          Sent <span className="text-lime-900 font-bold">{amount} USDm</span> to
+          @{recipient?.username}
         </p>
         <button
           onClick={() => navigate("/")}

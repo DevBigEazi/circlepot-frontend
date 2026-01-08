@@ -1,10 +1,10 @@
-// CirclePot Push Notification Handlers
+// Circlepot Push Notification Handlers
 // This file is imported by the Workbox-generated service worker via importScripts
 
 // Push event - handle incoming push notifications
 self.addEventListener("push", (event) => {
   let notificationData = {
-    title: "CirclePot Notification",
+    title: "Circlepot Notification",
     body: "You have a new update",
     icon: "/pwa-192x192.png",
     badge: "/pwa-64x64.png",
@@ -126,7 +126,7 @@ self.addEventListener("message", (event) => {
 
 // Periodic background sync (Chrome/Edge only)
 self.addEventListener("periodicsync", (event) => {
-  if (event.tag === "circlepot-notifications-sync") {
+  if (event.tag === "Circlepot-notifications-sync") {
     event.waitUntil(checkForNewNotifications());
   }
 });
@@ -180,7 +180,7 @@ async function checkForNewNotifications() {
 async function getNotificationApiUrl() {
   return new Promise((resolve) => {
     try {
-      const request = indexedDB.open("circlepot-config", 1);
+      const request = indexedDB.open("Circlepot-config", 1);
 
       request.onerror = () => {
         resolve(null);
