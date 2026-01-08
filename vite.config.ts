@@ -17,7 +17,7 @@ export default defineConfig({
     manifest: {
       name: 'Circlepot',
       short_name: 'Circlepot',
-      description: 'Helping millions of people around the world save and grow together through trusted digital savings circles that work just like the ones they know — only easier and safer.',
+      description: 'Save together, grow together. Circlepot is a community-driven savings platform that helps you reach your financial goals with friends and family.',
       theme_color: '#ffffff',
       background_color: '#ffffff',
       display: 'standalone',
