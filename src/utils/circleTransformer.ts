@@ -103,23 +103,21 @@ export const transformCircleToActiveCircle = (
     let userTotalContributed = 0n;
 
     if (userAddress) {
-        // Calculate total contributed by user for this circle
-        userTotalContributed = contributions
-            .filter(c =>
-                BigInt(c.circleId).toString() === BigInt(circle.circleId).toString() &&
-                isUserMatch(c.user)
-            )
-            .reduce((sum, c) => sum + c.amount, 0n);
-
         if (circle.state === 3) { // ACTIVE
             const currentRound = BigInt(circle.currentRound || 1n);
 
-            // Check manual contribution
-            const contributedThisRound = contributions.some(c =>
+            // Only count contribution for the CURRENT round as "committed"
+            // Previous rounds are already distributed.
+            const currentRoundContrib = contributions.find(c =>
                 BigInt(c.circleId).toString() === BigInt(circle.circleId).toString() &&
                 BigInt(c.round) === currentRound &&
                 isUserMatch(c.user)
             );
+
+            userTotalContributed = currentRoundContrib ? currentRoundContrib.amount : 0n;
+
+            // Check manual contribution for UI flags
+            const contributedThisRound = !!currentRoundContrib;
 
             // Check if forfeited this round
             const forfeitedThisRoundEvent = forfeitures.find(f =>
@@ -130,6 +128,9 @@ export const transformCircleToActiveCircle = (
 
             isForfeitedThisRound = !!forfeitedThisRoundEvent;
             hasContributed = contributedThisRound || isForfeitedThisRound;
+        } else {
+            // For other states, no contributions are "committed" in the active pot
+            userTotalContributed = 0n;
         }
     }
 
