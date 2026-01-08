@@ -29,7 +29,7 @@ export const useThemeColors = (): ThemeColors => {
 
   const lightColors: ThemeColors = {
     primary: "#5C6F2B", // Vibrant Circlepot Sage
-    secondary: "#DE802B", 
+    secondary: "#DE802B",
     accent: "#2E3338",
     background: "#F8F9FA",
     surface: "#F1F5F1",

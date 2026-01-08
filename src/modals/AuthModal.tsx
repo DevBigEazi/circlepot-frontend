@@ -133,7 +133,7 @@ const AuthModal: React.FC = () => {
           <div className="flex flex-col items-center justify-center mb-6">
             <img
               src={image.fullLogo}
-              alt="CirlePot Logo"
+              alt="Circlepot Logo"
               className="w-32 sm:w-40 md:w-48 lg:w-56 h-auto"
             />
             <h2

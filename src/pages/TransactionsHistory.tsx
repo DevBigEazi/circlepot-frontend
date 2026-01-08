@@ -360,7 +360,7 @@ const TransactionsHistory: React.FC = () => {
               </h3>
               <p className="text-sm" style={{ color: colors.textLight }}>
                 Your transaction history will appear here once you start using
-                CirclePot
+                Circlepot
               </p>
             </div>
           )}
