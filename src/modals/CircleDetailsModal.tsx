@@ -185,20 +185,24 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
   const maxMembers = Number(
     circle.rawCircle?.maxMembers || circle.totalPositions
   );
-  const collateralLocked = circle.hasWithdrawn
-    ? 0
-    : Math.max(
-        0,
-        calculateCollateral(circle.contribution, maxMembers) - deductions
-      );
+  // Show 0 for dead circles (hasWithdrawn) or completed circles (status === 'completed')
+  const collateralLocked =
+    circle.hasWithdrawn || circle.status === "completed"
+      ? 0
+      : Math.max(
+          0,
+          calculateCollateral(circle.contribution, maxMembers) - deductions
+        );
 
   // Collateral Required: Based on currentMembers (what's actually needed for the circle)
   const currentMembers = Number(
     circle.rawCircle?.currentMembers || circle.totalPositions
   );
-  const collateralRequired = circle.hasWithdrawn
-    ? 0
-    : calculateCollateral(circle.contribution, currentMembers);
+  // Show 0 for dead circles (hasWithdrawn) or completed circles (status === 'completed')
+  const collateralRequired =
+    circle.hasWithdrawn || circle.status === "completed"
+      ? 0
+      : calculateCollateral(circle.contribution, currentMembers);
 
   const minMembersToStart = getMinMembersToStart(maxMembers);
   const ultimatumPeriod = getUltimatumPeriod(circle.frequency);
