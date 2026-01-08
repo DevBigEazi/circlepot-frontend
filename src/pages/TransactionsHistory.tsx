@@ -43,6 +43,7 @@ const TransactionsHistory: React.FC = () => {
       case "dead_circle_fee":
         return AlertCircle;
       case "collateral_withdrawal":
+      case "collateral_return":
         return DollarSign;
       case "USDm_send":
         return Send;
@@ -71,6 +72,7 @@ const TransactionsHistory: React.FC = () => {
       case "goal_withdrawal":
       case "goal_completion":
       case "collateral_withdrawal":
+      case "collateral_return":
       case "USDm_receive":
         return "bg-green-100 text-green-600";
       case "circle_contribution":
@@ -104,6 +106,8 @@ const TransactionsHistory: React.FC = () => {
         return "Dead Circle Fee";
       case "collateral_withdrawal":
         return "Collateral Refund";
+      case "collateral_return":
+        return "Collateral Refund";
       case "USDm_send":
         return "Sent USDm";
       case "USDm_receive":
@@ -120,6 +124,7 @@ const TransactionsHistory: React.FC = () => {
       "goal_withdrawal",
       "goal_completion",
       "collateral_withdrawal",
+      "collateral_return",
       "USDm_receive",
     ].includes(type);
   };

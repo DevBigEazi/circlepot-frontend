@@ -162,6 +162,26 @@ const transactionHistoryQuery = gql`
       }
     }
 
+    # Collateral returns (completed circles)
+    collateralReturneds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+        username
+        fullName
+      }
+      circleId
+      amount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+
     # Dead circle fees deducted
     deadCircleFeeDeducteds(
       where: { creator: $userId }
@@ -226,9 +246,7 @@ export interface Transaction {
   | "goal_completion"
   | "late_payment"
   | "collateral_withdrawal"
-  | "USDm_send"
-  | "late_payment"
-  | "collateral_withdrawal"
+  | "collateral_return"
   | "dead_circle_fee"
   | "USDm_send"
   | "USDm_receive";
@@ -384,8 +402,8 @@ export const useTransactionHistory = () => {
             ...result.contributionMades.map((c: any) => c.circleId),
             ...result.payoutDistributeds.map((p: any) => p.circleId),
             ...result.latePaymentRecordeds.map((l: any) => l.circleId),
-            ...result.latePaymentRecordeds.map((l: any) => l.circleId),
             ...result.collateralWithdrawns.map((cw: any) => cw.circleId),
+            ...result.collateralReturneds.map((cr: any) => cr.circleId),
             ...result.deadCircleFeeDeducteds.map((d: any) => d.circleId),
           ]),
         ];
@@ -718,8 +736,8 @@ export const useTransactionHistory = () => {
           transactionsData.circleNamesMap.get(cw.circleId) || "Unknown Circle",
         circleId: BigInt(cw.circleId),
         note: hasDeadCircleFee
-          ? `Collateral refund (Dead circle fee: ${(Number(feeAmount) / 1e18).toFixed(2)} USDm deducted)`
-          : "Collateral refund",
+          ? `Dead Circle (fee: ${(Number(feeAmount) / 1e18).toFixed(2)} USDm deducted)`
+          : "Dead Circle",
       });
 
       // Mark this fee as processed so we don't create a duplicate transaction
@@ -744,6 +762,24 @@ export const useTransactionHistory = () => {
           transactionsData.circleNamesMap.get(fee.circleId) || "Unknown Circle",
         circleId: BigInt(fee.circleId),
         note: "Fee for dead circle",
+      });
+    });
+
+    // Process collateral returns (completed circles)
+    transactionsData.collateralReturneds?.forEach((cr: any) => {
+      allTransactions.push({
+        id: cr.id,
+        type: "collateral_return",
+        amount: BigInt(cr.amount),
+        currency: "USDm",
+        timestamp: BigInt(cr.transaction.blockTimestamp),
+        transactionHash: cr.transaction.transactionHash,
+        status: "success",
+        fee: 0n,
+        circleName:
+          transactionsData.circleNamesMap.get(cr.circleId) || "Unknown Circle",
+        circleId: BigInt(cr.circleId),
+        note: "Circle completed",
       });
     });
 
