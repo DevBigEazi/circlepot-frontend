@@ -393,8 +393,9 @@ const Circles: React.FC = () => {
                       p.user?.id?.toLowerCase() ===
                       account?.address?.toLowerCase()
                   );
+                  // Only consider actually withdrawn from DEAD circles, not completed circles
                   const hasWithdrawn =
-                    circle.hasWithdrawn || circle.status === "dead";
+                    circle.hasWithdrawn && circle.status === "dead";
                   const isForfeited = circle.isForfeited;
                   const hasForfeit = (circle.forfeitCount || 0) > 0;
 
@@ -425,8 +426,12 @@ const Circles: React.FC = () => {
                       class: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
                     });
                   }
-                  if (hasWithdrawn && !isForfeited) {
-                    // Show withdrawn if not forfeited (already covered)
+                  // Only show withdrawn label for DEAD circles, not completed ones
+                  if (
+                    hasWithdrawn &&
+                    !isForfeited &&
+                    circle.status === "dead"
+                  ) {
                     statusInfo.push({
                       label: "Withdrawn (Circle Dead)",
                       icon: (
