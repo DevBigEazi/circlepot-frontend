@@ -861,6 +861,7 @@ export const useCircleSavings = (
           circleId: BigInt(contrib.circleId),
           round: BigInt(contrib.round),
           amount: BigInt(contrib.amount),
+          user: contrib.user,
           timestamp: BigInt(contrib.transaction.blockTimestamp),
         })
       );
