@@ -1,27 +1,17 @@
 import {
-  Settings2,
-  User,
-  Camera,
-  Palette,
-  HelpCircle,
-  Loader,
   Check,
-  Upload,
-  Bell,
   Lock,
-  Copy,
-  CopyCheck,
   LogOut,
   ChevronDown,
   Search,
+  Bell,
+  ChevronRight,
 } from "lucide-react";
-import { BsCurrencyExchange } from "react-icons/bs";
 import { SiThirdweb } from "react-icons/si";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { useThirdwebStorage } from "../hooks/useThirdwebStorage";
 import { toast } from "sonner";
 import NavBar from "../components/NavBar";
 import { useNavigate } from "react-router";
@@ -33,8 +23,8 @@ import { useBiometric } from "../hooks/useBiometric";
 import ThemeToggle from "../components/ThemeToggle";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useNotifications } from "../contexts/NotificationsContext";
-import { Skeleton } from "../components/Skeleton";
 import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
+import { getInitials } from "../utils/helpers";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -43,77 +33,46 @@ const Settings: React.FC = () => {
   const wallet = useActiveWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { availableCurrencies } = useCurrencyConverter();
-  const { isPushSupported, isSubscribed, togglePushNotifications } =
-    useNotifications();
+  const { isSubscribed, togglePushNotifications } = useNotifications();
 
+  // State for logout and loading
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isPushLoading, setIsPushLoading] = useState(false);
-
-  const { profile, isLoading, updatePhoto } = useUserProfile(client);
-  const { uploadImage, isUploading, uploadProgress } =
-    useThirdwebStorage(client);
-  const { enableBiometric, disableBiometric } = useBiometricContext();
-  const {
-    isSupported: isBiometricSupported,
-    isAuthenticating,
-    registerBiometric,
-    removeBiometric,
-  } = useBiometric();
-
-  const [userSettings, setUserSettings] = useState({
-    userName: "",
-    userFullName: "",
-    userEmail: "",
-    accountId: "",
-    profileImage: null as string | null,
-    biometrics: false,
-    lastProfileUpdate: null as string | null,
-  });
-
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
   const [currencySearch, setCurrencySearch] = useState("");
   const currencyDropdownRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Populate settings from profile data
+  // Profile data for basic display (read-only in settings)
+  const { profile } = useUserProfile(client);
+  const { enableBiometric, disableBiometric } = useBiometricContext();
+  const { registerBiometric, removeBiometric } = useBiometric();
+
+  const [accountId, setAccountId] = useState("");
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+
   useEffect(() => {
     if (profile) {
-      setUserSettings((prev) => ({
-        ...prev,
-        userName: profile.username || "",
-        userFullName: profile.fullName || "",
-        userEmail: profile.email || "",
-        accountId: profile.accountId?.toString() || "",
-        profileImage: profile.photo || null,
-      }));
-      setPreviewImage(profile.photo || null);
+      setAccountId(profile.accountId?.toString() || "");
     }
   }, [profile]);
 
   // Sync biometric toggle with actual state
   useEffect(() => {
-    if (userSettings.accountId) {
+    if (accountId) {
       const biometricState = localStorage.getItem(
-        `biometric_state_${userSettings.accountId}`
+        `biometric_state_${accountId}`
       );
       if (biometricState) {
         try {
           const state = JSON.parse(biometricState);
-          setUserSettings((prev) => ({
-            ...prev,
-            biometrics: state.isEnabled || false,
-          }));
+          setIsBiometricEnabled(state.isEnabled || false);
         } catch (err) {
-          throw err;
+          console.error("Error parsing biometric state:", err);
         }
       }
     }
-  }, [userSettings.accountId]);
+  }, [accountId]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -128,122 +87,6 @@ const Settings: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const canUpdatePhoto = (): boolean => {
-    if (!profile?.lastPhotoUpdate) return true;
-    const lastUpdate = new Date(Number(profile.lastPhotoUpdate) * 1000);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return lastUpdate < thirtyDaysAgo;
-  };
-
-  const daysUntilPhotoUpdate = (): number => {
-    if (!profile?.lastPhotoUpdate) return 0;
-    const lastUpdate = new Date(Number(profile.lastPhotoUpdate) * 1000);
-    const nextAllowedUpdate = new Date(lastUpdate);
-    nextAllowedUpdate.setDate(nextAllowedUpdate.getDate() + 30);
-    const daysLeft = Math.ceil(
-      (nextAllowedUpdate.getTime() - new Date().getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
-    return daysLeft > 0 ? daysLeft : 0;
-  };
-
-  const handleImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size must be less than 5MB");
-        return;
-      }
-
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select a valid image file");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setPreviewImage(result);
-        setSelectedFile(file);
-      };
-      reader.onerror = () => {
-        toast.error("Failed to read image file");
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSaveProfile = useCallback(async (): Promise<void> => {
-    try {
-      let profilePhotoUrl: string | null = previewImage;
-
-      // Upload new photo to IPFS if a new file was selected
-      if (selectedFile) {
-        try {
-          const uploadResult = await uploadImage(selectedFile, {
-            name: `profile-${userSettings.userName}-${Date.now()}`,
-            keyvalues: {
-              username: userSettings.userName,
-              email: userSettings.userEmail,
-              fullName: userSettings.userFullName,
-              type: "profile_photo",
-            },
-          });
-          profilePhotoUrl = uploadResult.ipfsUrl;
-
-          // Update photo on blockchain
-          await updatePhoto(profilePhotoUrl);
-        } catch (uploadErr) {
-          const err = uploadErr as Error;
-          toast.error(`Failed to upload photo: ${err.message}`);
-          return;
-        }
-      }
-
-      setUserSettings((prev) => ({
-        ...prev,
-        profileImage: profilePhotoUrl,
-        lastProfileUpdate: new Date().toISOString(),
-      }));
-      toast.success("Profile photo updated successfully!");
-      setEditingProfile(false);
-      setSelectedFile(null);
-    } catch (err) {
-      const error = err as Error;
-      toast.error(error.message || "Failed to save profile");
-    }
-  }, [
-    previewImage,
-    selectedFile,
-    userSettings.userName,
-    userSettings.userEmail,
-    userSettings.userFullName,
-    uploadImage,
-    updatePhoto,
-  ]);
-
-  const handleCancelEdit = (): void => {
-    setPreviewImage(userSettings.profileImage);
-    setSelectedFile(null);
-    setEditingProfile(false);
-  };
-
-  const triggerFileInput = (): void => {
-    fileInputRef.current?.click();
-  };
-
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    toast.success(
-      `${field.charAt(0).toUpperCase() + field.slice(1)} copied to clipboard`
-    );
-    setTimeout(() => setCopiedField(null), 2000);
-  };
 
   const handleDisconnect = async () => {
     try {
@@ -262,22 +105,22 @@ const Settings: React.FC = () => {
   const handleBiometricToggle = async (enabled: boolean) => {
     if (enabled) {
       const result = await registerBiometric({
-        userId: userSettings.accountId,
-        userName: userSettings.userName,
-        userEmail: userSettings.userEmail,
+        userId: accountId,
+        userName: profile?.username || "",
+        userEmail: profile?.email || "",
       });
       if (result.success) {
-        enableBiometric(); // Updates global state + localStorage
-        setUserSettings((prev) => ({ ...prev, biometrics: true })); // Update local state
+        enableBiometric();
+        setIsBiometricEnabled(true);
         toast.success("Biometric registered!");
       } else {
         toast.error(result.error || "Failed to register biometric");
-        setUserSettings((prev) => ({ ...prev, biometrics: false })); // Reset on failure
+        setIsBiometricEnabled(false);
       }
     } else {
-      removeBiometric(userSettings.accountId);
-      disableBiometric(); // Updates global state + localStorage
-      setUserSettings((prev) => ({ ...prev, biometrics: false })); // Update local state
+      removeBiometric(accountId);
+      disableBiometric();
+      setIsBiometricEnabled(false);
       toast.success("Biometric disabled");
     }
   };
@@ -300,51 +143,13 @@ const Settings: React.FC = () => {
     }
   };
 
-  const isProcessing = isLoading || isUploading;
-
-  const CopyableField = ({
-    label,
-    value,
-    field,
-  }: {
-    label: string;
-    value: string;
-    field: string;
-  }) => (
-    <div>
-      <label
-        className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2"
-        style={{ color: colors.text }}
-      >
-        {label}
-      </label>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={value}
-          disabled
-          className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl border cursor-not-allowed opacity-60 text-sm"
-          style={{
-            borderColor: colors.border,
-            backgroundColor: colors.background,
-            color: colors.textLight,
-          }}
-        />
-        <button
-          onClick={() => copyToClipboard(value, field)}
-          className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl border transition flex items-center justify-center flex-shrink-0 hover:opacity-80"
-          style={{
-            borderColor: colors.border,
-            backgroundColor: colors.background,
-            color: copiedField === field ? colors.primary : colors.text,
-          }}
-          title="Copy to clipboard"
-        >
-          {copiedField === field ? <CopyCheck size={16} /> : <Copy size={16} />}
-        </button>
-      </div>
-    </div>
-  );
+  const filteredCurrencies = Object.keys(availableCurrencies).filter((code) => {
+    const currency = availableCurrencies[code];
+    return (
+      code.toLowerCase().includes(currencySearch.toLowerCase()) ||
+      currency.name.toLowerCase().includes(currencySearch.toLowerCase())
+    );
+  });
 
   return (
     <>
@@ -352,7 +157,6 @@ const Settings: React.FC = () => {
         variant="minimal"
         onBack={() => navigate(-1)}
         title="Settings"
-        titleIcon={<Settings2 size={24} />}
         colors={colors}
       />
 
@@ -363,339 +167,51 @@ const Settings: React.FC = () => {
       >
         <div className="max-w-2xl mx-auto py-4 sm:py-6">
           <div className="space-y-4 sm:space-y-6">
-            {/* Profile Section */}
-            <div
-              className="rounded-2xl p-4 sm:p-6 shadow-sm border"
+            {/* Profile Navigation Card */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-full text-left rounded-2xl p-4 sm:p-6 shadow-sm border transition hover:opacity-90 flex items-center justify-between"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
               }}
             >
-              <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <div className="flex items-center gap-4">
                 <div
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: colors.primary }}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border flex items-center justify-center bg-muted"
+                  style={{ borderColor: colors.border }}
                 >
-                  <User className="text-white" size={18} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-bold text-sm sm:text-base truncate"
-                    style={{ color: colors.text }}
-                  >
-                    Profile
-                  </h3>
-                  <p
-                    className="text-xs sm:text-sm truncate"
-                    style={{ color: colors.textLight }}
-                  >
-                    Update your profile photo
-                  </p>
-                </div>
-              </div>
-              {isLoading ? (
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center">
-                    <Skeleton
-                      width="6rem"
-                      height="6rem"
-                      borderRadius="50%"
-                      className="mb-4"
+                  {profile?.photo ? (
+                    <img
+                      src={profile.photo}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
                     />
-                    <Skeleton
-                      width="8rem"
-                      height="2rem"
-                      borderRadius="0.75rem"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="space-y-2">
-                        <Skeleton width="30%" height="1rem" />
-                        <Skeleton
-                          width="100%"
-                          height="3rem"
-                          borderRadius="0.75rem"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4">
-                  {/* Profile Image */}
-                  <div className="flex flex-col items-center">
-                    <div className="relative mb-3 sm:mb-4">
-                      <div
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4"
-                        style={{ borderColor: colors.primary }}
-                      >
-                        {previewImage ? (
-                          <img
-                            src={previewImage}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: colors.background }}
-                          >
-                            <User
-                              size={28}
-                              style={{ color: colors.textLight }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      {editingProfile && canUpdatePhoto() && (
-                        <button
-                          onClick={triggerFileInput}
-                          disabled={isProcessing}
-                          className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 transition hover:scale-110"
-                          style={{ backgroundColor: colors.primary }}
-                        >
-                          {isUploading ? (
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Camera size={14} className="text-white" />
-                          )}
-                        </button>
-                      )}
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageChange}
-                        accept="image/*"
-                        className="hidden"
-                        disabled={isProcessing}
-                      />
-                    </div>
-
-                    {/* Photo Update Lock Warning */}
-                    {!canUpdatePhoto() && (
-                      <div
-                        className="w-full rounded-lg p-2 sm:p-3 flex items-center gap-2 mb-3"
-                        style={{
-                          backgroundColor: colors.warningBg,
-                          borderColor: colors.warningBorder,
-                        }}
-                      >
-                        <Lock
-                          size={14}
-                          className="flex-shrink-0"
-                          style={{ color: colors.accent }}
-                        />
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.textLight }}
-                        >
-                          Photo update available in {daysUntilPhotoUpdate()}{" "}
-                          days
-                        </p>
-                      </div>
-                    )}
-
-                    {editingProfile && canUpdatePhoto() && (
-                      <>
-                        <button
-                          onClick={triggerFileInput}
-                          disabled={isProcessing}
-                          className="text-xs sm:text-sm font-medium disabled:opacity-50 flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition hover:bg-opacity-10 mb-3"
-                          style={{
-                            color: colors.primary,
-                            backgroundColor: selectedFile
-                              ? colors.successBg
-                              : "transparent",
-                          }}
-                        >
-                          {selectedFile ? (
-                            <>
-                              <Check size={14} />
-                              <span className="hidden sm:inline">
-                                Image Selected
-                              </span>
-                              <span className="sm:hidden">Selected</span>
-                            </>
-                          ) : (
-                            <>
-                              <Upload size={14} />
-                              <span className="hidden sm:inline">
-                                Upload Photo
-                              </span>
-                              <span className="sm:hidden">Upload</span>
-                            </>
-                          )}
-                        </button>
-
-                        {isUploading && (
-                          <div className="w-full mb-3">
-                            <div
-                              className="flex justify-between text-xs mb-1"
-                              style={{ color: colors.textLight }}
-                            >
-                              <span className="truncate">
-                                Uploading to IPFS...
-                              </span>
-                              <span className="flex-shrink-0 ml-1">
-                                {uploadProgress}%
-                              </span>
-                            </div>
-                            <div
-                              className="w-full h-1.5 rounded-full"
-                              style={{ backgroundColor: colors.border }}
-                            >
-                              <div
-                                className="h-full rounded-full transition-all duration-300"
-                                style={{
-                                  width: `${uploadProgress}%`,
-                                  backgroundColor: colors.primary,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {!editingProfile && canUpdatePhoto() && (
-                      <button
-                        onClick={() => setEditingProfile(true)}
-                        disabled={isLoading}
-                        className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-medium text-white text-sm transition disabled:opacity-50"
-                        style={{ background: colors.primary }}
-                      >
-                        {isLoading ? (
-                          <Loader size={14} className="animate-spin" />
-                        ) : (
-                          <p>Edit Photo</p>
-                        )}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Account ID */}
-                  <CopyableField
-                    label="Account ID"
-                    value={userSettings.accountId}
-                    field="accountId"
-                  />
-
-                  {/* Email (Copyable) */}
-                  <CopyableField
-                    label="Email"
-                    value={userSettings.userEmail}
-                    field="email"
-                  />
-
-                  {/* Full Name (Read-only) */}
-                  <div>
-                    <label
-                      className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2"
-                      style={{ color: colors.text }}
-                    >
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={userSettings.userFullName}
-                      disabled
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border cursor-not-allowed opacity-60 text-sm"
-                      style={{
-                        borderColor: colors.border,
-                        backgroundColor: colors.background,
-                        color: colors.textLight,
-                      }}
-                    />
-                    <p
-                      className="text-xs mt-1"
-                      style={{ color: colors.textLight }}
-                    >
-                      Stored on-chain and cannot be edited
-                    </p>
-                  </div>
-
-                  {/* Username (Copyable & Read-only) */}
-                  <CopyableField
-                    label="Username"
-                    value={userSettings.userName}
-                    field="username"
-                  />
-
-                  {editingProfile && (
-                    <div className="flex gap-2 sm:gap-3">
-                      <button
-                        onClick={handleCancelEdit}
-                        disabled={isProcessing}
-                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium border transition disabled:opacity-50 text-sm"
-                        style={{
-                          borderColor: colors.border,
-                          color: colors.text,
-                          backgroundColor: colors.background,
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSaveProfile}
-                        disabled={isProcessing}
-                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 text-sm"
-                        style={{ background: colors.primary }}
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader size={14} className="animate-spin" />
-                            <span className="hidden sm:inline">Saving...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="hidden sm:inline">
-                              Save Changes
-                            </span>
-                            <span className="sm:hidden">Save</span>
-                          </>
-                        )}
-                      </button>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-lg font-bold">
+                      {getInitials(profile?.fullName)}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* Appearance */}
-            <div
-              className="rounded-2xl p-4 sm:p-6 shadow-sm border"
-              style={{
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              }}
-            >
-              <div className="flex items-center gap-2 sm:gap-3 mb-4">
-                <div
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  <Palette className="text-white" size={18} />
-                </div>
                 <div className="flex-1 min-w-0">
                   <h3
-                    className="font-bold text-sm sm:text-base truncate"
+                    className="font-bold text-base sm:text-lg truncate"
                     style={{ color: colors.text }}
                   >
-                    Appearance
+                    {profile?.fullName || "Set your name"}
                   </h3>
                   <p
                     className="text-xs sm:text-sm truncate"
                     style={{ color: colors.textLight }}
                   >
-                    Choose your theme
+                    @{profile?.username || "username"}
                   </p>
                 </div>
               </div>
-              <ThemeToggle />
-            </div>
+              <ChevronRight size={20} style={{ color: colors.textLight }} />
+            </button>
 
-            {/* Currency Settings */}
+            {/* Preferences Section */}
             <div
               className="rounded-2xl p-4 sm:p-6 shadow-sm border"
               style={{
@@ -703,253 +219,10 @@ const Settings: React.FC = () => {
                 borderColor: colors.border,
               }}
             >
-              <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <div className="flex items-center gap-2 sm:gap-3 mb-6">
                 <div
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: colors.primary }}
-                >
-                  <BsCurrencyExchange className="text-white" size={18} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-bold text-sm sm:text-base truncate"
-                    style={{ color: colors.text }}
-                  >
-                    Local Currency
-                  </h3>
-                  <p
-                    className="text-xs sm:text-sm truncate"
-                    style={{ color: colors.textLight }}
-                  >
-                    Set currency
-                  </p>
-                </div>
-              </div>
-              <div className="relative" ref={currencyDropdownRef}>
-                <button
-                  onClick={() =>
-                    setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border flex items-center justify-between transition hover:opacity-80"
-                  style={{
-                    borderColor: colors.border,
-                    backgroundColor: colors.background,
-                    color: colors.text,
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    {availableCurrencies[selectedCurrency]?.flag && (
-                      <img
-                        src={availableCurrencies[selectedCurrency].flag}
-                        alt=""
-                        className="w-6 h-4 object-cover rounded-sm shadow-sm"
-                      />
-                    )}
-                    <span className="font-medium text-sm">
-                      {availableCurrencies[selectedCurrency]?.name ||
-                        selectedCurrency}{" "}
-                      ({selectedCurrency})
-                    </span>
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform duration-200 ${
-                      isCurrencyDropdownOpen ? "rotate-180" : ""
-                    }`}
-                    style={{ color: colors.textLight }}
-                  />
-                </button>
-
-                {isCurrencyDropdownOpen && (
-                  <div
-                    className="absolute z-50 w-full mt-2 rounded-2xl border shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
-                    style={{
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    <div
-                      className="p-3 border-b"
-                      style={{ borderColor: colors.border }}
-                    >
-                      <div className="relative">
-                        <Search
-                          size={14}
-                          className="absolute left-3 top-1/2 -translate-y-1/2"
-                          style={{ color: colors.textLight }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Search currency..."
-                          value={currencySearch}
-                          onChange={(e) => setCurrencySearch(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 rounded-lg text-sm focus:outline-none"
-                          style={{
-                            backgroundColor: colors.background,
-                            color: colors.text,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="max-h-[300px] overflow-y-auto pt-1 pb-1">
-                      {Object.entries(availableCurrencies)
-                        .filter(
-                          ([code, data]) =>
-                            code
-                              .toLowerCase()
-                              .includes(currencySearch.toLowerCase()) ||
-                            data.name
-                              .toLowerCase()
-                              .includes(currencySearch.toLowerCase())
-                        )
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .map(([code, data]) => (
-                          <button
-                            key={code}
-                            onClick={() => {
-                              setSelectedCurrency(code);
-                              setIsCurrencyDropdownOpen(false);
-                              setCurrencySearch("");
-                            }}
-                            className="w-full px-4 py-2.5 flex items-center gap-3 transition hover:opacity-80 text-left"
-                            style={{
-                              backgroundColor:
-                                selectedCurrency === code
-                                  ? `${colors.primary}10`
-                                  : "transparent",
-                            }}
-                          >
-                            {data.flag && (
-                              <img
-                                src={data.flag}
-                                alt=""
-                                className="w-6 h-4 object-cover rounded-sm shadow-sm flex-shrink-0"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div
-                                className={`text-sm font-medium truncate ${
-                                  selectedCurrency === code ? "" : ""
-                                }`}
-                                style={{
-                                  color:
-                                    selectedCurrency === code
-                                      ? colors.primary
-                                      : colors.text,
-                                }}
-                              >
-                                {data.name}
-                              </div>
-                              <div
-                                className="text-[10px]"
-                                style={{ color: colors.textLight }}
-                              >
-                                {code} • {data.symbol}
-                              </div>
-                            </div>
-                            {selectedCurrency === code && (
-                              <div
-                                className="w-1.5 h-1.5 rounded-full"
-                                style={{ backgroundColor: colors.primary }}
-                              />
-                            )}
-                          </button>
-                        ))}
-                      {Object.entries(availableCurrencies).filter(
-                        ([code, data]) =>
-                          code
-                            .toLowerCase()
-                            .includes(currencySearch.toLowerCase()) ||
-                          data.name
-                            .toLowerCase()
-                            .includes(currencySearch.toLowerCase())
-                      ).length === 0 && (
-                        <div
-                          className="px-4 py-6 text-center text-sm"
-                          style={{ color: colors.textLight }}
-                        >
-                          No currencies found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Security & Privacy */}
-            <div
-              className="rounded-2xl p-4 sm:p-6 shadow-sm border"
-              style={{
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              }}
-            >
-              <h3
-                className="font-bold text-sm sm:text-base mb-3 sm:mb-4"
-                style={{ color: colors.text }}
-              >
-                Security & Privacy
-              </h3>
-
-              <div className="space-y-2 sm:space-y-4">
-                <div
-                  className="flex items-center justify-between p-2 sm:p-4 rounded-xl border"
-                  style={{
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <div className="min-w-0">
-                    <div
-                      className="font-semibold text-sm"
-                      style={{ color: colors.text }}
-                    >
-                      Biometric
-                    </div>
-                    <div
-                      className="text-xs"
-                      style={{ color: colors.textLight }}
-                    >
-                      Fingerprint/Face ID
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={userSettings.biometrics}
-                      onChange={(e) => handleBiometricToggle(e.target.checked)}
-                      disabled={!isBiometricSupported || isAuthenticating}
-                      className="sr-only peer"
-                    />
-                    <div
-                      className="w-11 h-6 rounded-full peer transition"
-                      style={{
-                        backgroundColor: userSettings.biometrics
-                          ? colors.primary
-                          : colors.border,
-                        opacity: !isBiometricSupported ? 0.5 : 1,
-                      }}
-                    />
-                    <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5" />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Notifications */}
-            <div
-              className="rounded-2xl p-4 sm:p-6 shadow-sm border"
-              style={{
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              }}
-            >
-              <div className="flex items-center gap-2 sm:gap-3 mb-4">
-                <div
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: colors.secondary }}
                 >
                   <Bell className="text-white" size={18} />
                 </div>
@@ -958,81 +231,255 @@ const Settings: React.FC = () => {
                     className="font-bold text-sm sm:text-base truncate"
                     style={{ color: colors.text }}
                   >
-                    Notifications
+                    Preferences
                   </h3>
                   <p
                     className="text-xs sm:text-sm truncate"
                     style={{ color: colors.textLight }}
                   >
-                    {isPushSupported
-                      ? "Receive push notifications"
-                      : "Push notifications not supported"}
+                    Personalize your experience
                   </p>
                 </div>
               </div>
 
-              {/* Single Notifications Toggle */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="min-w-0">
-                  <div
-                    className="font-semibold text-sm"
-                    style={{ color: colors.text }}
+              <div className="space-y-8">
+                {/* Appearance Sub-section */}
+                <div className="space-y-3">
+                  <h4
+                    className="text-xs font-bold uppercase tracking-wider"
+                    style={{ color: colors.textLight }}
                   >
-                    Enable Notifications
-                  </div>
-                  <div className="text-xs" style={{ color: colors.textLight }}>
-                    {isPushSupported
-                      ? "Get notified about circle activity, payouts & more"
-                      : "Your browser doesn't support push notifications"}
-                  </div>
+                    Appearance
+                  </h4>
+                  <ThemeToggle />
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={isSubscribed}
-                    onChange={() => handlePushToggle()}
-                    disabled={!isPushSupported || isPushLoading}
-                  />
-                  <div
-                    className={`w-11 h-6 rounded-full peer ${
-                      !isPushSupported ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    style={{
-                      backgroundColor: isSubscribed
-                        ? colors.primary
-                        : colors.border,
-                    }}
-                  />
-                  <div
-                    className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 ${
-                      !isPushSupported ? "opacity-50" : ""
-                    }`}
-                  />
-                </label>
-              </div>
 
-              {/* Push Loading State */}
-              {isPushLoading && (
-                <div
-                  className="flex items-center gap-2 p-3 rounded-lg mb-4"
-                  style={{ backgroundColor: colors.background }}
-                >
-                  <Loader
-                    size={14}
-                    className="animate-spin"
-                    style={{ color: colors.primary }}
-                  />
-                  <span className="text-xs" style={{ color: colors.textLight }}>
-                    {isSubscribed
-                      ? "Disabling..."
-                      : "Enabling push notifications..."}
-                  </span>
+                {/* Currency Sub-section */}
+                <div className="space-y-3">
+                  <h4
+                    className="text-xs font-bold uppercase tracking-wider"
+                    style={{ color: colors.textLight }}
+                  >
+                    Local Currency
+                  </h4>
+                  <div className="relative" ref={currencyDropdownRef}>
+                    <button
+                      onClick={() =>
+                        setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)
+                      }
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border flex items-center justify-between transition hover:opacity-80"
+                      style={{
+                        borderColor: colors.border,
+                        backgroundColor: colors.background,
+                        color: colors.text,
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {availableCurrencies[selectedCurrency]?.flag && (
+                          <img
+                            src={availableCurrencies[selectedCurrency].flag}
+                            alt=""
+                            className="w-6 h-4 object-cover rounded-sm shadow-sm"
+                          />
+                        )}
+                        <span className="font-medium text-sm">
+                          {availableCurrencies[selectedCurrency]?.name} (
+                          {selectedCurrency})
+                        </span>
+                      </div>
+                      <ChevronDown
+                        size={18}
+                        className={`transition-transform duration-200 ${
+                          isCurrencyDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {isCurrencyDropdownOpen && (
+                      <div
+                        className="absolute z-50 mt-2 w-full max-h-64 overflow-hidden rounded-2xl shadow-xl border animate-in fade-in slide-in-from-top-2 duration-200"
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <div
+                          className="p-2 border-b sticky top-0 bg-inherit z-10"
+                          style={{ borderColor: colors.border }}
+                        >
+                          <div className="relative">
+                            <Search
+                              className="absolute left-3 top-1/2 -translate-y-1/2"
+                              size={14}
+                              style={{ color: colors.textLight }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Search currencies..."
+                              value={currencySearch}
+                              onChange={(e) =>
+                                setCurrencySearch(e.target.value)
+                              }
+                              className="w-full pl-9 pr-3 py-2 rounded-lg border text-sm focus:outline-none transition"
+                              style={{
+                                borderColor: colors.border,
+                                backgroundColor: colors.background,
+                                color: colors.text,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto max-h-48 custom-scrollbar">
+                          {filteredCurrencies.map((code) => (
+                            <button
+                              key={code}
+                              onClick={() => {
+                                setSelectedCurrency(code);
+                                setIsCurrencyDropdownOpen(false);
+                                setCurrencySearch("");
+                                toast.success(`Currency set to ${code}`);
+                              }}
+                              className="w-full px-4 py-3 flex items-center gap-3 transition hover:opacity-80 text-left"
+                              style={{
+                                backgroundColor:
+                                  selectedCurrency === code
+                                    ? colors.hoverBg
+                                    : "transparent",
+                              }}
+                            >
+                              {availableCurrencies[code].flag && (
+                                <img
+                                  src={availableCurrencies[code].flag}
+                                  alt=""
+                                  className="w-6 h-4 object-cover rounded-sm"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className="font-bold text-sm"
+                                  style={{ color: colors.text }}
+                                >
+                                  {code}
+                                </div>
+                                <div
+                                  className="text-xs truncate"
+                                  style={{ color: colors.textLight }}
+                                >
+                                  {availableCurrencies[code].name}
+                                </div>
+                              </div>
+                              {selectedCurrency === code && (
+                                <Check
+                                  size={16}
+                                  style={{ color: colors.primary }}
+                                />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* Notifications & Security Sub-section */}
+                <div
+                  className="space-y-4 pt-4 border-t"
+                  style={{ borderColor: colors.border }}
+                >
+                  <h4
+                    className="text-xs font-bold uppercase tracking-wider"
+                    style={{ color: colors.textLight }}
+                  >
+                    Notifications & Security
+                  </h4>
+
+                  {/* Push Notifications */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="p-2 rounded-lg"
+                        style={{ backgroundColor: colors.accentBg }}
+                      >
+                        <Bell size={16} style={{ color: colors.primary }} />
+                      </div>
+                      <div>
+                        <h4
+                          className="font-bold text-sm"
+                          style={{ color: colors.text }}
+                        >
+                          Push Notifications
+                        </h4>
+                        <p
+                          className="text-xs"
+                          style={{ color: colors.textLight }}
+                        >
+                          Stay updated on your circles
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handlePushToggle}
+                      disabled={isPushLoading}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${
+                        isSubscribed ? "bg-lime-600" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          isSubscribed ? "right-1" : "left-1"
+                        }`}
+                      />
+                      {isPushLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-full">
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Biometric Security */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="p-2 rounded-lg"
+                        style={{ backgroundColor: colors.accentBg }}
+                      >
+                        <Lock size={16} style={{ color: colors.primary }} />
+                      </div>
+                      <div>
+                        <h4
+                          className="font-bold text-sm"
+                          style={{ color: colors.text }}
+                        >
+                          Biometric Security
+                        </h4>
+                        <p
+                          className="text-xs"
+                          style={{ color: colors.textLight }}
+                        >
+                          Fingerprint or Face ID
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleBiometricToggle(!isBiometricEnabled)}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${
+                        isBiometricEnabled ? "bg-lime-600" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          isBiometricEnabled ? "right-1" : "left-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Support */}
+            {/* Support Section */}
             <div
               className="rounded-2xl p-4 sm:p-6 shadow-sm border"
               style={{
@@ -1045,7 +492,7 @@ const Settings: React.FC = () => {
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
-                  <HelpCircle className="text-white" size={18} />
+                  <div className="text-white text-lg font-bold">?</div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3

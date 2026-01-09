@@ -18,12 +18,15 @@ const userProfileQuery = gql`
     user(id: $id) {
       id
       email
+      phoneNumber
       username
       usernameLowercase
       fullName
       accountId
       photo
-      lastPhotoUpdate
+      emailIsOriginal
+      phoneIsOriginal
+      lastProfileUpdate
       createdAt
       hasProfile
       repCategory
@@ -37,12 +40,15 @@ const userProfileQuery = gql`
 interface UserProfile {
   userAddress: string;
   email: string;
+  phoneNumber: string;
   username: string; // The "Display" name (e.g. "AbC")
   usernameLowercase: string; // The "Identity" (e.g. "abc")
   fullName: string;
   accountId: bigint;
   photo: string;
-  lastPhotoUpdate: bigint;
+  emailIsOriginal: boolean;
+  phoneIsOriginal: boolean;
+  lastProfileUpdate: bigint;
   createdAt: bigint;
   hasProfile: Boolean;
   repCategory: Number;
@@ -101,12 +107,15 @@ export const useUserProfile = (client: ThirdwebClient) => {
       setProfile({
         userAddress: userData.id,
         email: userData.email,
+        phoneNumber: userData.phoneNumber,
         username: userData.username, // Original casing shown to user
         usernameLowercase: userData.usernameLowercase,
         fullName: userData.fullName,
         accountId: BigInt(userData.accountId),
         photo: userData.photo,
-        lastPhotoUpdate: BigInt(userData.lastPhotoUpdate),
+        emailIsOriginal: userData.emailIsOriginal,
+        phoneIsOriginal: userData.phoneIsOriginal,
+        lastProfileUpdate: BigInt(userData.lastProfileUpdate),
         createdAt: BigInt(userData.createdAt),
         hasProfile: userData.hasProfile,
         repCategory: userData.repCategory,
@@ -128,21 +137,34 @@ export const useUserProfile = (client: ThirdwebClient) => {
       email: string,
       username: string,
       fullName: string,
-      photo: string = ""
+      photo: string = "",
+      phoneNumber: string = ""
     ) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
       try {
         setError(null);
-        if (!email || email.trim().length === 0) throw new Error("Email is required");
+
+        // Validate that at least email or phone is provided
+        const hasEmail = email && email.trim().length > 0;
+        const hasPhone = phoneNumber && phoneNumber.trim().length > 0;
+
+        if (!hasEmail && !hasPhone) {
+          throw new Error("Either email or phone number is required");
+        }
+
         if (!username || username.trim().length === 0) throw new Error("Username is required");
         if (!fullName || fullName.trim().length === 0) throw new Error("Full name is required");
+
+        const emailParam = email?.trim() || "";
+        const phoneParam = phoneNumber?.trim() || "";
         const photoUrl = photo?.trim() || "";
+
         const transaction = prepareContractCall({
           contract,
           method: "createProfile",
-          params: [email, username, fullName, photoUrl],
+          params: [emailParam, phoneParam, username, fullName, photoUrl],
         });
         return new Promise((resolve, reject) => {
           sendTransaction(transaction, {
@@ -165,9 +187,9 @@ export const useUserProfile = (client: ThirdwebClient) => {
     [account?.address, contract, sendTransaction, refetchUser]
   );
 
-  // Update profile photo function
-  const updatePhoto = useCallback(
-    async (photo: string) => {
+  // Update profile (fullName and/or photo)
+  const updateProfile = useCallback(
+    async (fullName: string, photo: string) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
@@ -175,15 +197,21 @@ export const useUserProfile = (client: ThirdwebClient) => {
       try {
         setError(null);
 
-        // Validate input
-        if (!photo || photo.trim().length === 0) {
-          throw new Error("Profile photo cannot be empty");
+        // Validate that at least one field is provided
+        const hasFullName = fullName && fullName.trim().length > 0;
+        const hasPhoto = photo && photo.trim().length > 0;
+
+        if (!hasFullName && !hasPhoto) {
+          throw new Error("Please provide at least a full name or photo");
         }
+
+        const fullNameParam = fullName?.trim() || "";
+        const photoParam = photo?.trim() || "";
 
         const transaction = prepareContractCall({
           contract,
-          method: "updatePhoto",
-          params: [photo],
+          method: "updateProfile",
+          params: [fullNameParam, photoParam],
         });
 
         // Send transaction
@@ -202,12 +230,95 @@ export const useUserProfile = (client: ThirdwebClient) => {
         });
       } catch (err) {
         const error = err as Error;
-        setError(error.message || "Failed to update photo");
+        setError(error.message || "Failed to update profile");
         throw err;
       }
     },
     [account?.address, contract, sendTransaction, refetchUser]
   );
+
+  // Update contact info (email and/or phone number)
+  const updateContactInfo = useCallback(
+    async (email: string, phoneNumber: string) => {
+      if (!account?.address) {
+        throw new Error("No wallet connected");
+      }
+
+      try {
+        setError(null);
+
+        // Validate that at least one field is provided
+        const hasEmail = email && email.trim().length > 0;
+        const hasPhone = phoneNumber && phoneNumber.trim().length > 0;
+
+        if (!hasEmail && !hasPhone) {
+          throw new Error("Please provide at least an email or phone number");
+        }
+
+        const emailParam = email?.trim() || "";
+        const phoneParam = phoneNumber?.trim() || "";
+
+        const transaction = prepareContractCall({
+          contract,
+          method: "updateContactInfo",
+          params: [emailParam, phoneParam],
+        });
+
+        // Send transaction
+        return new Promise((resolve, reject) => {
+          sendTransaction(transaction, {
+            onSuccess: (receipt) => {
+              // Refresh profile data from subgraph after successful update
+              setTimeout(() => refetchUser(), 2000);
+              resolve(receipt);
+            },
+            onError: (error) => {
+              setError(error.message);
+              reject(error);
+            },
+          });
+        });
+      } catch (err) {
+        const error = err as Error;
+        setError(error.message || "Failed to update contact info");
+        throw err;
+      }
+    },
+    [account?.address, contract, sendTransaction, refetchUser]
+  );
+
+  // Check if user can update contact info (30-day cooldown)
+  const canUpdateContact = useCallback((): boolean => {
+    if (!profile?.lastProfileUpdate) return true;
+    const lastUpdate = new Date(Number(profile.lastProfileUpdate) * 1000);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return lastUpdate < thirtyDaysAgo;
+  }, [profile]);
+
+  // Get days until next contact update is allowed
+  const daysUntilContactUpdate = useCallback((): number => {
+    if (!profile?.lastProfileUpdate) return 0;
+    const lastUpdate = new Date(Number(profile.lastProfileUpdate) * 1000);
+    const nextAllowedUpdate = new Date(lastUpdate);
+    nextAllowedUpdate.setDate(nextAllowedUpdate.getDate() + 30);
+    const daysLeft = Math.ceil(
+      (nextAllowedUpdate.getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24)
+    );
+    return daysLeft > 0 ? daysLeft : 0;
+  }, [profile]);
+
+  // Get which contact method is original (permanent)
+  const getOriginalContact = useCallback((): {
+    emailIsOriginal: boolean;
+    phoneIsOriginal: boolean;
+  } => {
+    return {
+      emailIsOriginal: profile?.emailIsOriginal || false,
+      phoneIsOriginal: profile?.phoneIsOriginal || false,
+    };
+  }, [profile]);
 
   // Check username availability - CASE INSENSITIVE
   const checkUsernameAvailability = useCallback(
@@ -237,12 +348,15 @@ export const useUserProfile = (client: ThirdwebClient) => {
   const profileFields = `
     id
     email
+    phoneNumber
     username
     usernameLowercase
     fullName
     accountId
     photo
-    lastPhotoUpdate
+    emailIsOriginal
+    phoneIsOriginal
+    lastProfileUpdate
     createdAt
     hasProfile
     repCategory
@@ -295,11 +409,15 @@ export const useUserProfile = (client: ThirdwebClient) => {
           users(where: { accountId: $accountId }) {
             id
             email
+            phoneNumber
             username
+            usernameLowercase
             fullName
             accountId
             photo
-            lastPhotoUpdate
+            emailIsOriginal
+            phoneIsOriginal
+            lastProfileUpdate
             createdAt
             hasProfile
             repCategory
@@ -333,11 +451,15 @@ export const useUserProfile = (client: ThirdwebClient) => {
           users(where: { email: $email }) {
             id
             email
+            phoneNumber
             username
+            usernameLowercase
             fullName
             accountId
             photo
-            lastPhotoUpdate
+            emailIsOriginal
+            phoneIsOriginal
+            lastProfileUpdate
             createdAt
             hasProfile
             repCategory
@@ -369,7 +491,11 @@ export const useUserProfile = (client: ThirdwebClient) => {
     isLoading: isUserLoading || isSending,
     error,
     createProfile,
-    updatePhoto,
+    updateProfile,
+    updateContactInfo,
+    canUpdateContact,
+    daysUntilContactUpdate,
+    getOriginalContact,
     checkUsernameAvailability,
     getProfileByAddress,
     getProfileByAccountId,
@@ -409,11 +535,15 @@ export const useProfile = (address?: string) => {
       ? {
         userAddress: userProfile.id,
         email: userProfile.email,
+        phoneNumber: userProfile.phoneNumber,
         username: userProfile.username,
+        usernameLowercase: userProfile.usernameLowercase,
         fullName: userProfile.fullName,
         accountId: BigInt(userProfile.accountId),
         photo: userProfile.photo,
-        lastPhotoUpdate: BigInt(userProfile.lastPhotoUpdate),
+        emailIsOriginal: userProfile.emailIsOriginal,
+        phoneIsOriginal: userProfile.phoneIsOriginal,
+        lastProfileUpdate: BigInt(userProfile.lastProfileUpdate),
         createdAt: BigInt(userProfile.createdAt),
         hasProfile: userProfile.hasProfile,
         repCategory: userProfile.repCategory,

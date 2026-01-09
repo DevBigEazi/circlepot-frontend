@@ -228,3 +228,16 @@ export const shortenAddress = (addr: string, startChars: number = 8, endChars: n
     if (!addr) return "";
     return `${addr.slice(0, startChars)}...${addr.slice(-endChars)}`;
 };
+
+// Helper to get user initials from full name
+export const getInitials = (fullName?: string): string => {
+    if (!fullName) return "NN";
+    const initials = fullName
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((name) => name.charAt(0).toUpperCase())
+        .join("");
+    return initials || "NN";
+};
+
