@@ -1,5 +1,5 @@
-import React from "react";
 import { ArrowLeft } from "lucide-react";
+import { getInitials } from "../utils/helpers";
 
 export interface Tab {
   id: string;
@@ -56,14 +56,7 @@ const NavBar: React.FC<NavBarProps> = ({
   onActionClick,
   actionButtonText,
 }) => {
-  const userInitials = fullName
-    ? fullName
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((name) => name.charAt(0).toUpperCase())
-        .join("")
-    : "NN";
+  const userInitials = getInitials(fullName);
 
   // Tabs variant (for pages like Notifications)
   if (variant === "tabs") {
