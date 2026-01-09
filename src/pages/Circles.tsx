@@ -283,12 +283,9 @@ const Circles: React.FC = () => {
                 className="text-xs md:text-sm mb-2"
                 style={{ color: colors.textLight }}
               >
-                Withdrawn
+                Dead
               </div>
-              <div
-                className="text-xl md:text-2xl font-bold"
-                style={{ color: colors.text }}
-              >
+              <div className="text-xl md:text-2xl font-bold text-orange-800">
                 {
                   historyCircles.filter(
                     (c) => c.status === "dead" || c.hasWithdrawn

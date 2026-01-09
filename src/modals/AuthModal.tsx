@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useGoogleAuth, useEmailAuth } from "../hooks/useAuth";
+// import { usePhoneAuth } from "../hooks/useAuth"; // Phone auth requires Growth+ plan
 import { useThemeColors } from "../hooks/useThemeColors";
 import image from "../constants/image";
 import { MdOutlineEmail } from "react-icons/md";
+import { FiPhone } from "react-icons/fi"; // For phone auth (hidden for now)
 import ErrorDisplay from "../components/ErrorDisplay";
 import LoadingSpinner from "../components/LoadingSpinner";
 import NetworkTroubleshooting from "../components/NetworkTroubleshooting";
@@ -14,8 +16,11 @@ import { client } from "../thirdwebClient";
 
 const AuthModal: React.FC = () => {
   const colors = useThemeColors();
-  const [authMethod, setAuthMethod] = useState<"select" | "email">("select");
+  const [authMethod, setAuthMethod] = useState<"select" | "email" | "phone">(
+    "select"
+  );
   const [email, setEmail] = useState("");
+  // const [phoneNumber, setPhoneNumber] = useState(""); // For phone auth
   const [verificationCode, setVerificationCode] = useState("");
   const [codeDigits, setCodeDigits] = useState<string[]>([
     "",
@@ -37,6 +42,7 @@ const AuthModal: React.FC = () => {
 
   const googleAuth = useGoogleAuth();
   const emailAuth = useEmailAuth();
+  // const phoneAuth = usePhoneAuth(); // Phone auth requires Growth+ plan
 
   // the first available error (priority: google > email)
   const currentError = googleAuth.error || emailAuth.error;
@@ -45,6 +51,7 @@ const AuthModal: React.FC = () => {
   const clearAllErrors = () => {
     googleAuth.clearError();
     emailAuth.clearError();
+    // phoneAuth.clearError(); // For phone auth
   };
 
   const handleGoogleLogin = async () => {
@@ -73,6 +80,37 @@ const AuthModal: React.FC = () => {
     }
   };
 
+  // Phone auth functions - requires Growth+ plan
+  // const handlePhoneSubmit = async () => {
+  //   if (!phoneAuth.phoneSent) {
+  //     const phoneRegex = /^\+[1-9]\d{1,14}$/;
+  //     if (!phoneRegex.test(phoneNumber)) {
+  //       const authError = {
+  //         code: "INVALID_PHONE",
+  //         message: "Please enter a valid phone number in international format (e.g., +1234567890)",
+  //       };
+  //       phoneAuth.setError(authError);
+  //       return;
+  //     }
+  //     await phoneAuth.sendPhoneCode(phoneNumber);
+  //     setResendCooldown(60);
+  //     } else {
+  //       const success = await phoneAuth.loginWithPhone(phoneNumber, verificationCode);
+  //       if (success) {
+  //         setPhoneNumber(phoneNumber);
+  //       }
+  //     }
+  //   };
+  //
+  // const resetPhoneFlow = () => {
+  //   setAuthMethod("select");
+  //   setPhoneNumber("");
+  //   setVerificationCode("");
+  //   setCodeDigits(["", "", "", "", "", ""]);
+  //   setResendCooldown(0);
+  //   phoneAuth.resetPhoneFlow();
+  // };
+
   const resetEmailFlow = () => {
     setAuthMethod("select");
     setEmail("");
@@ -81,6 +119,15 @@ const AuthModal: React.FC = () => {
     setResendCooldown(0);
     emailAuth.resetEmailFlow();
   };
+
+  // const resetPhoneFlow = () => {
+  //   setAuthMethod("select");
+  //   setPhoneNumber("");
+  //   setVerificationCode("");
+  //   setCodeDigits(["", "", "", "", "", ""]);
+  //   setResendCooldown(0);
+  //   phoneAuth.resetPhoneFlow();
+  // };
 
   const handleCodeChange = (index: number, value: string) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -212,6 +259,20 @@ const AuthModal: React.FC = () => {
               <MdOutlineEmail size={24} /> Continue with Email
             </button>
 
+            {/* Phone auth - requires Growth+ plan, hidden for now */}
+            <button
+              onClick={() => setAuthMethod("phone")}
+              disabled={isLoading}
+              className="hidden"
+              style={{
+                backgroundColor: colors.accentBg,
+                borderColor: colors.border,
+                color: colors.text,
+              }}
+            >
+              <FiPhone size={24} /> Continue with Phone
+            </button>
+
             <div
               className="mt-6 p-4 rounded-xl border"
               style={{
@@ -269,7 +330,7 @@ const AuthModal: React.FC = () => {
               Back
             </button>
 
-            {!emailAuth.emailSent ? (
+            {authMethod === "email" && !emailAuth.emailSent ? (
               <>
                 <h2
                   className="text-2xl font-bold text-center mb-3"
@@ -344,7 +405,7 @@ const AuthModal: React.FC = () => {
                   </p>
                 </div>
               </>
-            ) : (
+            ) : !emailAuth.emailSent ? null : (
               <>
                 <h2
                   className="text-2xl font-bold text-center mb-3"
