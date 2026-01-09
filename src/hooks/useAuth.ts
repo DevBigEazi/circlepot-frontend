@@ -28,7 +28,7 @@ export const useAuth = () => {
 
   const wallet = inAppWallet({
     auth: {
-      options: ["google", "email"],
+      options: ["google", "email"]
     },
     executionMode: {
       mode: "EIP7702",
@@ -369,5 +369,201 @@ export const useEmailAuth = (): UseEmailAuthReturn => {
     sendEmailCode,
     loginWithEmail,
     resetEmailFlow,
+  };
+};
+
+interface UsePhoneAuthReturn {
+  isLoading: boolean;
+  error: AuthError | null;
+  isConnected: boolean;
+  account: any;
+  wallet: any;
+  connect: any;
+  isConnecting: boolean;
+  phoneSent: boolean;
+  clearError: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: AuthError) => void;
+  handleAuthSuccess: () => void;
+  loginWithPhone: (phoneNumber: string, verificationCode: string) => Promise<boolean>;
+  sendPhoneCode: (phoneNumber: string) => Promise<boolean>;
+  resetPhoneFlow: () => void;
+}
+
+export const usePhoneAuth = (): UsePhoneAuthReturn => {
+  const {
+    isLoading,
+    error,
+    isConnected,
+    account,
+    wallet,
+    connect,
+    isConnecting,
+    clearError,
+    setLoading,
+    setError,
+    handleAuthSuccess,
+  } = useAuth();
+
+  const [phoneSent, setPhoneSent] = useState(false);
+
+  const resetPhoneFlow = useCallback(() => {
+    setPhoneSent(false);
+    clearError();
+  }, [clearError]);
+
+  const sendPhoneCode = useCallback(
+    async (phoneNumber: string): Promise<boolean> => {
+      try {
+        setLoading(true);
+        clearError();
+
+        await preAuthenticate({
+          client,
+          strategy: "phone",
+          phoneNumber: phoneNumber,
+        });
+
+        setPhoneSent(true);
+        setLoading(false);
+        return true;
+      } catch (error: any) {
+        let errorMessage = "Failed to send verification code";
+        let errorCode = "PHONE_SEND_ERROR";
+
+        const errorMsg = error?.message?.toLowerCase() || "";
+
+        if (errorMsg.includes("invalid phone")) {
+          errorMessage = "Please enter a valid phone number";
+          errorCode = "INVALID_PHONE";
+        } else if (errorMsg.includes("rate limit")) {
+          errorMessage =
+            "Too many requests. Please wait a moment and try again";
+          errorCode = "RATE_LIMITED";
+        } else if (
+          errorMsg.includes("failed to fetch") ||
+          errorMsg.includes("err_proxy_certificate_invalid") ||
+          errorMsg.includes("network")
+        ) {
+          errorMessage =
+            "Network error. Please check your internet connection and try again";
+          errorCode = "NETWORK_ERROR";
+        }
+
+        const authError: AuthError = {
+          code: errorCode,
+          message: errorMessage,
+          details: error,
+        };
+
+        setError(authError);
+        setLoading(false);
+        return false;
+      }
+    },
+    [setLoading, clearError, setError]
+  );
+
+  const loginWithPhone = useCallback(
+    async (phoneNumber: string, verificationCode: string): Promise<boolean> => {
+      try {
+        setLoading(true);
+        clearError();
+
+        if (!verificationCode || verificationCode.length !== 6) {
+          const authError: AuthError = {
+            code: "INVALID_CODE",
+            message:
+              "The verification code you entered is incorrect or has expired. Please try again.",
+          };
+          setError(authError);
+          setLoading(false);
+          return false;
+        }
+
+        let connectionSuccessful = false;
+
+        try {
+          await connect(async () => {
+            try {
+              await wallet.connect({
+                client,
+                chain: celo,
+                strategy: "phone",
+                phoneNumber: phoneNumber,
+                verificationCode: verificationCode,
+              });
+              connectionSuccessful = true;
+              return wallet;
+            } catch (connectError: any) {
+              connectionSuccessful = false;
+              throw connectError;
+            }
+          });
+        } catch (connectError: any) {
+          throw connectError;
+        }
+
+        if (!connectionSuccessful) {
+          throw new Error("Phone authentication was not successful");
+        }
+
+        handleAuthSuccess();
+        setLoading(false);
+        return true;
+      } catch (error: any) {
+        let errorMessage =
+          "The verification code you entered is incorrect or has expired. Please try again.";
+        let errorCode = "INVALID_CODE";
+
+        const errorMsg = error?.message?.toLowerCase() || "";
+
+        if (
+          errorMsg.includes("failed to fetch") ||
+          errorMsg.includes("err_proxy_certificate_invalid") ||
+          errorMsg.includes("network")
+        ) {
+          errorMessage =
+            "Network error. Please check your internet connection and try again";
+          errorCode = "NETWORK_ERROR";
+        } else if (
+          errorMsg.includes("rate limit") ||
+          errorMsg.includes("too many attempts")
+        ) {
+          errorMessage =
+            "Too many attempts. Please wait a moment and try again";
+          errorCode = "RATE_LIMITED";
+        }
+
+        const authError: AuthError = {
+          code: errorCode,
+          message: errorMessage,
+          details: error,
+        };
+
+        setError(authError);
+        setLoading(false);
+        return false;
+      }
+    },
+    [setLoading, clearError, connect, wallet, handleAuthSuccess, setError]
+  );
+
+  return {
+    isLoading,
+    error,
+    isConnected,
+    account,
+    wallet,
+    connect,
+    isConnecting,
+    clearError,
+    setLoading,
+    setError,
+    handleAuthSuccess,
+    phoneSent,
+    sendPhoneCode,
+    loginWithPhone,
+    resetPhoneFlow,
   };
 };

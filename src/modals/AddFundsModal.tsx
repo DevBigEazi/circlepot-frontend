@@ -21,7 +21,7 @@ const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
   const currencyInfo = getCurrencyInfo(selectedCurrency);
 
   const handleInternalClick = () => {
-    navigate("/settings");
+    navigate("/profile");
     onClose();
   };
 
@@ -73,7 +73,7 @@ const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose }) => {
               </h3>
               <p className="text-xs mt-0.5" style={{ color: colors.textLight }}>
                 Use ID, username or email. Find yours in{" "}
-                <span className="underline font-medium">Settings</span>
+                <span className="underline font-medium">Profile</span>
               </p>
             </div>
             <ArrowRight

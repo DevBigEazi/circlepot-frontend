@@ -15,6 +15,7 @@ import { getUserEmail } from "thirdweb/wallets/in-app";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import LinkContactModal from "./LinkContactModal";
 
 interface ProfileCreationModalProps {
   client: any;
@@ -42,6 +43,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
   );
+  const [showLinkContactModal, setShowLinkContactModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameCheckTimeout = useRef<number | undefined>(undefined);
 
@@ -199,7 +201,8 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         position: "top-center",
       });
 
-      onProfileCreated?.();
+      // Show link contact modal to add backup contact info
+      setShowLinkContactModal(true);
     } catch (err: any) {
       if (err.message?.includes("ProfileAlreadyExists")) {
         onProfileCreated?.();
@@ -266,322 +269,341 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div
-        className="rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: colors.surface, borderColor: colors.border }}
-      >
-        {/* Header */}
+    <>
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div
-          className="p-6 text-center border-b sticky top-0 z-10"
+          className="rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
           style={{
-            borderColor: colors.border,
             backgroundColor: colors.surface,
+            borderColor: colors.border,
           }}
         >
+          {/* Header */}
           <div
-            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ backgroundColor: colors.primary }}
+            className="p-6 text-center border-b sticky top-0 z-10"
+            style={{
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            }}
           >
-            <User className="text-white" size={32} />
+            <div
+              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <User className="text-white" size={32} />
+            </div>
+            <h2
+              className="text-2xl font-bold mb-2"
+              style={{ color: colors.text }}
+            >
+              Complete Your Profile
+            </h2>
+            <p className="text-sm" style={{ color: colors.textLight }}>
+              Create your on-chain profile to get started
+            </p>
           </div>
-          <h2
-            className="text-2xl font-bold mb-2"
-            style={{ color: colors.text }}
-          >
-            Complete Your Profile
-          </h2>
-          <p className="text-sm" style={{ color: colors.textLight }}>
-            Create your on-chain profile to get started
-          </p>
-        </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {/* Profile Image */}
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative mb-4">
-              <div
-                className="w-24 h-24 rounded-full overflow-hidden border-4"
-                style={{ borderColor: colors.primary }}
-              >
-                {previewImage ? (
-                  <img
-                    src={previewImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ backgroundColor: colors.background }}
-                  >
-                    <User size={32} style={{ color: colors.textLight }} />
-                  </div>
-                )}
+          {/* Content */}
+          <div className="p-6">
+            {/* Profile Image */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="relative mb-4">
+                <div
+                  className="w-24 h-24 rounded-full overflow-hidden border-4"
+                  style={{ borderColor: colors.primary }}
+                >
+                  {previewImage ? (
+                    <img
+                      src={previewImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{ backgroundColor: colors.background }}
+                    >
+                      <User size={32} style={{ color: colors.textLight }} />
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={triggerFileInput}
+                  disabled={isProcessing}
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 transition hover:scale-110"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  {isUploading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera size={16} className="text-white" />
+                  )}
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isProcessing}
+                />
               </div>
+
               <button
                 onClick={triggerFileInput}
                 disabled={isProcessing}
-                className="absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 transition hover:scale-110"
-                style={{ backgroundColor: colors.primary }}
+                className="text-sm font-medium disabled:opacity-50 flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-opacity-10"
+                style={{
+                  color: colors.primary,
+                  backgroundColor: selectedFile
+                    ? colors.successBg
+                    : "transparent",
+                }}
               >
-                {isUploading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {selectedFile ? (
+                  <>
+                    <Check size={16} />
+                    Image Selected
+                  </>
                 ) : (
-                  <Camera size={16} className="text-white" />
+                  <>
+                    <Upload size={16} />
+                    Upload Photo (Optional)
+                  </>
                 )}
               </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                accept="image/*"
-                className="hidden"
-                disabled={isProcessing}
-              />
+
+              {isUploading && (
+                <div className="mt-2 w-full">
+                  <div
+                    className="flex justify-between text-xs mb-1"
+                    style={{ color: colors.textLight }}
+                  >
+                    <span>Uploading to IPFS...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div
+                    className="w-full h-1.5 rounded-full"
+                    style={{ backgroundColor: colors.border }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{
+                        width: `${uploadProgress}%`,
+                        backgroundColor: colors.primary,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={triggerFileInput}
-              disabled={isProcessing}
-              className="text-sm font-medium disabled:opacity-50 flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-opacity-10"
-              style={{
-                color: colors.primary,
-                backgroundColor: selectedFile
-                  ? colors.successBg
-                  : "transparent",
-              }}
-            >
-              {selectedFile ? (
-                <>
-                  <Check size={16} />
-                  Image Selected
-                </>
-              ) : (
-                <>
-                  <Upload size={16} />
-                  Upload Photo (Optional)
-                </>
-              )}
-            </button>
-
-            {isUploading && (
-              <div className="mt-2 w-full">
-                <div
-                  className="flex justify-between text-xs mb-1"
+            {/* Email Display */}
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: colors.text }}
+              >
+                Email Address
+              </label>
+              <div
+                className="flex items-center gap-2 px-4 py-3 rounded-xl border"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                }}
+              >
+                <span
+                  className="text-sm flex-1 truncate"
                   style={{ color: colors.textLight }}
                 >
-                  <span>Uploading to IPFS...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div
-                  className="w-full h-1.5 rounded-full"
-                  style={{ backgroundColor: colors.border }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${uploadProgress}%`,
-                      backgroundColor: colors.primary,
-                    }}
-                  />
-                </div>
+                  {userEmail || "No email available"}
+                </span>
+                {userEmail && (
+                  <Check size={16} className="text-lime-900 flex-shrink-0" />
+                )}
               </div>
-            )}
-          </div>
-
-          {/* Email Display */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: colors.text }}
-            >
-              Email Address
-            </label>
-            <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl border"
-              style={{
-                borderColor: colors.border,
-                backgroundColor: colors.background,
-              }}
-            >
-              <span
-                className="text-sm flex-1 truncate"
-                style={{ color: colors.textLight }}
-              >
-                {userEmail || "No email available"}
-              </span>
-              {userEmail && (
-                <Check size={16} className="text-lime-900 flex-shrink-0" />
-              )}
+              <p className="text-xs mt-1" style={{ color: colors.textLight }}>
+                Your email from authentication
+              </p>
             </div>
-            <p className="text-xs mt-1" style={{ color: colors.textLight }}>
-              Your email from authentication
-            </p>
-          </div>
 
-          {/* Wallet Address Display */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: colors.text }}
-            >
-              Wallet Address
-            </label>
-            <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl border"
-              style={{
-                borderColor: colors.border,
-                backgroundColor: colors.background,
-              }}
-            >
-              <span
-                className="text-xs font-mono flex-1"
-                style={{ color: colors.textLight }}
+            {/* Wallet Address Display */}
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: colors.text }}
               >
-                {account?.address
-                  ? formatWalletAddress(account.address)
-                  : "No wallet connected"}
-              </span>
-              {account?.address && (
-                <Check size={16} className="text-lime-900 flex-shrink-0" />
-              )}
+                Wallet Address
+              </label>
+              <div
+                className="flex items-center gap-2 px-4 py-3 rounded-xl border"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                }}
+              >
+                <span
+                  className="text-xs font-mono flex-1"
+                  style={{ color: colors.textLight }}
+                >
+                  {account?.address
+                    ? formatWalletAddress(account.address)
+                    : "No wallet connected"}
+                </span>
+                {account?.address && (
+                  <Check size={16} className="text-lime-900 flex-shrink-0" />
+                )}
+              </div>
+              <p className="text-xs mt-1" style={{ color: colors.textLight }}>
+                Your wallet address on the blockchain
+              </p>
             </div>
-            <p className="text-xs mt-1" style={{ color: colors.textLight }}>
-              Your wallet address on the blockchain
-            </p>
-          </div>
 
-          {/* Username Field */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: colors.text }}
-            >
-              Username *
-            </label>
-            <div className="relative">
+            {/* Username Field */}
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: colors.text }}
+              >
+                Username *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition pr-10"
+                  style={{
+                    borderColor: colors.border,
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                  }}
+                  placeholder="Enter your username"
+                  disabled={isProcessing}
+                  minLength={3}
+                  maxLength={20}
+                />
+                {isCheckingUsername && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div
+                      className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: colors.primary }}
+                    />
+                  </div>
+                )}
+                {!isCheckingUsername &&
+                  usernameAvailable !== null &&
+                  userName.length >= 3 && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {usernameAvailable ? (
+                        <Check size={20} style={{ color: colors.primary }} />
+                      ) : (
+                        <AlertCircle size={20} className="text-red-500" />
+                      )}
+                    </div>
+                  )}
+              </div>
+              <div className="mt-1">
+                {userName.length > 0 && userName.length < 3 && (
+                  <p className="text-xs text-yellow-600">
+                    Username must be at least 3 characters
+                  </p>
+                )}
+                {usernameAvailable === false && (
+                  <p className="text-xs text-red-500">
+                    Username is already taken
+                  </p>
+                )}
+                {usernameAvailable === true && (
+                  <p className="text-xs" style={{ color: colors.primary }}>
+                    Username is available!
+                  </p>
+                )}
+                <p className="text-xs mt-1" style={{ color: colors.textLight }}>
+                  This will be visible to other members. Username cannot be
+                  changed after setup.
+                </p>
+              </div>
+            </div>
+
+            {/* Full Name Field */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: colors.text }}
+              >
+                Full Name *
+              </label>
               <input
                 type="text"
-                value={userName}
-                onChange={(e) => handleUsernameChange(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition pr-10"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
                 style={{
                   borderColor: colors.border,
                   backgroundColor: colors.surface,
                   color: colors.text,
                 }}
-                placeholder="Enter your username"
+                placeholder="Enter your full name"
                 disabled={isProcessing}
-                minLength={3}
-                maxLength={20}
+                maxLength={50}
               />
-              {isCheckingUsername && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div
-                    className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-                    style={{ borderColor: colors.primary }}
-                  />
-                </div>
-              )}
-              {!isCheckingUsername &&
-                usernameAvailable !== null &&
-                userName.length >= 3 && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {usernameAvailable ? (
-                      <Check size={20} style={{ color: colors.primary }} />
-                    ) : (
-                      <AlertCircle size={20} className="text-red-500" />
-                    )}
-                  </div>
-                )}
-            </div>
-            <div className="mt-1">
-              {userName.length > 0 && userName.length < 3 && (
-                <p className="text-xs text-yellow-600">
-                  Username must be at least 3 characters
-                </p>
-              )}
-              {usernameAvailable === false && (
-                <p className="text-xs text-red-500">
-                  Username is already taken
-                </p>
-              )}
-              {usernameAvailable === true && (
-                <p className="text-xs" style={{ color: colors.primary }}>
-                  Username is available!
-                </p>
-              )}
               <p className="text-xs mt-1" style={{ color: colors.textLight }}>
-                This will be visible to other members. Username cannot be
-                changed after setup.
+                Your full name will be stored on-chain and cannot be changed
               </p>
             </div>
           </div>
 
-          {/* Full Name Field */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: colors.text }}
+          {/* Actions */}
+          <div
+            className="p-6 border-t sticky bottom-0"
+            style={{
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            }}
+          >
+            <button
+              onClick={handleCompleteSetup}
+              disabled={!isFormValid || isProcessing || !userEmail}
+              className="w-full px-4 py-3 rounded-xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: colors.primary }}
             >
-              Full Name *
-            </label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
-              style={{
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-                color: colors.text,
-              }}
-              placeholder="Enter your full name"
-              disabled={isProcessing}
-              maxLength={50}
-            />
-            <p className="text-xs mt-1" style={{ color: colors.textLight }}>
-              Your full name will be stored on-chain and cannot be changed
+              {isUploading ? (
+                <LoadingSpinner size="sm" text="Uploading to IPFS..." />
+              ) : isLoading ? (
+                <LoadingSpinner size="sm" text="Creating Profile..." />
+              ) : (
+                <>
+                  Complete Setup & Continue
+                  <Check size={18} />
+                </>
+              )}
+            </button>
+            <p
+              className="text-xs text-center mt-3"
+              style={{ color: colors.textLight }}
+            >
+              Your profile will be stored on the blockchain
             </p>
           </div>
         </div>
-
-        {/* Actions */}
-        <div
-          className="p-6 border-t sticky bottom-0"
-          style={{
-            borderColor: colors.border,
-            backgroundColor: colors.surface,
-          }}
-        >
-          <button
-            onClick={handleCompleteSetup}
-            disabled={!isFormValid || isProcessing || !userEmail}
-            className="w-full px-4 py-3 rounded-xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: colors.primary }}
-          >
-            {isUploading ? (
-              <LoadingSpinner size="sm" text="Uploading to IPFS..." />
-            ) : isLoading ? (
-              <LoadingSpinner size="sm" text="Creating Profile..." />
-            ) : (
-              <>
-                Complete Setup & Continue
-                <Check size={18} />
-              </>
-            )}
-          </button>
-          <p
-            className="text-xs text-center mt-3"
-            style={{ color: colors.textLight }}
-          >
-            Your profile will be stored on the blockchain
-          </p>
-        </div>
       </div>
-    </div>
+
+      {/* Link Contact Modal - shown after profile creation */}
+      {showLinkContactModal && (
+        <LinkContactModal
+          onClose={() => {
+            setShowLinkContactModal(false);
+            onProfileCreated?.();
+          }}
+          onSkip={() => {
+            setShowLinkContactModal(false);
+            onProfileCreated?.();
+          }}
+        />
+      )}
+    </>
   );
 };
 
