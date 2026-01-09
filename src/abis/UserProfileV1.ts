@@ -1,454 +1,1122 @@
 export const USER_PROFILE_ABI = [
-  { inputs: [], stateMutability: "nonpayable", type: "constructor" },
   {
-    inputs: [{ internalType: "address", name: "target", type: "address" }],
-    name: "AddressEmptyCode",
-    type: "error",
+    "type": "constructor",
+    "inputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    inputs: [
-      { internalType: "address", name: "implementation", type: "address" },
+    "type": "function",
+    "name": "MAX_FULLNAME_LENGTH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    name: "ERC1967InvalidImplementation",
-    type: "error",
-  },
-  { inputs: [], name: "ERC1967NonPayable", type: "error" },
-  { inputs: [], name: "EmailAlreadyTaken", type: "error" },
-  { inputs: [], name: "EmptyEmail", type: "error" },
-  { inputs: [], name: "EmptyFullName", type: "error" },
-  { inputs: [], name: "EmptyPhoto", type: "error" },
-  { inputs: [], name: "EmptyUsername", type: "error" },
-  { inputs: [], name: "FailedCall", type: "error" },
-  { inputs: [], name: "InvalidAccountId", type: "error" },
-  { inputs: [], name: "InvalidInitialization", type: "error" },
-  { inputs: [], name: "NoMoreAccountIdsAvailable", type: "error" },
-  { inputs: [], name: "NotInitializing", type: "error" },
-  { inputs: [], name: "OnlyProfileOwner", type: "error" },
-  {
-    inputs: [{ internalType: "address", name: "owner", type: "address" }],
-    name: "OwnableInvalidOwner",
-    type: "error",
+    "stateMutability": "view"
   },
   {
-    inputs: [{ internalType: "address", name: "account", type: "address" }],
-    name: "OwnableUnauthorizedAccount",
-    type: "error",
-  },
-  { inputs: [], name: "PhotoUpdateCooldownNotMet", type: "error" },
-  { inputs: [], name: "ProfileAlreadyExists", type: "error" },
-  { inputs: [], name: "ProfileDoesNotExist", type: "error" },
-  { inputs: [], name: "UUPSUnauthorizedCallContext", type: "error" },
-  {
-    inputs: [{ internalType: "bytes32", name: "slot", type: "bytes32" }],
-    name: "UUPSUnsupportedProxiableUUID",
-    type: "error",
-  },
-  { inputs: [], name: "UsernameAlreadyTaken", type: "error" },
-  {
-    anonymous: false,
-    inputs: [
+    "type": "function",
+    "name": "MAX_USERNAME_LENGTH",
+    "inputs": [],
+    "outputs": [
       {
-        indexed: true,
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "version",
-        type: "uint256",
-      },
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    name: "ContractUpgraded",
-    type: "event",
+    "stateMutability": "view"
   },
   {
-    anonymous: false,
-    inputs: [
+    "type": "function",
+    "name": "MIN_FULLNAME_LENGTH",
+    "inputs": [],
+    "outputs": [
       {
-        indexed: false,
-        internalType: "uint64",
-        name: "version",
-        type: "uint64",
-      },
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    name: "Initialized",
-    type: "event",
+    "stateMutability": "view"
   },
   {
-    anonymous: false,
-    inputs: [
+    "type": "function",
+    "name": "MIN_USERNAME_LENGTH",
+    "inputs": [],
+    "outputs": [
       {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    name: "OwnershipTransferred",
-    type: "event",
+    "stateMutability": "view"
   },
   {
-    anonymous: false,
-    inputs: [
+    "type": "function",
+    "name": "PROFILE_UPDATE_COOLDOWN",
+    "inputs": [],
+    "outputs": [
       {
-        indexed: true,
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "string",
-        name: "photo",
-        type: "string",
-      },
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    name: "PhotoUpdated",
-    type: "event",
+    "stateMutability": "view"
   },
   {
-    anonymous: false,
-    inputs: [
+    "type": "function",
+    "name": "UPGRADE_INTERFACE_VERSION",
+    "inputs": [],
+    "outputs": [
       {
-        indexed: true,
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "string",
-        name: "email",
-        type: "string",
-      },
-      {
-        indexed: true,
-        internalType: "string",
-        name: "username",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "fullName",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "accountId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "profilePhoto",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "createdAt",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "hasProfile",
-        type: "bool",
-      },
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
     ],
-    name: "ProfileCreated",
-    type: "event",
+    "stateMutability": "view"
   },
   {
-    anonymous: false,
-    inputs: [
+    "type": "function",
+    "name": "VERSION",
+    "inputs": [],
+    "outputs": [
       {
-        indexed: true,
-        internalType: "address",
-        name: "implementation",
-        type: "address",
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "accountIdToAddress",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "allUsers",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createProfile",
+    "inputs": [
+      {
+        "name": "_email",
+        "type": "string",
+        "internalType": "string"
       },
-    ],
-    name: "Upgraded",
-    type: "event",
-  },
-  {
-    inputs: [],
-    name: "PHOTO_UPDATE_COOLDOWN",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "UPGRADE_INTERFACE_VERSION",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "VERSION",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    name: "accountIdToAddress",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    name: "allUsers",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "string", name: "_email", type: "string" },
-      { internalType: "string", name: "_username", type: "string" },
-      { internalType: "string", name: "_fullName", type: "string" },
-      { internalType: "string", name: "_profilePhoto", type: "string" },
-    ],
-    name: "createProfile",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "", type: "string" }],
-    name: "emailToAddress",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "_accountId", type: "uint256" }],
-    name: "getAddressByAccountId",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "_email", type: "string" }],
-    name: "getAddressByEmail",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "_username", type: "string" }],
-    name: "getAddressByUsername",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "_user", type: "address" }],
-    name: "getProfile",
-    outputs: [
       {
-        components: [
+        "name": "_phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_username",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_fullName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_profilePhoto",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emailToAddress",
+    "inputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getAddressByAccountId",
+    "inputs": [
+      {
+        "name": "_accountId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getAddressByEmail",
+    "inputs": [
+      {
+        "name": "_email",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getAddressByPhoneNumber",
+    "inputs": [
+      {
+        "name": "_phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getAddressByUsername",
+    "inputs": [
+      {
+        "name": "_username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProfile",
+    "inputs": [
+      {
+        "name": "_user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct UserProfileV1.UserProfile",
+        "components": [
           {
-            internalType: "address",
-            name: "userAddress",
-            type: "address",
+            "name": "userAddress",
+            "type": "address",
+            "internalType": "address"
           },
-          { internalType: "string", name: "email", type: "string" },
-          { internalType: "string", name: "username", type: "string" },
-          { internalType: "string", name: "fullName", type: "string" },
           {
-            internalType: "string",
-            name: "profilePhoto",
-            type: "string",
+            "name": "email",
+            "type": "string",
+            "internalType": "string"
           },
-          { internalType: "uint256", name: "accountId", type: "uint256" },
           {
-            internalType: "uint256",
-            name: "lastPhotoUpdate",
-            type: "uint256",
+            "name": "phoneNumber",
+            "type": "string",
+            "internalType": "string"
           },
-          { internalType: "uint256", name: "createdAt", type: "uint256" },
-        ],
-        internalType: "struct UserProfileV1.UserProfile",
-        name: "",
-        type: "tuple",
-      },
+          {
+            "name": "username",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "fullName",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "profilePhoto",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "accountId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "emailIsOriginal",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "phoneIsOriginal",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "lastProfileUpdate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "createdAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view"
   },
   {
-    inputs: [],
-    name: "getRemainingAccountIds",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getTotalProfiles",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "_accountId", type: "uint256" }],
-    name: "getUserDetailsByAccountId",
-    outputs: [
-      { internalType: "address", name: "userAddress", type: "address" },
-      { internalType: "string", name: "fullName", type: "string" },
-      { internalType: "string", name: "email", type: "string" },
-      { internalType: "string", name: "username", type: "string" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "_identifier", type: "string" }],
-    name: "getUserDetailsByIdentifier",
-    outputs: [
-      { internalType: "address", name: "userAddress", type: "address" },
-      { internalType: "string", name: "fullName", type: "string" },
-      { internalType: "uint256", name: "accountId", type: "uint256" },
-      { internalType: "string", name: "email", type: "string" },
-      { internalType: "string", name: "username", type: "string" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "", type: "address" }],
-    name: "hasProfile",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "_user", type: "address" }],
-    name: "hasUserProfile",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "address", name: "initialOwner", type: "address" },
-    ],
-    name: "initialize",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "_email", type: "string" }],
-    name: "isEmailAvailable",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "_username", type: "string" }],
-    name: "isUsernameAvailable",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "owner",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "", type: "address" }],
-    name: "profiles",
-    outputs: [
-      { internalType: "address", name: "userAddress", type: "address" },
-      { internalType: "string", name: "email", type: "string" },
-      { internalType: "string", name: "username", type: "string" },
-      { internalType: "string", name: "fullName", type: "string" },
-      { internalType: "string", name: "profilePhoto", type: "string" },
-      { internalType: "uint256", name: "accountId", type: "uint256" },
+    "type": "function",
+    "name": "getRemainingAccountIds",
+    "inputs": [],
+    "outputs": [
       {
-        internalType: "uint256",
-        name: "lastPhotoUpdate",
-        type: "uint256",
-      },
-      { internalType: "uint256", name: "createdAt", type: "uint256" },
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    stateMutability: "view",
-    type: "function",
+    "stateMutability": "view"
   },
   {
-    inputs: [],
-    name: "proxiableUUID",
-    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "string", name: "_profilePhoto", type: "string" }],
-    name: "updatePhoto",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
+    "type": "function",
+    "name": "getTotalProfiles",
+    "inputs": [],
+    "outputs": [
       {
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
-      { internalType: "bytes", name: "data", type: "bytes" },
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    name: "upgradeToAndCall",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
+    "stateMutability": "view"
   },
   {
-    inputs: [{ internalType: "string", name: "", type: "string" }],
-    name: "usernameToAddress",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
+    "type": "function",
+    "name": "getUserDetailsByAccountId",
+    "inputs": [
+      {
+        "name": "_accountId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "userAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "fullName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    inputs: [],
-    name: "version",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "pure",
-    type: "function",
+    "type": "function",
+    "name": "getUserDetailsByIdentifier",
+    "inputs": [
+      {
+        "name": "_identifier",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "userAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "fullName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "accountId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
   },
+  {
+    "type": "function",
+    "name": "hasProfile",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasUserProfile",
+    "inputs": [
+      {
+        "name": "_user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "initialOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isEmailAvailable",
+    "inputs": [
+      {
+        "name": "_email",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isPhoneNumberAvailable",
+    "inputs": [
+      {
+        "name": "_phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isUsernameAvailable",
+    "inputs": [
+      {
+        "name": "_username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "phoneNumberToAddress",
+    "inputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "profiles",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "userAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "fullName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "profilePhoto",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "accountId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "emailIsOriginal",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "phoneIsOriginal",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "lastProfileUpdate",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "createdAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proxiableUUID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "renounceOwnership",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateContactInfo",
+    "inputs": [
+      {
+        "name": "_email",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_phoneNumber",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateProfile",
+    "inputs": [
+      {
+        "name": "_fullName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_profilePhoto",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "upgradeToAndCall",
+    "inputs": [
+      {
+        "name": "newImplementation",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "usernameToAddress",
+    "inputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "version",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "event",
+    "name": "ContactInfoUpdated",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "phoneNumber",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ContractUpgraded",
+    "inputs": [
+      {
+        "name": "newImplementation",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "version",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Initialized",
+    "inputs": [
+      {
+        "name": "version",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProfileCreated",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "phoneNumber",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "fullName",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "accountId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "profilePhoto",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "createdAt",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "hasProfile",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProfileUpdated",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "fullName",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "photo",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Upgraded",
+    "inputs": [
+      {
+        "name": "implementation",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AddressEmptyCode",
+    "inputs": [
+      {
+        "name": "target",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "CannotChangeOriginalContactInfo",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ERC1967InvalidImplementation",
+    "inputs": [
+      {
+        "name": "implementation",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ERC1967NonPayable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmailAlreadyTaken",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmailOrPhoneRequired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmptyFullName",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmptyUsername",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FailedCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FullNameTooLong",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FullNameTooShort",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidAccountId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidInitialization",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoFieldsToUpdate",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoMoreAccountIdsAvailable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotInitializing",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyProfileOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OwnableInvalidOwner",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "OwnableUnauthorizedAccount",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PhoneNumberAlreadyTaken",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ProfileAlreadyExists",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ProfileDoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ProfileUpdateCooldownNotMet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UUPSUnauthorizedCallContext",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UUPSUnsupportedProxiableUUID",
+    "inputs": [
+      {
+        "name": "slot",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UsernameAlreadyTaken",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UsernameTooLong",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UsernameTooShort",
+    "inputs": []
+  }
 ] as const;
