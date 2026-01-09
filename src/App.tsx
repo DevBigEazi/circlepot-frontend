@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import AuthModal from "./modals/AuthModal";
+// import LinkContactModal from "./modals/LinkContactModal";
 import ProfileCreationModal from "./modals/ProfileCreationModal";
 import { Route, Routes, Navigate } from "react-router";
 import { useActiveAccount } from "thirdweb/react";
@@ -15,6 +16,7 @@ import SkeletonPage from "./components/SkeletonPage";
 // Lazy load page components for code-splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Profile = lazy(() => import("./pages/Profile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const TransactionsHistory = lazy(() => import("./pages/TransactionsHistory"));
 const Goals = lazy(() => import("./pages/Goals"));
@@ -41,6 +43,8 @@ function App({ client }: AppProps) {
   const { hasProfile, isLoading, profile, refreshProfile } =
     useUserProfile(client);
 
+  // const [showLinkContact, setShowLinkContact] = useState(false);
+
   // Show auth modal if not authenticated
   const showAuthModal = !account;
 
@@ -51,11 +55,21 @@ function App({ client }: AppProps) {
   // Show dashboard if authenticated and has profile
   const showDashboard = account && hasProfile === true;
 
+  // Check if user needs to link contact info (missing email or phone)
+  // const needsContactLink = profile && (!profile.email || !profile.phoneNumber);
+
   // Handle successful profile creation
   const handleProfileCreated = () => {
     // Refresh profile data to update the UI
     refreshProfile();
   };
+
+  // Show link contact modal when user logs in and is missing contact info
+  // useEffect(() => {
+  //   if (showDashboard && !isLoading && needsContactLink) {
+  //     setShowLinkContact(true);
+  //   }
+  // }, [showDashboard, isLoading, needsContactLink]);
 
   // Check if current URL is invalid dashboard ID
   const isInvalidDashboardId = () => {
@@ -117,6 +131,7 @@ function App({ client }: AppProps) {
                     />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/profile" element={<Profile />} />
                     <Route path="/local-methods" element={<LocalMethods />} />
                     <Route
                       path="/external-wallets"
@@ -165,6 +180,14 @@ function App({ client }: AppProps) {
                 onProfileCreated={handleProfileCreated}
               />
             )}
+
+            {/* Link Contact Modal - shows when user is missing email or phone */}
+            {/* {showLinkContact && needsContactLink && (
+              <LinkContactModal
+                onClose={() => setShowLinkContact(false)}
+                onSkip={() => setShowLinkContact(false)}
+              />
+            )} */}
 
             {/* PWA Install Prompt - Global, non-intrusive */}
             <PWAInstallPrompt />
