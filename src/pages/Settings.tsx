@@ -25,6 +25,7 @@ import { useCurrency } from "../contexts/CurrencyContext";
 import { useNotifications } from "../contexts/NotificationsContext";
 import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
 import { getInitials } from "../utils/helpers";
+import { MdRoomPreferences } from "react-icons/md";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -33,7 +34,8 @@ const Settings: React.FC = () => {
   const wallet = useActiveWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { availableCurrencies } = useCurrencyConverter();
-  const { isSubscribed, togglePushNotifications } = useNotifications();
+  const { isPushSupported, isSubscribed, togglePushNotifications } =
+    useNotifications();
 
   // State for logout and loading
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -224,7 +226,7 @@ const Settings: React.FC = () => {
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
-                  <Bell className="text-white" size={18} />
+                  <MdRoomPreferences className="white" size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3
@@ -410,19 +412,20 @@ const Settings: React.FC = () => {
                         >
                           Push Notifications
                         </h4>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.textLight }}
-                        >
-                          Stay updated on your circles
-                        </p>
+                        <div style={{ color: colors.textLight }} className="text-xs">
+                          {isPushSupported
+                            ? "Get notified about circle activity, payouts & more"
+                            : "Your browser doesn't support push notifications"}
+                        </div>
                       </div>
                     </div>
                     <button
                       onClick={handlePushToggle}
-                      disabled={isPushLoading}
+                      disabled={isPushLoading || !isPushSupported}
                       className={`w-12 h-6 rounded-full transition-colors relative ${
                         isSubscribed ? "bg-lime-600" : "bg-gray-300"
+                      } ${
+                        !isPushSupported ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
                       <div
