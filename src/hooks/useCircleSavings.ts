@@ -692,6 +692,7 @@ export const useCircleSavings = (
   const {
     data: circlesData,
     isLoading: isCirclesLoading,
+    error: circlesDataError,
     refetch: refetchCircles,
   } = useQuery({
     queryKey: ["circleSavings", account?.address],
@@ -700,12 +701,13 @@ export const useCircleSavings = (
 
       try {
         // 1. Fetch user's created circles and join events
-        const userResult: any = await request(
-          SUBGRAPH_URL,
-          userCirclesQuery,
-          { userId: account.address.toLowerCase() },
-          SUBGRAPH_HEADERS
-        );
+        const userResult: any = await request({
+          url: SUBGRAPH_URL,
+          document: userCirclesQuery,
+          variables: { userId: account.address.toLowerCase() },
+          requestHeaders: SUBGRAPH_HEADERS,
+          signal: AbortSignal.timeout(7000),
+        });
 
         // 2. Extract unique circle IDs from join events
         const joinedCircleIds = [
@@ -721,12 +723,13 @@ export const useCircleSavings = (
         let joinedCirclesCollateralWithdrawals = [];
         let joinedCirclesCollateralReturns = [];
         if (joinedCircleIds.length > 0) {
-          const circlesResult: any = await request(
-            SUBGRAPH_URL,
-            circlesByIdsQuery,
-            { circleIds: joinedCircleIds },
-            SUBGRAPH_HEADERS
-          );
+          const circlesResult: any = await request({
+            url: SUBGRAPH_URL,
+            document: circlesByIdsQuery,
+            variables: { circleIds: joinedCircleIds },
+            requestHeaders: SUBGRAPH_HEADERS,
+            signal: AbortSignal.timeout(7000),
+          });
           joinedCirclesDetails = circlesResult.circles;
           joinedCirclesMembers = circlesResult.circleJoineds;
           joinedCirclesVotingEvents = circlesResult.votingInitiateds;
@@ -748,6 +751,9 @@ export const useCircleSavings = (
           joinedCirclesCollateralReturns,
         };
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          throw new Error("Subgraph request timed out. Please check your connection.");
+        }
         throw err;
       }
     },
@@ -757,8 +763,15 @@ export const useCircleSavings = (
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchOnReconnect: true, // Refetch on network reconnect
     refetchOnMount: true, // Refetch when component mounts
-    retry: 1, // Only retry once on failure
+    retry: 0,
   });
+
+  const queryError = useMemo(() => {
+    // If we have an error, show it regardless of loading state
+    if (circlesDataError) return (circlesDataError as any)?.message || "Data server error";
+    if (isCirclesLoading) return null;
+    return null;
+  }, [circlesDataError, isCirclesLoading]);
 
   // Update local state when subgraph data changes
   useEffect(() => {
@@ -1800,9 +1813,9 @@ export const useCircleSavings = (
     collateralWithdrawals,
     collateralReturns,
     deadCircleFees,
-    isLoading: isCirclesLoading,
+    isLoading: isCirclesLoading || isSending,
     isTransactionPending: isSending,
-    error,
+    error: error || queryError,
     createCircle,
     joinCircle,
     contribute,

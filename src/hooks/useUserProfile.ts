@@ -78,20 +78,25 @@ export const useUserProfile = (client: ThirdwebClient) => {
   const {
     data: userData,
     isLoading: isUserLoading,
+    error: userDataError,
     refetch: refetchUser,
   } = useQuery({
     queryKey: ["userProfile", account?.address],
     async queryFn() {
       if (!account?.address) return null;
       try {
-        const result = await request(
-          SUBGRAPH_URL,
-          userProfileQuery,
-          { id: account.address.toLowerCase() },
-          SUBGRAPH_HEADERS
-        );
+        const result = await request({
+          url: SUBGRAPH_URL,
+          document: userProfileQuery,
+          variables: { id: account.address.toLowerCase() },
+          requestHeaders: SUBGRAPH_HEADERS,
+          signal: AbortSignal.timeout(5000),
+        });
         return result.user;
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          throw new Error("The data server is taking too long to respond. It might be undergoing maintenance.");
+        }
         throw err;
       }
     },
@@ -99,8 +104,15 @@ export const useUserProfile = (client: ThirdwebClient) => {
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    retry: 1,
+    retry: 0,
   });
+
+  const queryError = useMemo(() => {
+    // If we have an error, show it regardless of loading state
+    if (userDataError) return (userDataError as any)?.message || "Data server error";
+    if (isUserLoading) return null;
+    return null;
+  }, [userDataError, isUserLoading]);
   useEffect(() => {
     if (userData) {
       setHasProfile(userData.hasProfile);
@@ -126,10 +138,14 @@ export const useUserProfile = (client: ThirdwebClient) => {
       });
       setError(null);
     } else if (!isUserLoading && account?.address) {
-      setHasProfile(false);
-      setProfile(null);
+      // Only set to false if no error occurred, otherwise we want to keep it null 
+      // so the error state can be shown in App.tsx
+      if (!userDataError) {
+        setHasProfile(false);
+        setProfile(null);
+      }
     }
-  }, [userData, isUserLoading, account?.address]);
+  }, [userData, isUserLoading, account?.address, userDataError]);
 
   // Create profile function
   const createProfile = useCallback(
@@ -489,7 +505,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
     hasProfile,
     profile,
     isLoading: isUserLoading || isSending,
-    error,
+    error: error || queryError,
     createProfile,
     updateProfile,
     updateContactInfo,
