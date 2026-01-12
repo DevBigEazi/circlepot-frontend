@@ -12,6 +12,7 @@ import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { Toaster } from "sonner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import SkeletonPage from "./components/SkeletonPage";
+import DataErrorState from "./components/DataErrorState";
 
 // Lazy load page components for code-splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -40,8 +41,13 @@ interface AppProps {
 
 function App({ client }: AppProps) {
   const account = useActiveAccount();
-  const { hasProfile, isLoading, profile, refreshProfile } =
-    useUserProfile(client);
+  const {
+    hasProfile,
+    isLoading,
+    profile,
+    refreshProfile,
+    error: profileError,
+  } = useUserProfile(client);
 
   // const [showLinkContact, setShowLinkContact] = useState(false);
 
@@ -94,7 +100,22 @@ function App({ client }: AppProps) {
             <AutoConnectWallet />
 
             {/* Loading state while checking profile or initializing */}
-            {account && (isLoading || hasProfile === null) && <SkeletonPage />}
+            {account &&
+              (isLoading || (hasProfile === null && !profileError)) && (
+                <SkeletonPage />
+              )}
+
+            {/* Error state if data fetching fails */}
+            {account && profileError && hasProfile === null && (
+              <DataErrorState
+                onRetry={refreshProfile}
+                message={
+                  profileError.includes("database unavailable")
+                    ? "Our database is currently taking a break. We're working to wake it up and get you back in!"
+                    : undefined
+                }
+              />
+            )}
 
             {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
             {showDashboard && !isLoading && !isInvalidDashboardId() && (

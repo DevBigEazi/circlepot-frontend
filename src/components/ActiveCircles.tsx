@@ -35,6 +35,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     getLateMembersForCircle,
     forfeitures,
     isLoading,
+    error,
     initiateVoting,
     castVote,
     executeVote,
@@ -173,6 +174,29 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
         {[1, 2, 3].map((i) => (
           <CircleCardSkeleton key={i} />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="rounded-2xl p-8 shadow-sm border text-center space-y-4"
+        style={{ backgroundColor: colors.surface, borderColor: colors.border }}
+      >
+        <div className="text-red-500 mb-2">
+          <Users size={48} className="mx-auto opacity-20" />
+        </div>
+        <p style={{ color: colors.text }} className="font-semibold">
+          It's Not You, It's Us
+        </p>
+        <p
+          style={{ color: colors.textLight }}
+          className="text-sm max-w-xs mx-auto"
+        >
+          We're having a little trouble finding your savings circles. We'll have
+          them back for you soon!
+        </p>
       </div>
     );
   }

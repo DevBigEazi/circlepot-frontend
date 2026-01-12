@@ -135,6 +135,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   const {
     data: goalsData,
     isLoading: isGoalsLoading,
+    error: goalsDataError,
     refetch: refetchGoals,
   } = useQuery({
     queryKey: ["personalGoals", account?.address],
@@ -142,19 +143,31 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       if (!account?.address) return null;
 
       try {
-        const result = await request(
-          SUBGRAPH_URL,
-          userGoalsQuery,
-          { userId: account.address.toLowerCase() },
-          SUBGRAPH_HEADERS
-        );
+        const result = await request({
+          url: SUBGRAPH_URL,
+          document: userGoalsQuery,
+          variables: { userId: account.address.toLowerCase() },
+          requestHeaders: SUBGRAPH_HEADERS,
+          signal: AbortSignal.timeout(5000),
+        });
         return result;
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          throw new Error("Personal goals request timed out. Please check your connection.");
+        }
         throw err;
       }
     },
     enabled: !!account?.address,
+    retry: 0,
   });
+
+  const queryError = useMemo(() => {
+    // If we have an error, show it regardless of loading state
+    if (goalsDataError) return (goalsDataError as any)?.message || "Data server error";
+    if (isGoalsLoading) return null;
+    return null;
+  }, [goalsDataError, isGoalsLoading]);
 
   // Update local state when subgraph data changes
   useEffect(() => {
@@ -460,9 +473,9 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     goals,
     contributions,
     withdrawals,
-    isLoading: isGoalsLoading,
+    isLoading: isGoalsLoading || isSending,
     isTransacting: isSending,
-    error,
+    error: error || queryError,
     createPersonalGoal,
     contributeToGoal,
     withdrawFromGoal,
