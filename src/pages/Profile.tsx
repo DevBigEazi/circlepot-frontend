@@ -25,7 +25,8 @@ const Profile: React.FC = () => {
   const colors = useThemeColors();
   const navigate = useNavigate();
 
-  const { profile, isLoading, updateProfile } = useUserProfile(client);
+  const { profile, isLoading, updateProfile, isUpdatingProfile } =
+    useUserProfile(client);
   const { uploadImage, isUploading } = useThirdwebStorage(client);
 
   const [userSettings, setUserSettings] = useState({
@@ -186,7 +187,7 @@ const Profile: React.FC = () => {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const isProcessing = isLoading || isUploading;
+  const isProcessing = isUpdatingProfile || isUploading;
 
   const CopyableField = ({
     label,

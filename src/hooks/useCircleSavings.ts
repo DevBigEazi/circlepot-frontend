@@ -1813,7 +1813,7 @@ export const useCircleSavings = (
     collateralWithdrawals,
     collateralReturns,
     deadCircleFees,
-    isLoading: isCirclesLoading || isSending,
+    isLoading: isCirclesLoading,
     isTransactionPending: isSending,
     error: error || queryError,
     createCircle,
