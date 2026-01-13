@@ -9,6 +9,8 @@ export interface PersonalGoal {
   contributionAmount: bigint;
   deadline: bigint;
   isActive: boolean;
+  isYieldEnabled: boolean;
+  token: string;
   createdAt: bigint;
   user: {
     id: string;
@@ -40,6 +42,8 @@ export interface CreateGoalParams {
   contributionAmount: bigint;
   frequency: 0 | 1 | 2; // 0 = Daily, 1 = Weekly, 2 = Monthly
   deadline: bigint;
+  enableYield: boolean;
+  token: string;
 }
 
 // Interfaces for goal withdrawal modal
@@ -67,13 +71,15 @@ export interface Goal {
   formattedDeadline: string;
   nextContribution: string;
   frequency: number;
+  isYieldEnabled: boolean;
+  token: string;
 }
 
 export interface ActiveGoalsListProps {
   goals: Goal[];
   isLoading: boolean;
   contributingGoalId: bigint | null;
-  onContribute: (goalId: bigint, amount: bigint) => Promise<void>;
+  onContribute: (goalId: bigint, amount: bigint, tokenAddress: string) => Promise<void>;
   onWithdraw: (goalId: bigint) => Promise<void>;
   contributions: Array<{
     goalId: bigint;
