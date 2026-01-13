@@ -52,7 +52,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   // Get withdrawal info if function is available
   const withdrawalInfo = getWithdrawalInfo
     ? getWithdrawalInfo(circle.rawCircle.circleId, account?.address)
-    : circle; // Fallback to circle data if not provided
+    : (circle as any); // Fallback to circle data if not provided (matching previous logic)
 
   if (!account || !circle.rawCircle) return null;
 
@@ -70,8 +70,8 @@ const CircleActions: React.FC<CircleActionsProps> = ({
 
   const isCreator =
     creator?.id?.toLowerCase() === account.address.toLowerCase();
-  // We assume the user is a member if they are seeing this card in "Active Circles" or if we check the members list.
-  // we should check if they are in the members list.
+
+  // We determine membership based on whether the subgraph has assigned the user a position (> 0).
   const isMember = circle.currentPosition > 0;
 
   // Time calculations
@@ -79,18 +79,13 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   const createdTime = Number(createdAt);
 
   // Ultimatum Period
-  // Daily/Weekly: 7 days (604800s)
-  // Monthly: 14 days (1209600s)
+  // Daily/Weekly: 7 days (604800s) | Monthly: 14 days (1209600s)
   const ultimatumDuration = frequency <= 1 ? 604800 : 1209600;
   const ultimatumPassed = now > createdTime + ultimatumDuration;
 
   // Grace Period
-  // Daily: 12 hours (43200s)
-  // Others: 48 hours (172800s)
-  // We need the deadline of the current round to check grace period.
-  // Ideally this info should be in the circle object, but we might need to estimate it or fetch it.
-  // For now, we'll assume the button is enabled if the backend allows it (we can't easily check grace period on frontend without round deadline).
-  // However, `forfeitMember` is only for the NEXT recipient.
+  // Daily: 12 hours (43200s) | Others: 48 hours (172800s)
+  // We use circle.contributionDeadline (including grace period from subgraph) to determine if actions like 'Forfeit' are now accessible.
 
   // Handler for withdrawal confirmation
   const handleWithdrawConfirm = async () => {
@@ -169,6 +164,35 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     } catch (error) {}
   };
 
+  // Helper for premium withdraw button design
+  const renderWithdrawButton = () => (
+    <button
+      onClick={() => setShowWithdrawModal(true)}
+      disabled={isLoading}
+      className="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 text-white shadow-sm hover:shadow-orange-100 dark:hover:shadow-none hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+    >
+      {isLoading ? (
+        <span className="flex items-center gap-2">
+          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span className="whitespace-nowrap">Withdrawing...</span>
+        </span>
+      ) : (
+        <>
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform flex-shrink-0" />
+          <span className="whitespace-nowrap">
+            <span className="hidden sm:inline">Withdraw Collateral</span>
+            <span className="sm:hidden">Withdraw</span>
+          </span>
+          {withdrawalInfo?.isCreator && withdrawalInfo.creatorDeadFee > 0n && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-black/10 backdrop-blur-sm hidden md:inline-block">
+              Fee: ${(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(2)}
+            </span>
+          )}
+        </>
+      )}
+    </button>
+  );
+
   const renderInviteShareButtons = () => {
     const circleFull = Number(currentMembers) >= Number(maxMembers);
     if (circleFull) return null;
@@ -233,147 +257,62 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         </button>
       );
     }
-
     return null;
   };
 
-  // Render buttons based on state
-  // State: COMPLETED (4) or DEAD (5)
-  if (state === 4 || state === 5) {
-    if (
-      state === 5 &&
-      isMember &&
-      withdrawalInfo?.canWithdraw &&
-      !circle.hasWithdrawn
-    ) {
-      return (
-        <button
-          onClick={() => setShowWithdrawModal(true)}
-          disabled={isLoading}
-          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
-        >
-          {isLoading ? (
-            "Withdrawing..."
-          ) : (
-            <>
-              <AlertTriangle className="w-4 h-4" />
-              <span className="hidden sm:inline">Withdraw Collateral</span>
-              <span className="sm:hidden">Withdraw</span>
-              {withdrawalInfo.isCreator &&
-                withdrawalInfo.creatorDeadFee > 0n && (
-                  <span className="text-[10px] opacity-80 hidden sm:inline">
-                    (Fee: $
-                    {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(2)})
-                  </span>
-                )}
-            </>
-          )}
-        </button>
-      );
-    }
-    return null;
-  }
-
-  // State: CREATED (1)
-  if (state === 1) {
-    const thresholdReached = Number(currentMembers) >= Number(maxMembers) * 0.6;
-
-    // Logic should prioritize phase-specific actions (Voting/Ultimatum)
-    // Initial and post-vote share buttons are handled by fall-through
-
-    // Check if there is an active voting session that the subgraph state might have missed
-    // or if we simply want to treat a certain condition as voting.
-    const latestVotingEvt = circle.votingEvents?.[0];
-    const votingHasEnded =
-      latestVotingEvt && now > Number(latestVotingEvt.votingEndAt);
-    const votingIsActive =
-      latestVotingEvt && now <= Number(latestVotingEvt.votingEndAt);
-
-    // Check if vote has been executed by looking for voteResults
-    const latestVoteResult = circle.voteResults?.[0];
-    const voteHasBeenExecuted = !!latestVoteResult;
-
-    // Check if withdraw won the vote
-    const withdrawWonVote = latestVoteResult?.withdrawWon === true;
-
-    // If voting has ended but not executed, show Execute Vote button
-    if (votingHasEnded && !voteHasBeenExecuted) {
-      return (
-        <button
-          onClick={() =>
-            handleAction(() => onExecuteVote(circleId), "Execute vote")
-          }
-          disabled={isLoading}
-          className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.primary }}
-        >
-          {isLoading ? "Processing..." : "Execute Vote Results"}
-        </button>
-      );
+  const renderButtons = () => {
+    // State: COMPLETED (4) or DEAD (5)
+    if (state === 4 || state === 5) {
+      if (
+        state === 5 &&
+        isMember &&
+        (withdrawalInfo?.canWithdraw ||
+          withdrawalInfo?.canWithdrawCollateral) &&
+        !circle.hasWithdrawn
+      ) {
+        return renderWithdrawButton();
+      }
+      return null;
     }
 
-    // If vote has been executed and withdraw won, show withdraw button immediately
-    if (voteHasBeenExecuted && withdrawWonVote && isMember) {
-      return (
-        <>
+    // State: CREATED (1)
+    if (state === 1) {
+      // Logic handles phase-specific actions: Voting status, Vote Execution, or Ultimatum Expiry.
+      // If no phase-specific action is currently valid, it falls back to Invite/Share buttons.
+      const latestVotingEvt = circle.votingEvents?.[0];
+      const votingHasEnded =
+        latestVotingEvt && now > Number(latestVotingEvt.votingEndAt);
+      const votingIsActive =
+        latestVotingEvt && now <= Number(latestVotingEvt.votingEndAt);
+
+      const latestVoteResult = circle.voteResults?.[0];
+      const voteHasBeenExecuted = !!latestVoteResult;
+      const withdrawWonVote = latestVoteResult?.withdrawWon === true;
+
+      // 1. Voting phase ended but not executed
+      if (votingHasEnded && !voteHasBeenExecuted) {
+        return (
           <button
-            onClick={() => setShowWithdrawModal(true)}
+            onClick={() =>
+              handleAction(() => onExecuteVote(circleId), "Execute vote")
+            }
             disabled={isLoading}
-            className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
+            className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+            style={{ background: colors.primary }}
           >
-            {isLoading ? (
-              "Withdrawing..."
-            ) : (
-              <>
-                <AlertTriangle className="w-4 h-4" />
-                <span className="hidden sm:inline">Withdraw Collateral</span>
-                <span className="sm:hidden">Withdraw</span>
-                {withdrawalInfo?.isCreator &&
-                  withdrawalInfo.creatorDeadFee > 0n && (
-                    <span className="text-[10px] opacity-80 hidden sm:inline">
-                      (Fee: $
-                      {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(
-                        2
-                      )}
-                      )
-                    </span>
-                  )}
-              </>
-            )}
+            {isLoading ? "Processing..." : "Execute Vote Results"}
           </button>
-          {showWithdrawModal && withdrawalInfo && (
-            <WithdrawCollateralModal
-              isOpen={showWithdrawModal}
-              onClose={() => setShowWithdrawModal(false)}
-              onConfirm={handleWithdrawConfirm}
-              colors={colors}
-              circleName={circle.name}
-              collateralLocked={withdrawalInfo.collateralLocked || 0n}
-              creatorDeadFee={withdrawalInfo.creatorDeadFee || 0n}
-              netAmount={withdrawalInfo.netWithdrawalAmount || 0n}
-              isCreator={withdrawalInfo.isCreator || false}
-              withdrawalReason={withdrawalInfo.reason || "vote_failed"}
-              isLoading={isLoading}
-            />
-          )}
-        </>
-      );
-    }
-
-    // If we are effectively in voting mode, Return the voting UI
-    if (votingIsActive) {
-      // Check if user has voted
-      const userVote = circle.votes?.find(
-        (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
-      );
-      const hasVoted = !!userVote;
-
-      if (hasVoted) {
-        return renderInviteShareButtons();
+        );
       }
 
-      return (
-        <div className="flex flex-col sm:flex-row gap-2 flex-1">
+      // 2. Voting phase active
+      if (votingIsActive) {
+        const userVote = circle.votes?.find(
+          (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
+        );
+        if (!!userVote) return renderInviteShareButtons();
+
+        return (
           <button
             onClick={() => setIsVoteModalOpen(true)}
             disabled={isLoading}
@@ -383,148 +322,238 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             <Vote className="w-4 h-4" />
             <span>Vote</span>
           </button>
+        );
+      }
 
-          <VoteModal
-            isOpen={isVoteModalOpen}
-            onClose={() => setIsVoteModalOpen(false)}
-            isLoading={isLoading}
-            onVoteStart={async () => {
-              await handleAction(
-                () => onCastVote(circleId, 1),
-                "Vote to start"
-              );
-              setIsVoteModalOpen(false);
-            }}
-            onVoteWithdraw={async () => {
-              await handleAction(
-                () => onCastVote(circleId, 2),
-                "Vote to withdraw"
-              );
-              setIsVoteModalOpen(false);
-            }}
-          />
-        </div>
-      );
-    }
+      // 3. Vote executed and withdraw won
+      if (voteHasBeenExecuted && withdrawWonVote && isMember) {
+        return renderWithdrawButton();
+      }
 
-    // Check ultimatum and threshold for voting initiation or withdrawal
-    if (ultimatumPassed) {
-      if (thresholdReached) {
-        // Show "Initiate Vote" for all members (including creator)
-        // The circle will auto-start when vote is executed if start wins
-        if (isMember) {
-          return (
-            <button
-              onClick={() =>
-                handleAction(
-                  () => onInitiateVoting(circleId),
-                  "Initiate voting"
-                )
-              }
-              disabled={isLoading}
-              className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-yellow-500 hover:bg-yellow-600"
-            >
-              {isLoading ? (
-                "Processing..."
-              ) : (
-                <>
-                  <Vote className="w-4 h-4" />
-                  <span>Initiate Vote</span>
-                </>
-              )}
-            </button>
-          );
-        }
-      } else {
-        // Threshold NOT reached and Ultimatum PASSED -> Withdraw Collateral
-        // Check if withdrawal is eligible using withdrawalInfo
-        if (isMember && withdrawalInfo?.canWithdraw) {
-          return (
-            <button
-              onClick={() => setShowWithdrawModal(true)}
-              disabled={isLoading}
-              className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-orange-500 hover:bg-orange-600"
-            >
-              {isLoading ? (
-                "Withdrawing..."
-              ) : (
-                <>
-                  <AlertTriangle className="w-4 h-4" />
-                  <span className="hidden sm:inline">Withdraw Collateral</span>
-                  <span className="sm:hidden">Withdraw</span>
-                  {withdrawalInfo.isCreator &&
-                    withdrawalInfo.creatorDeadFee > 0n && (
-                      <span className="text-[10px] opacity-80 hidden sm:inline">
-                        (Fee: $
-                        {(Number(withdrawalInfo.creatorDeadFee) / 1e18).toFixed(
-                          2
-                        )}
-                        )
-                      </span>
-                    )}
-                </>
-              )}
-            </button>
-          );
+      // 4. Threshold & Ultimatum logic
+      const thresholdReached =
+        Number(currentMembers) >= Number(maxMembers) * 0.6;
+      if (ultimatumPassed) {
+        if (thresholdReached) {
+          if (isMember) {
+            return (
+              <button
+                onClick={() =>
+                  handleAction(
+                    () => onInitiateVoting(circleId),
+                    "Initiate voting"
+                  )
+                }
+                disabled={isLoading}
+                className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 bg-yellow-500 hover:bg-yellow-600"
+              >
+                {isLoading ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    <Vote className="w-4 h-4" />
+                    <span>Initiate Vote</span>
+                  </>
+                )}
+              </button>
+            );
+          }
+        } else if (
+          isMember &&
+          (withdrawalInfo?.canWithdraw || withdrawalInfo?.canWithdrawCollateral)
+        ) {
+          return renderWithdrawButton();
         }
       }
-    }
 
-    // For public circles or general members, show buttons if applicable
-    const generalInviteButtons = renderInviteShareButtons();
-    if (generalInviteButtons) {
-      return generalInviteButtons;
-    }
-
-    return null;
-  }
-
-  // State: VOTING (2)
-  if (state === 2) {
-    // Check if user has voted
-    const userVote = circle.votes?.find(
-      (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
-    );
-    const hasVoted = !!userVote;
-
-    // Check if voting period has passed
-    // We use the latest voting event
-    const latestVotingEvent = circle.votingEvents?.[0];
-    const votingEnded = latestVotingEvent
-      ? now > Number(latestVotingEvent.votingEndAt)
-      : false;
-
-    if (votingEnded) {
-      return (
-        <button
-          onClick={() =>
-            handleAction(() => onExecuteVote(circleId), "Execute vote")
-          }
-          disabled={isLoading}
-          className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-          style={{ background: colors.primary }}
-        >
-          {isLoading ? "Processing..." : "Execute Vote Results"}
-        </button>
-      );
-    }
-
-    if (hasVoted) {
       return renderInviteShareButtons();
     }
 
-    return (
-      <div className="flex flex-col sm:flex-row gap-2 flex-1">
+    // State: VOTING (2)
+    if (state === 2) {
+      const latestVotingEvent = circle.votingEvents?.[0];
+      const votingEnded = latestVotingEvent
+        ? now > Number(latestVotingEvent.votingEndAt)
+        : false;
+
+      if (votingEnded) {
+        return (
+          <button
+            onClick={() =>
+              handleAction(() => onExecuteVote(circleId), "Execute vote")
+            }
+            disabled={isLoading}
+            className="w-full py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+            style={{ background: colors.primary }}
+          >
+            {isLoading ? "Processing..." : "Execute Vote Results"}
+          </button>
+        );
+      }
+
+      const userVote = circle.votes?.find(
+        (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
+      );
+      if (!!userVote) return renderInviteShareButtons();
+
+      return (
         <button
           onClick={() => setIsVoteModalOpen(true)}
           disabled={isLoading}
-          className="flex-1 py-2 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+          className="flex-1 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
           style={{ background: colors.primary }}
         >
           <Vote className="w-4 h-4" />
           <span>Vote</span>
         </button>
+      );
+    }
 
+    // State: ACTIVE (3)
+    if (state === 3) {
+      const hasContributed = circle.hasContributed;
+      const currentRound = Number(circle.rawCircle.currentRound || 1);
+      const deadlineElapsed = now > Number(circle.contributionDeadline);
+      const isRecipient = circle.currentPosition === currentRound;
+      const hasReceivedPayout =
+        circle.payouts?.some(
+          (payout: any) => Number(payout.round) === currentRound
+        ) || false;
+
+      if (isRecipient) {
+        if (deadlineElapsed && !hasReceivedPayout) {
+          return (
+            <button
+              onClick={() => {
+                const lateMembers = getLateMembersForCircle(circleId);
+                handleAction(
+                  () => onForfeitMember(circleId, lateMembers),
+                  "Forfeit member"
+                );
+              }}
+              disabled={isLoading}
+              className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
+            >
+              {isLoading ? (
+                "Processing..."
+              ) : (
+                <>
+                  <UserX className="w-4 h-4" />
+                  <span>Forfeit</span>
+                </>
+              )}
+            </button>
+          );
+        }
+
+        if (!hasContributed) {
+          return (
+            <button
+              onClick={() =>
+                handleAction(
+                  () => onContribute(circleId, contributionAmount),
+                  "Contribution"
+                )
+              }
+              disabled={isLoading}
+              className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+              style={{ background: colors.primary }}
+            >
+              {isLoading ? (
+                "Processing..."
+              ) : (
+                <>
+                  <DollarSign className="w-4 h-4" />
+                  <span>Contribute</span>
+                </>
+              )}
+            </button>
+          );
+        }
+
+        return (
+          <div
+            className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1"
+            style={{ borderColor: colors.border, color: colors.textLight }}
+          >
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <span>
+              {hasReceivedPayout ? "Payout Received" : "Awaiting Payout"}
+            </span>
+          </div>
+        );
+      }
+
+      const canForfeit =
+        deadlineElapsed && hasContributed && !hasReceivedPayout;
+
+      if (!hasContributed) {
+        return (
+          <button
+            onClick={() =>
+              handleAction(
+                () => onContribute(circleId, contributionAmount),
+                "Contribution"
+              )
+            }
+            disabled={isLoading}
+            className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
+            style={{ background: colors.primary }}
+          >
+            {isLoading ? (
+              "Processing..."
+            ) : (
+              <>
+                <DollarSign className="w-4 h-4" />
+                <span>Contribute</span>
+              </>
+            )}
+          </button>
+        );
+      } else if (canForfeit) {
+        return (
+          <button
+            onClick={() => {
+              const lateMembers = getLateMembersForCircle(circleId);
+              handleAction(
+                () => onForfeitMember(circleId, lateMembers),
+                "Forfeit member"
+              );
+            }}
+            disabled={isLoading}
+            className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
+          >
+            {isLoading ? (
+              "Processing..."
+            ) : (
+              <>
+                <UserX className="w-4 h-4" />
+                <span>Forfeit</span>
+              </>
+            )}
+          </button>
+        );
+      }
+
+      return (
+        <div
+          className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1"
+          style={{ borderColor: colors.border, color: colors.textLight }}
+        >
+          <CheckCircle className="w-4 h-4 text-green-500" />
+          <span>Contributed</span>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <>
+      <div className="flex gap-2 flex-1">{renderButtons()}</div>
+
+      {isVoteModalOpen && (
         <VoteModal
           isOpen={isVoteModalOpen}
           onClose={() => setIsVoteModalOpen(false)}
@@ -541,172 +570,29 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             setIsVoteModalOpen(false);
           }}
         />
-      </div>
-    );
-  }
+      )}
 
-  // State: ACTIVE (3)
-  if (state === 3) {
-    const hasContributed = circle.hasContributed;
-    const currentRound = Number(circle.rawCircle.currentRound || 1);
-
-    const contributionDeadlineWithGrace = circle.contributionDeadline;
-    const deadlineElapsed = now > Number(contributionDeadlineWithGrace);
-
-    // Check if current user is the recipient for this round
-    const isRecipient = circle.currentPosition === currentRound;
-
-    // Check if user has received payout for the current round
-    const hasReceivedPayout =
-      circle.payouts?.some(
-        (payout: any) => Number(payout.round) === currentRound
-      ) || false;
-
-    // For the recipient:
-    // - They don't need to contribute
-    // - After grace period, they should see forfeit button
-    // - Before grace period or after payout, they see status
-    if (isRecipient) {
-      // If grace period has elapsed and payout hasn't been received, show forfeit
-      if (deadlineElapsed && !hasReceivedPayout) {
-        return (
-          <div className="flex gap-2 flex-1">
-            <button
-              onClick={() => {
-                const lateMembers = getLateMembersForCircle(circleId);
-                handleAction(
-                  () => onForfeitMember(circleId, lateMembers),
-                  "Forfeit member"
-                );
-              }}
-              disabled={isLoading}
-              className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
-              title="Forfeit late members (Available after grace period)"
-            >
-              {isLoading ? (
-                "Processing..."
-              ) : (
-                <>
-                  <UserX className="w-4 h-4" />
-                  <span className="inline">Forfeit</span>
-                </>
-              )}
-            </button>
-          </div>
-        );
-      }
-
-      // Otherwise show status (waiting for payout or payout received)
-      // Only show "Awaiting Payout" if the recipient has also contributed
-      if (hasContributed) {
-        return (
-          <div className="flex gap-2 flex-1">
-            <div
-              className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1"
-              style={{ borderColor: colors.border, color: colors.textLight }}
-            >
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>
-                {hasReceivedPayout ? "Payout Received" : "Awaiting Payout"}
-              </span>
-            </div>
-          </div>
-        );
-      }
-
-      // If recipient hasn't contributed, show contribute button
-      return (
-        <div className="flex gap-2 flex-1">
-          <button
-            onClick={() =>
-              handleAction(
-                () => onContribute(circleId, contributionAmount),
-                "Contribution"
-              )
-            }
-            disabled={isLoading}
-            className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.primary }}
-          >
-            {isLoading ? (
-              "Processing..."
-            ) : (
-              <>
-                <DollarSign className="w-4 h-4" />
-                <span>Contribute</span>
-              </>
-            )}
-          </button>
-        </div>
-      );
-    }
-
-    // For non-recipients, use the original logic
-    // Show forfeit button only if:
-    // 1. Contribution deadline (WITH grace period) has elapsed
-    // 2. User has already contributed (to ensure they are an active player)
-    // 3. User has NOT received payout for this round (should always be false for non-recipients)
-    const canForfeit = deadlineElapsed && hasContributed && !hasReceivedPayout;
-
-    return (
-      <div className="flex gap-2 flex-1">
-        {!hasContributed ? (
-          <button
-            onClick={() =>
-              handleAction(
-                () => onContribute(circleId, contributionAmount),
-                "Contribution"
-              )
-            }
-            disabled={isLoading}
-            className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.primary }}
-          >
-            {isLoading ? (
-              "Processing..."
-            ) : (
-              <>
-                <DollarSign className="w-4 h-4" />
-                <span>Contribute</span>
-              </>
-            )}
-          </button>
-        ) : canForfeit ? (
-          <button
-            onClick={() => {
-              const lateMembers = getLateMembersForCircle(circleId);
-              handleAction(
-                () => onForfeitMember(circleId, lateMembers),
-                "Forfeit member"
-              );
-            }}
-            disabled={isLoading}
-            className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1 hover:bg-red-50 dark:hover:bg-red-950 text-red-500 border-red-200 dark:border-red-800"
-            title="Forfeit late members (Available after grace period if payout hasn't been distributed)"
-          >
-            {isLoading ? (
-              "Processing..."
-            ) : (
-              <>
-                <UserX className="w-4 h-4" />
-                <span className="inline">Forfeit</span>
-              </>
-            )}
-          </button>
-        ) : (
-          <div
-            className="flex-1 py-2 px-2 rounded-lg font-medium text-xs sm:text-sm text-center border flex items-center justify-center gap-1"
-            style={{ borderColor: colors.border, color: colors.textLight }}
-          >
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span>Contributed</span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return null;
+      {showWithdrawModal && withdrawalInfo && (
+        <WithdrawCollateralModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          onConfirm={handleWithdrawConfirm}
+          colors={colors}
+          circleName={circle.name}
+          collateralLocked={withdrawalInfo.collateralLocked || 0n}
+          creatorDeadFee={withdrawalInfo.creatorDeadFee || 0n}
+          netAmount={withdrawalInfo.netWithdrawalAmount || 0n}
+          isCreator={withdrawalInfo.isCreator || false}
+          withdrawalReason={
+            withdrawalInfo.reason ||
+            withdrawalInfo.withdrawalReason ||
+            "vote_failed"
+          }
+          isLoading={isLoading}
+        />
+      )}
+    </>
+  );
 };
 
 export default CircleActions;
