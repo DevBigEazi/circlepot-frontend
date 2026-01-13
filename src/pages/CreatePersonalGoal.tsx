@@ -13,12 +13,18 @@ import { client } from "../thirdwebClient";
 import NavBar from "../components/NavBar";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { USDm_ADDRESS } from "../constants/constants";
+import { Info } from "lucide-react";
 
 const CreatePersonalGoal: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
-  const { createPersonalGoal, isLoading: isContractLoading } =
-    usePersonalGoals(client);
+  const {
+    createPersonalGoal,
+    checkVaultAddress,
+    vaults,
+    isLoading: isContractLoading,
+  } = usePersonalGoals(client);
 
   const [goalForm, setGoalForm] = useState({
     name: "",
@@ -30,11 +36,36 @@ const CreatePersonalGoal: React.FC = () => {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isYieldEnabled, setIsYieldEnabled] = useState(false);
+  const [hasAcceptedRisk, setHasAcceptedRisk] = useState(false);
+  const [isYieldAvailable, setIsYieldAvailable] = useState(false);
+  const [isCheckingYield, setIsCheckingYield] = useState(true);
 
   // Only set mounted to true after component fully mounts
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      checkYieldAvailability();
+    }
+  }, [isMounted, vaults]);
+
+  const checkYieldAvailability = async () => {
+    setIsCheckingYield(true);
+    try {
+      const vault = await checkVaultAddress(USDm_ADDRESS);
+      setIsYieldAvailable(
+        vault !== "0x0000000000000000000000000000000000000000"
+      );
+    } catch (err) {
+      console.error("Failed to check yield availability:", err);
+      setIsYieldAvailable(false);
+    } finally {
+      setIsCheckingYield(false);
+    }
+  };
 
   // Validate form inputs early
   const validateForm = (): string | null => {
@@ -123,7 +154,8 @@ const CreatePersonalGoal: React.FC = () => {
     !isCreating &&
     !isContractLoading &&
     isMounted &&
-    !validationError
+    !validationError &&
+    (!isYieldEnabled || hasAcceptedRisk)
   );
 
   const handleCreateGoal = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -182,6 +214,8 @@ const CreatePersonalGoal: React.FC = () => {
         contributionAmount: contributionAmountWei,
         frequency: frequencyMap[goalForm.frequency],
         deadline: deadlineTimestamp,
+        enableYield: isYieldEnabled,
+        token: USDm_ADDRESS,
       };
 
       await createPersonalGoal(params);
@@ -622,6 +656,155 @@ const CreatePersonalGoal: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Yield Option */}
+            <div
+              className={`rounded-2xl p-6 border transition-all duration-300 ${
+                !isYieldAvailable && !isCheckingYield ? "opacity-60" : ""
+              }`}
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: isYieldEnabled ? colors.primary : colors.border,
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp
+                    size={20}
+                    style={{
+                      color: isYieldEnabled ? colors.primary : colors.textLight,
+                    }}
+                  />
+                  <div>
+                    <span
+                      className="font-bold flex items-center gap-2"
+                      style={{ color: colors.text }}
+                    >
+                      Enable Yield Savings
+                      {!isYieldAvailable && !isCheckingYield && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-500 font-medium">
+                          Unavailable
+                        </span>
+                      )}
+                    </span>
+                    <p
+                      className="text-xs"
+                      style={{
+                        color:
+                          !isYieldAvailable && !isCheckingYield
+                            ? colors.secondary
+                            : colors.textLight,
+                      }}
+                    >
+                      {!isYieldAvailable && !isCheckingYield
+                        ? "Currently unavailable for this token"
+                        : "Earn yield on your savings via money markets"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={
+                    !isYieldAvailable || isCreating || isContractLoading
+                  }
+                  onClick={() => setIsYieldEnabled(!isYieldEnabled)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    isYieldEnabled ? "" : "bg-gray-200"
+                  }`}
+                  style={{
+                    backgroundColor: isYieldEnabled
+                      ? colors.primary
+                      : undefined,
+                  }}
+                >
+                  <span
+                    className={`${
+                      isYieldEnabled ? "translate-x-6" : "translate-x-1"
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  />
+                </button>
+              </div>
+
+              {!isYieldAvailable && !isCheckingYield && (
+                <div
+                  className="mt-4 p-3 rounded-xl border flex items-start gap-2"
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <AlertTriangle
+                    size={14}
+                    style={{ color: colors.secondary }}
+                    className="mt-0.5 flex-shrink-0"
+                  />
+                  <p
+                    className="text-[11px] leading-relaxed"
+                    style={{ color: colors.textLight }}
+                  >
+                    Yield generation is not currently availabile as market-based
+                    yield strategies are added periodically.
+                  </p>
+                </div>
+              )}
+
+              {isYieldEnabled && (
+                <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div
+                    className="p-4 rounded-xl border border-dashed text-sm"
+                    style={{
+                      backgroundColor: `${colors.primary}05`,
+                      borderColor: `${colors.primary}40`,
+                      color: colors.textLight,
+                    }}
+                  >
+                    <div className="flex items-start gap-2 mb-2">
+                      <Info
+                        size={16}
+                        className="mt-0.5 flex-shrink-0"
+                        style={{ color: colors.primary }}
+                      />
+                      <p
+                        className="font-medium text-xs"
+                        style={{ color: colors.text }}
+                      >
+                        You will earn real yield on your deposits. Circlepot
+                        takes a 10% share of generated yield to support the
+                        platform.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="flex items-start gap-3 p-4 rounded-xl"
+                    style={{ backgroundColor: colors.warningBg }}
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      <input
+                        type="checkbox"
+                        id="risk-agreement"
+                        checked={hasAcceptedRisk}
+                        onChange={(e) => setHasAcceptedRisk(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 transition focus:ring-offset-0"
+                        style={{ accentColor: colors.primary }}
+                      />
+                    </div>
+                    <label
+                      htmlFor="risk-agreement"
+                      className="text-xs leading-relaxed cursor-pointer"
+                      style={{ color: colors.textLight }}
+                    >
+                      I understand that yield is generated through third-party
+                      protocols and carries smart contract risk. I agree to the{" "}
+                      <span className="underline font-medium">
+                        Yield Savings Terms
+                      </span>
+                      .
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Create Button */}

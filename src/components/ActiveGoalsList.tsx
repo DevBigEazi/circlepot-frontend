@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Target, Plus, Calendar, Clock, Loader } from "lucide-react";
+import {
+  Target,
+  Plus,
+  Calendar,
+  Clock,
+  Loader,
+  TrendingUp,
+} from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useNavigate } from "react-router";
 import { GoalWithdrawalModal } from "../modals/GoalWithdrawalModal";
@@ -246,6 +253,20 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                         {goal.goalName}
                       </h3>
 
+                      {goal.isYieldEnabled && (
+                        <div
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 w-fit"
+                          style={{
+                            backgroundColor: `${colors.primary}15`,
+                            color: colors.primary,
+                            border: `1px solid ${colors.primary}30`,
+                          }}
+                        >
+                          <TrendingUp size={10} />
+                          YIELD EARNING
+                        </div>
+                      )}
+
                       <div className="flex gap-1 items-center">
                         <Calendar
                           size={14}
@@ -369,7 +390,8 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                       onClick={() =>
                         onContribute(
                           goal.goalId,
-                          BigInt(goal.contributionAmount)
+                          BigInt(goal.contributionAmount),
+                          goal.token
                         )
                       }
                       disabled={
