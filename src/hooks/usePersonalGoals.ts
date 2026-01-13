@@ -43,6 +43,8 @@ const userGoalsQuery = gql`
       frequency
       deadline
       isActive
+      isYieldEnabled
+      token
       createdAt
       updatedAt
     }
@@ -83,6 +85,20 @@ const userGoalsQuery = gql`
         transactionHash
       }
     }
+
+    # Vault updates to check yield availability
+    vaultUpdateds(
+      where: { contractType: "PERSONAL_SAVINGS" }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      token
+      newVault
+      transaction {
+        blockTimestamp
+      }
+    }
   }
 `;
 
@@ -103,6 +119,8 @@ const singleGoalQuery = gql`
       frequency
       deadline
       isActive
+      isYieldEnabled
+      token
       createdAt
       updatedAt
     }
@@ -116,6 +134,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   const [goals, setGoals] = useState<PersonalGoal[]>([]);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [withdrawals, setWithdrawals] = useState<GoalWithdrawal[]>([]);
+  const [vaults, setVaults] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -129,6 +148,31 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         abi: PERSONAL_SAVING_ABI,
       }),
     [client, chain]
+  );
+
+  const checkVaultAddress = useCallback(
+    async (token: string) => {
+      // First check local state from subgraph
+      const lowerToken = token.toLowerCase();
+      if (vaults[lowerToken]) {
+        return vaults[lowerToken];
+      }
+
+      // Fallback to contract call if not in subgraph or not yet loaded
+      try {
+        const { readContract } = await import("thirdweb");
+        const vault = await readContract({
+          contract,
+          method: "tokenVaults",
+          params: [token],
+        });
+        return vault as string;
+      } catch (err) {
+        console.error("Error checking vault address:", err);
+        return "0x0000000000000000000000000000000000000000";
+      }
+    },
+    [contract, vaults]
   );
 
   // Fetch user goals from Subgraph
@@ -148,8 +192,9 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           document: userGoalsQuery,
           variables: { userId: account.address.toLowerCase() },
           requestHeaders: SUBGRAPH_HEADERS,
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(10000),
         });
+        console.log("Personal Goals Subgraph Data:", result);
         return result;
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -172,62 +217,86 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   // Update local state when subgraph data changes
   useEffect(() => {
     if (goalsData) {
-      // Process goals
-      const processedGoals = goalsData.personalGoals.map((goal: any) => ({
-        id: goal.id,
-        goalId: BigInt(goal.goalId),
-        goalName: goal.goalName,
-        goalAmount: BigInt(goal.goalAmount),
-        contributionAmount: BigInt(goal.contributionAmount),
-        currentAmount: BigInt(goal.currentAmount),
-        frequency: goal.frequency,
-        deadline: BigInt(goal.deadline),
-        isActive: goal.isActive,
-        createdAt: BigInt(goal.createdAt),
-        user: goal.user,
-      }));
-      setGoals(processedGoals);
-
-      // Process contributions
-      const processedContributions = goalsData.goalContributions.map(
-        (contrib: any) => {
-          // Find the goal name from the CURRENT goals array
-          const relatedGoal = goalsData.personalGoals.find(
-            (g: any) => g.goalId === contrib.goalId
-          );
-
-          return {
-            id: contrib.id,
-            amount: BigInt(contrib.amount),
-            goalId: BigInt(contrib.goalId),
-            goalName: relatedGoal?.goalName || "Unknown Goal",
-            timestamp: BigInt(contrib.transaction.blockTimestamp),
-          };
+      try {
+        // Process goals
+        if (goalsData.personalGoals) {
+          const processedGoals = goalsData.personalGoals.map((goal: any) => ({
+            id: goal.id,
+            goalId: BigInt(goal.goalId),
+            goalName: goal.goalName,
+            goalAmount: BigInt(goal.goalAmount),
+            contributionAmount: BigInt(goal.contributionAmount),
+            currentAmount: BigInt(goal.currentAmount),
+            frequency: goal.frequency,
+            deadline: BigInt(goal.deadline),
+            isActive: goal.isActive,
+            isYieldEnabled: goal.isYieldEnabled,
+            token: goal.token,
+            createdAt: BigInt(goal.createdAt),
+            user: goal.user,
+          }));
+          setGoals(processedGoals);
         }
-      );
-      setContributions(processedContributions);
 
-      // Process withdrawals
-      const processedWithdrawals = goalsData.goalWithdrawns.map(
-        (withdrawal: any) => {
-          // Find the goal name from the CURRENT goals array
-          const relatedGoal = goalsData.personalGoals.find(
-            (g: any) => g.goalId === withdrawal.goalId
+        // Process contributions
+        if (goalsData.goalContributions) {
+          const processedContributions = goalsData.goalContributions.map(
+            (contrib: any) => {
+              const relatedGoal = goalsData.personalGoals?.find(
+                (g: any) => g.goalId === contrib.goalId
+              );
+
+              return {
+                id: contrib.id,
+                amount: BigInt(contrib.amount),
+                goalId: BigInt(contrib.goalId),
+                goalName: relatedGoal?.goalName || "Unknown Goal",
+                timestamp: BigInt(contrib.transaction.blockTimestamp),
+              };
+            }
           );
-
-          return {
-            id: withdrawal.id,
-            goalId: BigInt(withdrawal.goalId),
-            goalName: relatedGoal?.goalName || "Unknown Goal",
-            amount: BigInt(withdrawal.amount),
-            penalty: BigInt(withdrawal.penalty),
-            timestamp: BigInt(withdrawal.transaction.blockTimestamp),
-          };
+          setContributions(processedContributions);
         }
-      );
-      setWithdrawals(processedWithdrawals);
 
-      setError(null);
+        // Process withdrawals
+        if (goalsData.goalWithdrawns) {
+          const processedWithdrawals = goalsData.goalWithdrawns.map(
+            (withdrawal: any) => {
+              const relatedGoal = goalsData.personalGoals?.find(
+                (g: any) => g.goalId === withdrawal.goalId
+              );
+
+              return {
+                id: withdrawal.id,
+                goalId: BigInt(withdrawal.goalId),
+                goalName: relatedGoal?.goalName || "Unknown Goal",
+                amount: BigInt(withdrawal.amount),
+                penalty: BigInt(withdrawal.penalty),
+                timestamp: BigInt(withdrawal.transaction.blockTimestamp),
+              };
+            }
+          );
+          setWithdrawals(processedWithdrawals);
+        }
+
+        // Process vaults correctly - take the latest for each token
+        const processedVaults: Record<string, string> = {};
+        if (goalsData.vaultUpdateds && goalsData.vaultUpdateds.length > 0) {
+          console.log("VaultUpdated Entity Sample:", goalsData.vaultUpdateds[0]);
+          goalsData.vaultUpdateds.forEach((v: any) => {
+            const token = v.token.toLowerCase();
+            if (!processedVaults[token]) {
+              processedVaults[token] = v.newVault;
+            }
+          });
+        }
+        console.log("Processed Vaults:", processedVaults);
+        setVaults(processedVaults);
+        setError(null);
+      } catch (err) {
+        console.error("Error processing subgraph data:", err);
+        setError("Error processing goal data");
+      }
     }
   }, [goalsData]);
 
@@ -247,7 +316,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           contract: getContract({
             client,
             chain,
-            address: USDm_ADDRESS,
+            address: params.token || USDm_ADDRESS,
             abi: USDm_ABI,
           }),
           method: "approve",
@@ -300,7 +369,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
 
   // Contribute to goal
   const contributeToGoal = useCallback(
-    async (goalId: bigint, contributionAmount: bigint) => {
+    async (goalId: bigint, contributionAmount: bigint, tokenAddress?: string) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
@@ -313,7 +382,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           contract: getContract({
             client,
             chain,
-            address: USDm_ADDRESS,
+            address: tokenAddress || USDm_ADDRESS,
             abi: USDm_ABI,
           }),
           method: "approve",
@@ -459,6 +528,8 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           frequency: goal.frequency,
           deadline: BigInt(goal.deadline),
           isActive: goal.isActive,
+          isYieldEnabled: goal.isYieldEnabled,
+          token: goal.token,
           createdAt: BigInt(goal.createdAt),
           user: goal.user,
         };
@@ -474,14 +545,18 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     contributions,
     withdrawals,
     isLoading: isGoalsLoading,
+    isFetching: !!goalsData && !isGoalsLoading, // Useful for showing subtle loading states
     isTransacting: isSending,
-    error: error || queryError,
+    error: error, // Mutation error
+    queryError: queryError, // Query error
     createPersonalGoal,
     contributeToGoal,
     withdrawFromGoal,
     completeGoal,
     getGoalById,
+    checkVaultAddress,
     refreshGoals: refetchGoals,
     contract,
+    vaults,
   };
 };
