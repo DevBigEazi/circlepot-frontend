@@ -473,7 +473,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     goals,
     contributions,
     withdrawals,
-    isLoading: isGoalsLoading || isSending,
+    isLoading: isGoalsLoading,
     isTransacting: isSending,
     error: error || queryError,
     createPersonalGoal,

@@ -504,7 +504,8 @@ export const useUserProfile = (client: ThirdwebClient) => {
   return {
     hasProfile,
     profile,
-    isLoading: isUserLoading || isSending,
+    isLoading: isUserLoading,
+    isUpdatingProfile: isSending,
     error: error || queryError,
     createProfile,
     updateProfile,
