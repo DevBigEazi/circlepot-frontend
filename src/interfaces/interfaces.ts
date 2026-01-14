@@ -133,6 +133,8 @@ export interface ActiveCircle {
   withdrawalReason?: 'vote_failed' | 'below_threshold';
   creatorDeadFee?: bigint; // Fee for creators (0 for non-creators)
   netWithdrawalAmount?: bigint; // Amount after fee deduction
+  isYieldEnabled?: boolean;
+  yieldAPY?: bigint;
 }
 
 export interface Circle {
@@ -164,6 +166,9 @@ export interface Circle {
     startVoteTotal: bigint;
     withdrawVoteTotal: bigint;
   };
+  isYieldEnabled: boolean;
+  yieldAPY?: bigint;
+  token: string;
 }
 
 export interface CircleJoined {
@@ -202,6 +207,9 @@ export interface CreateCircleParams {
   frequency: 0 | 1 | 2;
   maxMembers: bigint;
   visibility: 0 | 1;
+  enableYield: boolean;
+  token: string;
+  yieldAPY: bigint;
 }
 
 // Voting-related interfaces

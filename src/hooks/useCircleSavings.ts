@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract } from "thirdweb";
+import { prepareContractCall, getContract, readContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
 import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavings";
@@ -60,6 +60,30 @@ const userCirclesQuery = gql`
       createdAt
       startedAt
       updatedAt
+      isYieldEnabled
+      token
+    }
+
+    # Yield support
+    vaultUpdateds(
+      where: { contractType: "CIRCLE" }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      token
+      newVault
+      projectName
+    }
+
+    # Collateral APY data
+    circleCreateds(
+      where: { isYieldEnabled: true }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      circleId
+      yieldAPY
+      isYieldEnabled
     }
 
     # Query circles user has joined
@@ -311,6 +335,8 @@ const circlesByIdsQuery = gql`
       createdAt
       startedAt
       updatedAt
+      isYieldEnabled
+      token
       
       # Vote tracking for withdrawal eligibility
       voteWithdrawWon
@@ -506,6 +532,8 @@ const singleCircleQuery = gql`
       createdAt
       startedAt
       updatedAt
+      isYieldEnabled
+      token
       
       # Vote tracking for withdrawal eligibility
       voteWithdrawWon
@@ -673,6 +701,7 @@ export const useCircleSavings = (
   const [deadCircleFees, setDeadCircleFees] = useState<DeadCircleFeeDeducted[]>(
     []
   );
+  const [vaultProjects, setVaultProjects] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -776,294 +805,325 @@ export const useCircleSavings = (
   // Update local state when subgraph data changes
   useEffect(() => {
     if (circlesData) {
-      // Process circles created by user
-      const createdCircles =
-        circlesData.createdCircles?.map((circle: any) => ({
-          id: circle.id,
-          circleId: BigInt(circle.circleId),
-          circleName: circle.circleName,
-          circleDescription: circle.circleDescription,
-          contributionAmount: BigInt(circle.contributionAmount),
-          collateralAmount: BigInt(circle.collateralAmount),
-          frequency: circle.frequency,
-          maxMembers: BigInt(circle.maxMembers),
-          currentMembers: BigInt(circle.currentMembers),
-          // For created circles not in joined list (rare), default to 1 or fetch separately.
-          // But they should be in joined list if creator is member.
-          currentRound: 1n,
-          visibility: circle.visibility,
-          state: circle.state,
-          createdAt: BigInt(circle.createdAt),
-          startedAt: BigInt(circle.startedAt),
-          creator: circle.creator,
-        })) || [];
+      try {
+        // Create APY map from creation events
+        const apyMap = new Map<string, bigint>();
+        if (circlesData.circleCreateds) {
+          circlesData.circleCreateds.forEach((created: any) => {
+            apyMap.set(created.circleId, BigInt(created.yieldAPY || 0));
+          });
+        }
 
-      // Process circles user has joined (from separate query)
-      const joinedCirclesData =
-        circlesData.joinedCirclesDetails?.map((circle: any) => ({
-          id: circle.id,
-          circleId: BigInt(circle.circleId),
-          circleName: circle.circleName,
-          circleDescription: circle.circleDescription,
-          contributionAmount: BigInt(circle.contributionAmount),
-          collateralAmount: BigInt(circle.collateralAmount),
-          frequency: circle.frequency,
-          maxMembers: BigInt(circle.maxMembers),
-          currentMembers: BigInt(circle.currentMembers),
-          currentRound: BigInt(circle.currentRound || 1),
-          visibility: circle.visibility,
-          state: circle.state,
-          createdAt: BigInt(circle.createdAt),
-          startedAt: BigInt(circle.startedAt),
-          creator: circle.creator,
-        })) || [];
+        // Process vault projects
+        const processedProjects: Record<string, string> = {};
+        if (circlesData.vaultUpdateds && circlesData.vaultUpdateds.length > 0) {
+          circlesData.vaultUpdateds.forEach((v: any) => {
+            const token = v.token.toLowerCase();
+            if (!processedProjects[token]) {
+              processedProjects[token] = v.projectName || v.project;
+            }
+          });
+        }
+        setVaultProjects(processedProjects);
 
-      // Combine created and joined circles, removing duplicates by circleId
-      const allCirclesMap = new Map();
+        // Process circles created by user
+        const createdCircles =
+          circlesData.createdCircles?.map((circle: any) => ({
+            id: circle.id,
+            circleId: BigInt(circle.circleId),
+            circleName: circle.circleName,
+            circleDescription: circle.circleDescription,
+            contributionAmount: BigInt(circle.contributionAmount),
+            collateralAmount: BigInt(circle.collateralAmount),
+            frequency: circle.frequency,
+            maxMembers: BigInt(circle.maxMembers),
+            currentMembers: BigInt(circle.currentMembers),
+            // For created circles not in joined list (rare), default to 1 or fetch separately.
+            // But they should be in joined list if creator is member.
+            currentRound: 1n,
+            visibility: circle.visibility,
+            state: circle.state,
+            createdAt: BigInt(circle.createdAt),
+            startedAt: BigInt(circle.startedAt),
+            creator: circle.creator,
+            isYieldEnabled: circle.isYieldEnabled,
+            yieldAPY: apyMap.get(circle.circleId) || 0n,
+            token: circle.token,
+          })) || [];
 
-      // Add created circles first
-      createdCircles.forEach((circle: any) => {
-        allCirclesMap.set(circle.circleId.toString(), circle);
-      });
+        // Process circles user has joined (from separate query)
+        const joinedCirclesData =
+          circlesData.joinedCirclesDetails?.map((circle: any) => ({
+            id: circle.id,
+            circleId: BigInt(circle.circleId),
+            circleName: circle.circleName,
+            circleDescription: circle.circleDescription,
+            contributionAmount: BigInt(circle.contributionAmount),
+            collateralAmount: BigInt(circle.collateralAmount),
+            frequency: circle.frequency,
+            maxMembers: BigInt(circle.maxMembers),
+            currentMembers: BigInt(circle.currentMembers),
+            currentRound: BigInt(circle.currentRound || 1),
+            visibility: circle.visibility,
+            state: circle.state,
+            createdAt: BigInt(circle.createdAt),
+            startedAt: BigInt(circle.startedAt),
+            creator: circle.creator,
+            isYieldEnabled: circle.isYieldEnabled,
+            yieldAPY: apyMap.get(circle.circleId) || 0n,
+            token: circle.token,
+          })) || [];
 
-      // Add joined circles (will overwrite if duplicate, ensuring latest data)
-      joinedCirclesData.forEach((circle: any) => {
-        allCirclesMap.set(circle.circleId.toString(), circle);
-      });
+        // Combine created and joined circles, removing duplicates by circleId
+        const allCirclesMap = new Map();
 
-      // Convert map back to array
-      const combinedCircles = Array.from(allCirclesMap.values());
-      setCircles(combinedCircles);
+        // Add created circles first
+        createdCircles.forEach((circle: any) => {
+          allCirclesMap.set(circle.circleId.toString(), circle);
+        });
 
-      // Process joined circles metadata (for position tracking)
-      // We need to combine the user's join events (from first query) with ALL members of joined circles (from second query)
-      // to ensure we have complete member lists for position calculation.
+        // Add joined circles (will overwrite if duplicate, ensuring latest data)
+        joinedCirclesData.forEach((circle: any) => {
+          allCirclesMap.set(circle.circleId.toString(), circle);
+        });
 
-      const allJoinEventsMap = new Map();
+        // Convert map back to array
+        const combinedCircles = Array.from(allCirclesMap.values());
+        setCircles(combinedCircles);
 
-      // Add user's join events first
-      circlesData.circleJoineds.forEach((joined: any) => {
-        allJoinEventsMap.set(joined.id, joined);
-      });
+        // Process joined circles metadata (for position tracking)
+        // We need to combine the user's join events (from first query) with ALL members of joined circles (from second query)
+        // to ensure we have complete member lists for position calculation.
 
-      // Add all members from joined circles
-      circlesData.joinedCirclesMembers?.forEach((joined: any) => {
-        allJoinEventsMap.set(joined.id, joined);
-      });
+        const allJoinEventsMap = new Map();
 
-      const allJoinEvents = Array.from(allJoinEventsMap.values()).sort(
-        (a: any, b: any) =>
-          Number(a.transaction.blockTimestamp) -
-          Number(b.transaction.blockTimestamp)
-      );
+        // Add user's join events first
+        circlesData.circleJoineds.forEach((joined: any) => {
+          allJoinEventsMap.set(joined.id, joined);
+        });
 
-      const processedJoined = allJoinEvents.map((joined: any) => ({
-        id: joined.user.id, // Use user address as ID for correct membership checking
-        circleId: BigInt(joined.circleId),
-        currentMembers: BigInt(joined.currentMembers),
-        circleState: joined.circleState,
-        timestamp: BigInt(joined.transaction.blockTimestamp),
-        user: joined.user,
-      }));
-      setJoinedCircles(processedJoined);
+        // Add all members from joined circles
+        circlesData.joinedCirclesMembers?.forEach((joined: any) => {
+          allJoinEventsMap.set(joined.id, joined);
+        });
 
-      // Process contributions
-      const processedContributions = circlesData.contributionMades.map(
-        (contrib: any) => ({
-          id: contrib.id,
-          circleId: BigInt(contrib.circleId),
-          round: BigInt(contrib.round),
-          amount: BigInt(contrib.amount),
-          user: contrib.user,
-          timestamp: BigInt(contrib.transaction.blockTimestamp),
-        })
-      );
-      setContributions(processedContributions);
+        const allJoinEvents = Array.from(allJoinEventsMap.values()).sort(
+          (a: any, b: any) =>
+            Number(a.transaction.blockTimestamp) -
+            Number(b.transaction.blockTimestamp)
+        );
 
-      // Process payouts - combine user payouts and all circle payouts
-      const allPayoutsMap = new Map();
+        const processedJoined = allJoinEvents.map((joined: any) => ({
+          id: joined.user.id, // Use user address as ID for correct membership checking
+          circleId: BigInt(joined.circleId),
+          currentMembers: BigInt(joined.currentMembers),
+          circleState: joined.circleState,
+          timestamp: BigInt(joined.transaction.blockTimestamp),
+          user: joined.user,
+        }));
+        setJoinedCircles(processedJoined);
 
-      // Add user payouts first
-      circlesData.payoutDistributeds.forEach((p: any) =>
-        allPayoutsMap.set(p.id, p)
-      );
+        // Process contributions
+        const processedContributions = circlesData.contributionMades.map(
+          (contrib: any) => ({
+            id: contrib.id,
+            circleId: BigInt(contrib.circleId),
+            round: BigInt(contrib.round),
+            amount: BigInt(contrib.amount),
+            user: contrib.user,
+            timestamp: BigInt(contrib.transaction.blockTimestamp),
+          })
+        );
+        setContributions(processedContributions);
 
-      // Add joined circles payouts (may overlap)
-      circlesData.joinedCirclesPayouts?.forEach((p: any) =>
-        allPayoutsMap.set(p.id, p)
-      );
+        // Process payouts - combine user payouts and all circle payouts
+        const allPayoutsMap = new Map();
 
-      const processedPayouts = Array.from(allPayoutsMap.values()).map(
-        (payout: any) => ({
-          id: payout.id,
-          circleId: BigInt(payout.circleId),
-          round: BigInt(payout.round),
-          payoutAmount: BigInt(payout.payoutAmount),
-          user: payout.user, // Include user info for payout received indicator
-          timestamp: BigInt(payout.transaction.blockTimestamp),
-        })
-      );
-      setPayouts(processedPayouts);
+        // Add user payouts first
+        circlesData.payoutDistributeds.forEach((p: any) =>
+          allPayoutsMap.set(p.id, p)
+        );
 
-      // Process position assignments
-      const processedPositions = (circlesData.positionAssigneds || []).map(
-        (pos: any) => ({
-          id: pos.id,
-          circleId: BigInt(pos.circleId),
-          user: pos.user,
-          position: BigInt(pos.position),
-          timestamp: BigInt(pos.transaction.blockTimestamp),
-          transactionHash: pos.transaction.transactionHash,
-        })
-      );
-      setPositions(processedPositions);
+        // Add joined circles payouts (may overlap)
+        circlesData.joinedCirclesPayouts?.forEach((p: any) =>
+          allPayoutsMap.set(p.id, p)
+        );
 
-      // Process votes cast
-      const processedVotes = (circlesData.voteCasts || []).map((vote: any) => ({
-        id: vote.id,
-        circleId: BigInt(vote.circleId),
-        voter: vote.voter,
-        choice: vote.choice,
-        timestamp: BigInt(vote.transaction.blockTimestamp),
-        transactionHash: vote.transaction.transactionHash,
-      }));
-      setVotes(processedVotes);
+        const processedPayouts = Array.from(allPayoutsMap.values()).map(
+          (payout: any) => ({
+            id: payout.id,
+            circleId: BigInt(payout.circleId),
+            round: BigInt(payout.round),
+            payoutAmount: BigInt(payout.payoutAmount),
+            user: payout.user, // Include user info for payout received indicator
+            timestamp: BigInt(payout.transaction.blockTimestamp),
+          })
+        );
+        setPayouts(processedPayouts);
 
-      // Process late payments
-      const processedLatePayments = (
-        circlesData.latePaymentRecordeds || []
-      ).map((late: any) => ({
-        id: late.id,
-        circleId: BigInt(late.circleId),
-        user: late.user,
-        round: BigInt(late.round),
-        fee: BigInt(late.fee),
-        timestamp: BigInt(late.transaction.blockTimestamp),
-        transactionHash: late.transaction.transactionHash,
-      }));
-      setLatePayments(processedLatePayments);
+        // Process position assignments
+        const processedPositions = (circlesData.positionAssigneds || []).map(
+          (pos: any) => ({
+            id: pos.id,
+            circleId: BigInt(pos.circleId),
+            user: pos.user,
+            position: BigInt(pos.position),
+            timestamp: BigInt(pos.transaction.blockTimestamp),
+            transactionHash: pos.transaction.transactionHash,
+          })
+        );
+        setPositions(processedPositions);
 
-      // Process member forfeitures
-      const processedForfeitures = (circlesData.memberForfeiteds || []).map(
-        (forf: any) => ({
-          id: forf.id,
-          circleId: BigInt(forf.circleId),
-          forfeiter: forf.forfeiter,
-          forfeitedUser: forf.forfeitedUser,
-          round: BigInt(forf.round),
-          deductionAmount: BigInt(forf.deductionAmount),
-          timestamp: BigInt(forf.transaction.blockTimestamp),
-          transactionHash: forf.transaction.transactionHash,
-        })
-      );
-      setForfeitures(processedForfeitures);
+        // Process votes cast
+        const processedVotes = (circlesData.voteCasts || []).map((vote: any) => ({
+          id: vote.id,
+          circleId: BigInt(vote.circleId),
+          voter: vote.voter,
+          choice: vote.choice,
+          timestamp: BigInt(vote.transaction.blockTimestamp),
+          transactionHash: vote.transaction.transactionHash,
+        }));
+        setVotes(processedVotes);
 
-      // Process invitations
-      const processedInvitations = (circlesData.memberInviteds || []).map(
-        (inv: any) => ({
-          id: inv.id,
-          circleId: BigInt(inv.circleId),
-          inviter: inv.inviter,
-          invitee: inv.invitee,
-          invitedAt: BigInt(inv.invitedAt),
-          timestamp: BigInt(inv.transaction.blockTimestamp),
-          transactionHash: inv.transaction.transactionHash,
-        })
-      );
-      setInvitations(processedInvitations);
+        // Process late payments
+        const processedLatePayments = (
+          circlesData.latePaymentRecordeds || []
+        ).map((late: any) => ({
+          id: late.id,
+          circleId: BigInt(late.circleId),
+          user: late.user,
+          round: BigInt(late.round),
+          fee: BigInt(late.fee),
+          timestamp: BigInt(late.transaction.blockTimestamp),
+          transactionHash: late.transaction.transactionHash,
+        }));
+        setLatePayments(processedLatePayments);
 
-      // Process collateral withdrawals - combine user withdrawals and all circle withdrawals
-      const allWithdrawalsMap = new Map();
+        // Process member forfeitures
+        const processedForfeitures = (circlesData.memberForfeiteds || []).map(
+          (forf: any) => ({
+            id: forf.id,
+            circleId: BigInt(forf.circleId),
+            forfeiter: forf.forfeiter,
+            forfeitedUser: forf.forfeitedUser,
+            round: BigInt(forf.round),
+            deductionAmount: BigInt(forf.deductionAmount),
+            timestamp: BigInt(forf.transaction.blockTimestamp),
+            transactionHash: forf.transaction.transactionHash,
+          })
+        );
+        setForfeitures(processedForfeitures);
 
-      // Add user withdrawals first
-      circlesData.collateralWithdrawns?.forEach((cw: any) =>
-        allWithdrawalsMap.set(cw.id, cw)
-      );
+        // Process invitations
+        const processedInvitations = (circlesData.memberInviteds || []).map(
+          (inv: any) => ({
+            id: inv.id,
+            circleId: BigInt(inv.circleId),
+            inviter: inv.inviter,
+            invitee: inv.invitee,
+            invitedAt: BigInt(inv.invitedAt),
+            timestamp: BigInt(inv.transaction.blockTimestamp),
+            transactionHash: inv.transaction.transactionHash,
+          })
+        );
+        setInvitations(processedInvitations);
 
-      // Add joined circles withdrawals
-      circlesData.joinedCirclesCollateralWithdrawals?.forEach((cw: any) =>
-        allWithdrawalsMap.set(cw.id, cw)
-      );
+        // Process collateral withdrawals - combine user withdrawals and all circle withdrawals
+        const allWithdrawalsMap = new Map();
 
-      const processedCollateralWithdrawals = Array.from(
-        allWithdrawalsMap.values()
-      ).map((cw: any) => ({
-        id: cw.id,
-        circleId: BigInt(cw.circleId),
-        user: cw.user,
-        amount: BigInt(cw.amount),
-        timestamp: BigInt(cw.transaction.blockTimestamp),
-        transactionHash: cw.transaction.transactionHash,
-      }));
-      setCollateralWithdrawals(processedCollateralWithdrawals);
+        // Add user withdrawals first
+        circlesData.collateralWithdrawns?.forEach((cw: any) =>
+          allWithdrawalsMap.set(cw.id, cw)
+        );
 
-      // Process dead circle fees
-      const processedDeadCircleFees = (
-        circlesData.deadCircleFeeDeducteds || []
-      ).map((fee: any) => ({
-        id: fee.id,
-        circleId: BigInt(fee.circleId),
-        creator: fee.creator,
-        deadFee: BigInt(fee.deadFee),
-        timestamp: BigInt(fee.transaction.blockTimestamp),
-        transactionHash: fee.transaction.transactionHash,
-      }));
-      setDeadCircleFees(processedDeadCircleFees);
+        // Add joined circles withdrawals
+        circlesData.joinedCirclesCollateralWithdrawals?.forEach((cw: any) =>
+          allWithdrawalsMap.set(cw.id, cw)
+        );
 
-      // Process voting events from joined circles
-      const processedVotingEvents = (
-        circlesData.joinedCirclesVotingEvents || []
-      ).map((evt: any) => ({
-        id: evt.id,
-        circleId: BigInt(evt.circleId),
-        votingStartAt: BigInt(evt.votingStartAt),
-        votingEndAt: BigInt(evt.votingEndAt),
-        timestamp: BigInt(evt.transaction.blockTimestamp),
-        transactionHash: evt.transaction.transactionHash,
-      }));
-      setVotingEvents(processedVotingEvents);
+        const processedCollateralWithdrawals = Array.from(
+          allWithdrawalsMap.values()
+        ).map((cw: any) => ({
+          id: cw.id,
+          circleId: BigInt(cw.circleId),
+          user: cw.user,
+          amount: BigInt(cw.amount),
+          timestamp: BigInt(cw.transaction.blockTimestamp),
+          transactionHash: cw.transaction.transactionHash,
+        }));
+        setCollateralWithdrawals(processedCollateralWithdrawals);
 
-      // Process vote results from joined circles
-      const processedVoteResults = (
-        circlesData.joinedCirclesVoteResults || []
-      ).map((res: any) => ({
-        id: res.id,
-        circleId: BigInt(res.circleId),
-        circleStarted: res.circleStarted,
-        startVoteTotal: BigInt(res.startVoteTotal),
-        withdrawVoteTotal: BigInt(res.withdrawVoteTotal),
-        withdrawWon: res.withdrawWon,
-        timestamp: BigInt(res.transaction.blockTimestamp),
-        transactionHash: res.transaction.transactionHash,
-      }));
-      setVoteResults(processedVoteResults);
+        // Process dead circle fees
+        const processedDeadCircleFees = (
+          circlesData.deadCircleFeeDeducteds || []
+        ).map((fee: any) => ({
+          id: fee.id,
+          circleId: BigInt(fee.circleId),
+          creator: fee.creator,
+          deadFee: BigInt(fee.deadFee),
+          timestamp: BigInt(fee.transaction.blockTimestamp),
+          transactionHash: fee.transaction.transactionHash,
+        }));
+        setDeadCircleFees(processedDeadCircleFees);
 
-      // process collateral returns
-      const allCollateralReturnsMap = new Map();
+        // Process voting events from joined circles
+        const processedVotingEvents = (
+          circlesData.joinedCirclesVotingEvents || []
+        ).map((evt: any) => ({
+          id: evt.id,
+          circleId: BigInt(evt.circleId),
+          votingStartAt: BigInt(evt.votingStartAt),
+          votingEndAt: BigInt(evt.votingEndAt),
+          timestamp: BigInt(evt.transaction.blockTimestamp),
+          transactionHash: evt.transaction.transactionHash,
+        }));
+        setVotingEvents(processedVotingEvents);
 
-      // Add user's returns
-      circlesData.collateralReturneds.forEach((cr: any) =>
-        allCollateralReturnsMap.set(cr.id, cr)
-      );
+        // Process vote results from joined circles
+        const processedVoteResults = (
+          circlesData.joinedCirclesVoteResults || []
+        ).map((res: any) => ({
+          id: res.id,
+          circleId: BigInt(res.circleId),
+          circleStarted: res.circleStarted,
+          startVoteTotal: BigInt(res.startVoteTotal),
+          withdrawVoteTotal: BigInt(res.withdrawVoteTotal),
+          withdrawWon: res.withdrawWon,
+          timestamp: BigInt(res.transaction.blockTimestamp),
+          transactionHash: res.transaction.transactionHash,
+        }));
+        setVoteResults(processedVoteResults);
 
-      // Add all circle returns
-      circlesData.joinedCirclesCollateralReturns?.forEach((cr: any) =>
-        allCollateralReturnsMap.set(cr.id, cr)
-      );
+        // process collateral returns
+        const allCollateralReturnsMap = new Map();
 
-      const processedCollateralReturns = Array.from(
-        allCollateralReturnsMap.values()
-      ).map((cr: any) => ({
-        id: cr.id,
-        circleId: BigInt(cr.circleId),
-        user: cr.user,
-        amount: BigInt(cr.amount),
-        timestamp: BigInt(cr.transaction.blockTimestamp),
-        transactionHash: cr.transaction.transactionHash,
-      }));
-      setCollateralReturns(processedCollateralReturns);
+        // Add user's returns
+        circlesData.collateralReturneds.forEach((cr: any) =>
+          allCollateralReturnsMap.set(cr.id, cr)
+        );
 
-      setError(null);
+        // Add all circle returns
+        circlesData.joinedCirclesCollateralReturns?.forEach((cr: any) =>
+          allCollateralReturnsMap.set(cr.id, cr)
+        );
+
+        const processedCollateralReturns = Array.from(
+          allCollateralReturnsMap.values()
+        ).map((cr: any) => ({
+          id: cr.id,
+          circleId: BigInt(cr.circleId),
+          user: cr.user,
+          amount: BigInt(cr.amount),
+          timestamp: BigInt(cr.transaction.blockTimestamp),
+          transactionHash: cr.transaction.transactionHash,
+        }));
+        setCollateralReturns(processedCollateralReturns);
+
+        setError(null);
+      } catch (err) {
+        console.error("Error processing Circle Savings data:", err);
+        setError("Error processing data from subgraph");
+      }
     }
   }, [circlesData]);
 
@@ -1089,7 +1149,7 @@ export const useCircleSavings = (
           contract: getContract({
             client,
             chain,
-            address: USDm_ADDRESS,
+            address: params.token,
             abi: USDm_ABI,
           }),
           method: "approve",
@@ -1362,41 +1422,22 @@ export const useCircleSavings = (
     [account?.address, contract, sendTransaction, refetchCircles]
   );
 
-  // Start circle (manual start by creator)
-  const startCircle = useCallback(
-    async (circleId: bigint) => {
-      if (!account?.address) {
-        throw new Error("No wallet connected");
-      }
-
+  // Check vault address for a token
+  const checkVaultAddress = useCallback(
+    async (tokenAddress: string): Promise<string> => {
       try {
-        setError(null);
-
-        const startTransaction = prepareContractCall({
+        const vault = await readContract({
           contract,
-          method: "startCircle",
-          params: [circleId],
+          method: "tokenVaults",
+          params: [tokenAddress],
         });
-
-        return new Promise((resolve, reject) => {
-          sendTransaction(startTransaction, {
-            onSuccess: (receipt) => {
-              setTimeout(() => refetchCircles(), 3000);
-              resolve(receipt);
-            },
-            onError: (error) => {
-              setError(error.message);
-              reject(error);
-            },
-          });
-        });
+        return vault as string;
       } catch (err) {
-        const error = err as Error;
-        setError(error.message || "Failed to start circle");
-        throw err;
+        console.error("Error checking vault address:", err);
+        return "0x0000000000000000000000000000000000000000";
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [contract]
   );
 
   // Initiate voting
@@ -1820,7 +1861,6 @@ export const useCircleSavings = (
     joinCircle,
     contribute,
     inviteMembers,
-    startCircle,
     initiateVoting,
     castVote,
     executeVote,
@@ -1831,6 +1871,8 @@ export const useCircleSavings = (
     getCircleById,
     updateCircleVisibility,
     refreshCircles: refetchCircles,
+    vaultProjects,
+    checkVaultAddress,
     contract,
   };
 };

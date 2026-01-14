@@ -257,6 +257,8 @@ export const transformCircleToActiveCircle = (
         forfeitedAmount: forfeitedAmount,
         forfeitedContributionPortion: forfeitedContributionPortion,
         forfeitCount: forfeitCount,
+        isYieldEnabled: circle.isYieldEnabled,
+        yieldAPY: circle.yieldAPY,
         rawCircle: {
             ...circle,
             circleId: circle.circleId,

@@ -1,5 +1,13 @@
 import React, { useState, useMemo } from "react";
-import { Search, Users, Lock, Globe, DollarSign, Calendar } from "lucide-react";
+import {
+  Search,
+  Users,
+  Lock,
+  Globe,
+  DollarSign,
+  Calendar,
+  TrendingUp,
+} from "lucide-react";
 import { useBrowseCircles } from "../hooks/useBrowseCircles";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useCircleSavings } from "../hooks/useCircleSavings";
@@ -251,6 +259,23 @@ const Browse: React.FC = () => {
                           >
                             {circle.circleName}
                           </h4>
+                          {circle.isYieldEnabled && (
+                            <div
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                              style={{
+                                backgroundColor: `${colors.primary}15`,
+                                color: colors.primary,
+                                border: `1px solid ${colors.primary}30`,
+                              }}
+                            >
+                              <TrendingUp size={8} />
+                              {circle.yieldAPY
+                                ? `${(Number(circle.yieldAPY) / 100).toFixed(
+                                    1
+                                  )}% APY`
+                                : "YIELD"}
+                            </div>
+                          )}
                           {circle.visibility === 0 ? (
                             <Lock
                               size={16}
