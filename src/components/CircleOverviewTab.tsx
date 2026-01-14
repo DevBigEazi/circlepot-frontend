@@ -1,7 +1,15 @@
 import React from "react";
-import { DollarSign, Users, TrendingUp, Calendar, Shield } from "lucide-react";
+import {
+  DollarSign,
+  Users,
+  TrendingUp,
+  Calendar,
+  Shield,
+  Loader2,
+} from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { getFrequencyText } from "../utils/helpers";
+import { useYieldAPY } from "../hooks/useYieldAPY";
 
 interface CircleOverviewTabProps {
   circle: ActiveCircle;
@@ -10,6 +18,7 @@ interface CircleOverviewTabProps {
   collateralRequired: number;
   minMembersToStart: number;
   ultimatumPeriod: string;
+  projectName?: string;
 }
 
 const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
@@ -19,7 +28,13 @@ const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
   collateralRequired,
   minMembersToStart,
   ultimatumPeriod,
+  projectName,
 }) => {
+  // Fetch live APY for yield-enabled circles
+  const { apy, isLoading: isLoadingAPY } = useYieldAPY(
+    circle.isYieldEnabled ? projectName : undefined
+  );
+
   return (
     <div className="space-y-6">
       {/* Circle Stats */}
@@ -83,6 +98,39 @@ const CircleOverviewTab: React.FC<CircleOverviewTabProps> = ({
             </div>
             <div className="text-xs" style={{ color: colors.textLight }}>
               Payout Amount
+            </div>
+          </div>
+        )}
+
+        {circle.isYieldEnabled && (
+          <div
+            className="rounded-xl p-4 text-center border"
+            style={{
+              backgroundColor: `${colors.primary}10`,
+              borderColor: `${colors.primary}30`,
+            }}
+          >
+            <TrendingUp
+              className="mx-auto mb-2"
+              size={24}
+              style={{ color: colors.primary }}
+            />
+            <div
+              className="font-bold text-lg"
+              style={{ color: colors.primary }}
+            >
+              {isLoadingAPY ? (
+                <span className="flex items-center justify-center gap-1">
+                  <Loader2 size={16} className="animate-spin" />
+                </span>
+              ) : apy > 0 ? (
+                `${apy.toFixed(2)}%`
+              ) : (
+                `${(Number(circle.yieldAPY || 0) / 100).toFixed(2)}%`
+              )}
+            </div>
+            <div className="text-xs" style={{ color: colors.primary }}>
+              Estimated APY
             </div>
           </div>
         )}

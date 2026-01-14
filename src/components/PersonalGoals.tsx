@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router";
-import { Target, Plus } from "lucide-react";
+import { Target, Plus, TrendingUp } from "lucide-react";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { client } from "../thirdwebClient";
 import { useThemeColors } from "../hooks/useThemeColors";
@@ -17,7 +17,7 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
   const {
     goals,
     isLoading: isLoadingGoals,
-    error: goalsError,
+    queryError: goalsError,
   } = usePersonalGoals(client);
 
   // Filter active goals
@@ -124,6 +124,19 @@ const PersonalGoals: React.FC<PersonalGoalsProps> = ({ className = "" }) => {
                     >
                       {goal.goalName}
                     </h4>
+                    {goal.isYieldEnabled && (
+                      <div
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold mb-1 w-fit"
+                        style={{
+                          backgroundColor: `${colors.primary}15`,
+                          color: colors.primary,
+                          border: `1px solid ${colors.primary}30`,
+                        }}
+                      >
+                        <TrendingUp size={8} />
+                        YIELD
+                      </div>
+                    )}
                     <p className="text-sm" style={{ color: colors.textLight }}>
                       ${contributionFormatted}/{frequencyText} • $
                       {currentFormatted} of ${targetFormatted}

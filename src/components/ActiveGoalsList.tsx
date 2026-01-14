@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Target, Plus, Calendar, Clock, Loader } from "lucide-react";
+import {
+  Target,
+  Plus,
+  Calendar,
+  Clock,
+  Loader,
+  TrendingUp,
+} from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useNavigate } from "react-router";
 import { GoalWithdrawalModal } from "../modals/GoalWithdrawalModal";
@@ -246,6 +253,25 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                         {goal.goalName}
                       </h3>
 
+                      {goal.isYieldEnabled && (
+                        <div
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 w-fit"
+                          style={{
+                            backgroundColor: `${colors.primary}15`,
+                            color: colors.primary,
+                            border: `1px solid ${colors.primary}30`,
+                          }}
+                        >
+                          <TrendingUp size={10} />
+                          YIELD EARNING
+                          {goal.yieldAPY &&
+                            goal.yieldAPY > 0n &&
+                            ` • ${(Number(goal.yieldAPY) / 100).toFixed(
+                              2
+                            )}% APY`}
+                        </div>
+                      )}
+
                       <div className="flex gap-1 items-center">
                         <Calendar
                           size={14}
@@ -255,7 +281,19 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                           className="text-sm mt-1"
                           style={{ color: colors.textLight }}
                         >
-                          {getFrequencyLabel(goal.frequency)} contributions
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: colors.text }}
+                          >
+                            $
+                            {(
+                              Number(goal.contributionAmount) / 1e18
+                            ).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>{" "}
+                          / {getFrequencyLabel(goal.frequency)} contributions
                         </p>
                       </div>
 
@@ -369,7 +407,8 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                       onClick={() =>
                         onContribute(
                           goal.goalId,
-                          BigInt(goal.contributionAmount)
+                          BigInt(goal.contributionAmount),
+                          goal.token
                         )
                       }
                       disabled={

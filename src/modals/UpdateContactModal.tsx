@@ -88,7 +88,6 @@ const UpdateContactModal: React.FC<UpdateContactModalProps> = ({
       setStep("verify");
       toast.success(`Verification code sent to ${contactValue}`);
     } catch (error: any) {
-      console.error("Error sending code:", error);
       toast.error(error.message || "Failed to send verification code");
     } finally {
       setIsLoading(false);
@@ -128,7 +127,7 @@ const UpdateContactModal: React.FC<UpdateContactModalProps> = ({
       );
       onClose();
     } catch (error: any) {
-      console.error("Error verifying code:", error);
+      error("Error verifying code:", error);
 
       let errorMessage = error.message || "Failed to verify code";
       if (errorMessage.includes("EmailAlreadyTaken")) {
