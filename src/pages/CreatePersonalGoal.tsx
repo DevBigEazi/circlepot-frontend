@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
+import { useYieldAPY } from "../hooks/useYieldAPY";
 import { client } from "../thirdwebClient";
 import NavBar from "../components/NavBar";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ const CreatePersonalGoal: React.FC = () => {
     createPersonalGoal,
     checkVaultAddress,
     vaults,
+    vaultProjects,
     isLoading: isContractLoading,
   } = usePersonalGoals(client);
 
@@ -40,6 +42,18 @@ const CreatePersonalGoal: React.FC = () => {
   const [hasAcceptedRisk, setHasAcceptedRisk] = useState(false);
   const [isYieldAvailable, setIsYieldAvailable] = useState(false);
   const [isCheckingYield, setIsCheckingYield] = useState(true);
+
+  // Deriving project name from vaultProjects
+  const projectName = vaultProjects[USDm_ADDRESS.toLowerCase()];
+
+  useEffect(() => {}, [vaultProjects, projectName]);
+
+  // Fetch APY data when yield is available
+  const {
+    apy,
+    isLoading: isLoadingAPY,
+    lastUpdated,
+  } = useYieldAPY(projectName);
 
   // Only set mounted to true after component fully mounts
   useEffect(() => {
@@ -60,7 +74,6 @@ const CreatePersonalGoal: React.FC = () => {
         vault !== "0x0000000000000000000000000000000000000000"
       );
     } catch (err) {
-      console.error("Failed to check yield availability:", err);
       setIsYieldAvailable(false);
     } finally {
       setIsCheckingYield(false);
@@ -216,6 +229,8 @@ const CreatePersonalGoal: React.FC = () => {
         deadline: deadlineTimestamp,
         enableYield: isYieldEnabled,
         token: USDm_ADDRESS,
+        yieldAPY:
+          isYieldEnabled && apy > 0 ? BigInt(Math.floor(apy * 100)) : 0n,
       };
 
       await createPersonalGoal(params);
@@ -725,6 +740,47 @@ const CreatePersonalGoal: React.FC = () => {
                   />
                 </button>
               </div>
+
+              {/* APY Display - shown when yield is available */}
+              {isYieldAvailable && !isCheckingYield && (
+                <div
+                  className="mt-4 p-3 rounded-xl border"
+                  style={{
+                    backgroundColor: `${colors.primary}08`,
+                    borderColor: `${colors.primary}30`,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp size={16} style={{ color: colors.primary }} />
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: colors.text }}
+                      >
+                        {isLoadingAPY ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 size={12} className="animate-spin" />
+                            Loading APY...
+                          </span>
+                        ) : apy > 0 ? (
+                          `Estimated APY: ${apy.toFixed(2)}%`
+                        ) : (
+                          "APY data unavailable"
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  {!isLoadingAPY && apy > 0 && lastUpdated > 0 && (
+                    <p
+                      className="text-[10px] mt-1"
+                      style={{ color: colors.textLight }}
+                    >
+                      Updated {Math.round((Date.now() - lastUpdated) / 60000)}{" "}
+                      mins ago
+                    </p>
+                  )}
+                </div>
+              )}
 
               {!isYieldAvailable && !isCheckingYield && (
                 <div

@@ -3,7 +3,7 @@ import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
-import { USER_PROFILE_ABI } from "../abis/UserProfileV1";
+import { USER_PROFILE_ABI } from "../abis/UserProfile";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import {

@@ -11,6 +11,7 @@ export interface PersonalGoal {
   isActive: boolean;
   isYieldEnabled: boolean;
   token: string;
+  yieldAPY?: bigint; // uint256 (in basis points, 500 = 5%)
   createdAt: bigint;
   user: {
     id: string;
@@ -44,6 +45,7 @@ export interface CreateGoalParams {
   deadline: bigint;
   enableYield: boolean;
   token: string;
+  yieldAPY: bigint; // APY in basis points for creation (e.g., 500 = 5%)
 }
 
 // Interfaces for goal withdrawal modal
@@ -73,6 +75,7 @@ export interface Goal {
   frequency: number;
   isYieldEnabled: boolean;
   token: string;
+  yieldAPY?: bigint;
 }
 
 export interface ActiveGoalsListProps {

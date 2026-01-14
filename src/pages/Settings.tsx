@@ -69,9 +69,7 @@ const Settings: React.FC = () => {
         try {
           const state = JSON.parse(biometricState);
           setIsBiometricEnabled(state.isEnabled || false);
-        } catch (err) {
-          console.error("Error parsing biometric state:", err);
-        }
+        } catch (err) {}
       }
     }
   }, [accountId]);
@@ -412,7 +410,10 @@ const Settings: React.FC = () => {
                         >
                           Push Notifications
                         </h4>
-                        <div style={{ color: colors.textLight }} className="text-xs">
+                        <div
+                          style={{ color: colors.textLight }}
+                          className="text-xs"
+                        >
                           {isPushSupported
                             ? "Get notified about circle activity, payouts & more"
                             : "Your browser doesn't support push notifications"}

@@ -264,6 +264,11 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                         >
                           <TrendingUp size={10} />
                           YIELD EARNING
+                          {goal.yieldAPY &&
+                            goal.yieldAPY > 0n &&
+                            ` • ${(Number(goal.yieldAPY) / 100).toFixed(
+                              2
+                            )}% APY`}
                         </div>
                       )}
 
@@ -276,7 +281,19 @@ export const ActiveGoalsList: React.FC<ActiveGoalsListProps> = ({
                           className="text-sm mt-1"
                           style={{ color: colors.textLight }}
                         >
-                          {getFrequencyLabel(goal.frequency)} contributions
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: colors.text }}
+                          >
+                            $
+                            {(
+                              Number(goal.contributionAmount) / 1e18
+                            ).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>{" "}
+                          / {getFrequencyLabel(goal.frequency)} contributions
                         </p>
                       </div>
 

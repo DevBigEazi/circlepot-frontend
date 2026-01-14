@@ -3,7 +3,7 @@ import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
-import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavingsV1";
+import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavings";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { USDm_ABI } from "../abis/USDm";
@@ -49,6 +49,16 @@ const userGoalsQuery = gql`
       updatedAt
     }
 
+    # Get creation events for stored APY
+    personalGoalCreateds(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      goalId
+      yieldAPY
+    }
+
     # Keep the historical events for activity tracking
     goalContributions(
       where: { user: $userId }
@@ -88,13 +98,14 @@ const userGoalsQuery = gql`
 
     # Vault updates to check yield availability
     vaultUpdateds(
-      where: { contractType: "PERSONAL_SAVINGS" }
+      where: { contractType: "PERSONAL" }
       orderBy: transaction__blockTimestamp
       orderDirection: desc
     ) {
       id
       token
       newVault
+      projectName
       transaction {
         blockTimestamp
       }
@@ -135,6 +146,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [withdrawals, setWithdrawals] = useState<GoalWithdrawal[]>([]);
   const [vaults, setVaults] = useState<Record<string, string>>({});
+  const [vaultProjects, setVaultProjects] = useState<Record<string, string>>({}); // token -> project name
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -168,7 +180,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         });
         return vault as string;
       } catch (err) {
-        console.error("Error checking vault address:", err);
         return "0x0000000000000000000000000000000000000000";
       }
     },
@@ -194,7 +205,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           requestHeaders: SUBGRAPH_HEADERS,
           signal: AbortSignal.timeout(10000),
         });
-        console.log("Personal Goals Subgraph Data:", result);
         return result;
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -220,6 +230,14 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
       try {
         // Process goals
         if (goalsData.personalGoals) {
+          // Create APY map from creation events
+          const apyMap = new Map<string, bigint>();
+          if (goalsData.personalGoalCreateds) {
+            goalsData.personalGoalCreateds.forEach((created: any) => {
+              apyMap.set(created.goalId, BigInt(created.yieldAPY || 0));
+            });
+          }
+
           const processedGoals = goalsData.personalGoals.map((goal: any) => ({
             id: goal.id,
             goalId: BigInt(goal.goalId),
@@ -232,6 +250,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
             isActive: goal.isActive,
             isYieldEnabled: goal.isYieldEnabled,
             token: goal.token,
+            yieldAPY: apyMap.get(goal.goalId) || BigInt(0),
             createdAt: BigInt(goal.createdAt),
             user: goal.user,
           }));
@@ -281,20 +300,20 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
 
         // Process vaults correctly - take the latest for each token
         const processedVaults: Record<string, string> = {};
+        const processedProjects: Record<string, string> = {};
         if (goalsData.vaultUpdateds && goalsData.vaultUpdateds.length > 0) {
-          console.log("VaultUpdated Entity Sample:", goalsData.vaultUpdateds[0]);
           goalsData.vaultUpdateds.forEach((v: any) => {
             const token = v.token.toLowerCase();
             if (!processedVaults[token]) {
               processedVaults[token] = v.newVault;
+              processedProjects[token] = v.projectName || v.project; // Handle both potential field names
             }
           });
         }
-        console.log("Processed Vaults:", processedVaults);
         setVaults(processedVaults);
+        setVaultProjects(processedProjects);
         setError(null);
       } catch (err) {
-        console.error("Error processing subgraph data:", err);
         setError("Error processing goal data");
       }
     }
@@ -558,5 +577,6 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     refreshGoals: refetchGoals,
     contract,
     vaults,
+    vaultProjects,
   };
 };

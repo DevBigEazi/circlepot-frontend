@@ -3,7 +3,7 @@ import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
-import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavingsV1";
+import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavings";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { USDm_ABI } from "../abis/USDm";
