@@ -636,11 +636,14 @@ export const useTransactionHistory = () => {
       });
     });
 
-    // Process goal withdrawals (only early withdrawals, not completions)
-    // When a goal is completed, isActive = false and it's captured by goalCompleteds
+    // Process goal withdrawals (early withdrawals with penalties)
+    // Note: Goal completions (without penalties) are tracked separately via goalCompleteds
     transactionsData.goalWithdrawns?.forEach((withdrawal: any) => {
-      // Skip withdrawals where isActive = false (these are completions, not early withdrawals)
-      if (withdrawal.isActive === false) {
+      const penaltyAmount = BigInt(withdrawal.penalty);
+
+      // Only show withdrawals that have a penalty (early withdrawals)
+      // Withdrawals without penalty are goal completions, handled by goalCompleteds
+      if (penaltyAmount === 0n) {
         return;
       }
 
@@ -652,13 +655,13 @@ export const useTransactionHistory = () => {
         timestamp: BigInt(withdrawal.transaction.blockTimestamp),
         transactionHash: withdrawal.transaction.transactionHash,
         status: "success",
-        fee: 0n,
-        penalty: BigInt(withdrawal.penalty),
+        fee: penaltyAmount, // Show penalty as fee in transaction display
+        penalty: penaltyAmount,
         goalName:
           transactionsData.goalNamesMap.get(withdrawal.goalId) ||
           "Unknown Goal",
         goalId: BigInt(withdrawal.goalId),
-        note: withdrawal.penalty > 0 ? `Early withdrawal` : "Withdrawal",
+        note: `Early withdrawal (penalty: ${(Number(penaltyAmount) / 1e18).toFixed(2)} USDm)`,
       });
     });
 

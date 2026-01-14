@@ -1,9 +1,10 @@
 import React from "react";
-import { Eye, MessageCircle } from "lucide-react";
+import { Eye, MessageCircle, TrendingUp, Loader2 } from "lucide-react";
 import { useActiveAccount } from "thirdweb/react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import CircleActions from "./CircleActions";
 import CountdownTimer from "./CountdownTimer";
+import { useYieldAPY } from "../hooks/useYieldAPY";
 
 interface ActiveCircleCardProps {
   circle: ActiveCircle;
@@ -19,6 +20,7 @@ interface ActiveCircleCardProps {
   getWithdrawalInfo?: (circleId: bigint, userAddress?: string) => any;
   getLateMembersForCircle: (circleId: bigint) => string[];
   onInviteMembers?: () => void;
+  projectName?: string;
 }
 
 const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
@@ -35,9 +37,15 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
   getWithdrawalInfo,
   getLateMembersForCircle,
   onInviteMembers,
+  projectName,
 }) => {
   const account = useActiveAccount();
   const hasContributed = circle.hasContributed;
+
+  // Fetch live APY for yield-enabled circles
+  const { apy, isLoading: isLoadingAPY } = useYieldAPY(
+    circle.isYieldEnabled ? projectName : undefined
+  );
   const [now, setNow] = React.useState(Math.floor(Date.now() / 1000));
 
   React.useEffect(() => {
@@ -66,12 +74,33 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
       {/* Circle Header */}
       <div className="flex justify-between items-start mb-2 sm:mb-3">
         <div className="min-w-0">
-          <h4
-            className="font-semibold text-sm sm:text-base truncate"
-            style={{ color: colors.text }}
-          >
-            {circle.name}
-          </h4>
+          <div className="flex items-center gap-2 mb-1">
+            <h4
+              className="font-semibold text-sm sm:text-base truncate"
+              style={{ color: colors.text }}
+            >
+              {circle.name}
+            </h4>
+            {circle.isYieldEnabled && (
+              <div
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold w-fit"
+                style={{
+                  backgroundColor: `${colors.primary}15`,
+                  color: colors.primary,
+                  border: `1px solid ${colors.primary}30`,
+                }}
+              >
+                <TrendingUp size={8} />
+                {isLoadingAPY ? (
+                  <Loader2 size={8} className="animate-spin" />
+                ) : apy > 0 ? (
+                  `${apy.toFixed(1)}% APY`
+                ) : (
+                  `${(Number(circle.yieldAPY || 0) / 100).toFixed(1)}% APY`
+                )}
+              </div>
+            )}
+          </div>
           {circle.status === "active" ||
           circle.status === "completed" ||
           circle.status === "voting" ? (

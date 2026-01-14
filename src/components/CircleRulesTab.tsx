@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, TrendingUp } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { getFrequencyText } from "../utils/helpers";
 
@@ -113,6 +113,44 @@ const CircleRulesTab: React.FC<CircleRulesTabProps> = ({
               <li>• Collateral is returned after circle completion</li>
             </ul>
           </div>
+
+          {circle.isYieldEnabled && (
+            <div
+              className="border-l-4 pl-4"
+              style={{ borderColor: colors.primary }}
+            >
+              <h4
+                className="font-semibold mb-2 flex items-center gap-2"
+                style={{ color: colors.text }}
+              >
+                <TrendingUp size={16} />
+                Yield & Performance Rewards
+              </h4>
+              <ul
+                className="text-sm space-y-1"
+                style={{ color: colors.textLight }}
+              >
+                <li>
+                  • Collateral is invested in decentralized finance (DeFi) to
+                  earn yield
+                </li>
+                <li>
+                  • Late fees contribute to the community reward pool instead of
+                  the platform
+                </li>
+                <li>• Rewards are distributed only at the end of the circle</li>
+                <li>
+                  • Distribution is based on Performance Points (earned for
+                  on-time payments)
+                </li>
+                <li>
+                  • High performers earn a larger share of the total yield and
+                  late fee pool
+                </li>
+                <li>• Platform takes a 10% share of generated yield only</li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

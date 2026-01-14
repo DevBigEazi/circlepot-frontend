@@ -44,6 +44,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
     null
   );
   const [showLinkContactModal, setShowLinkContactModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameCheckTimeout = useRef<number | undefined>(undefined);
 
@@ -128,8 +129,12 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   };
 
   const handleCompleteSetup = async () => {
+    // Set loading state immediately
+    setIsSubmitting(true);
+
     if (!account?.address) {
       toast.error("No wallet connected");
+      setIsSubmitting(false);
       return;
     }
 
@@ -137,31 +142,37 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
       toast.error(
         "Email is required. Please make sure you signed in with email."
       );
+      setIsSubmitting(false);
       return;
     }
 
     if (!userName.trim()) {
       toast.error("Username is required");
+      setIsSubmitting(false);
       return;
     }
 
     if (userName.trim().length < 3) {
       toast.error("Username must be at least 3 characters");
+      setIsSubmitting(false);
       return;
     }
 
     if (usernameAvailable === false) {
       toast.error("Username is not available");
+      setIsSubmitting(false);
       return;
     }
 
     if (isCheckingUsername) {
       toast.error("Please wait while we check username availability");
+      setIsSubmitting(false);
       return;
     }
 
     if (!fullName.trim()) {
       toast.error("Full name is required");
+      setIsSubmitting(false);
       return;
     }
 
@@ -203,7 +214,9 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
 
       // Show link contact modal to add backup contact info
       setShowLinkContactModal(true);
+      setIsSubmitting(false);
     } catch (err: any) {
+      setIsSubmitting(false);
       if (err.message?.includes("ProfileAlreadyExists")) {
         onProfileCreated?.();
         return;
@@ -261,7 +274,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
     !isCheckingUsername &&
     fullName.trim().length > 0;
 
-  const isProcessing = isLoading || isUploading;
+  const isProcessing = isLoading || isUploading || isSubmitting;
 
   const formatWalletAddress = (address: string) => {
     if (!address) return "";
@@ -550,7 +563,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                 maxLength={50}
               />
               <p className="text-xs mt-1" style={{ color: colors.textLight }}>
-                Your full name will be stored on-chain and cannot be changed
+                Your full name will be stored on-chain.
               </p>
             </div>
           </div>
@@ -569,10 +582,17 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
               className="w-full px-4 py-3 rounded-xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ background: colors.primary }}
             >
-              {isUploading ? (
-                <LoadingSpinner size="sm" text="Uploading to IPFS..." />
-              ) : isLoading ? (
-                <LoadingSpinner size="sm" text="Creating Profile..." />
+              {isSubmitting || isUploading || isLoading ? (
+                <LoadingSpinner
+                  size="sm"
+                  text={
+                    isUploading
+                      ? "Uploading to IPFS..."
+                      : isLoading
+                      ? "Creating Profile..."
+                      : "Processing..."
+                  }
+                />
               ) : (
                 <>
                   Complete Setup & Continue

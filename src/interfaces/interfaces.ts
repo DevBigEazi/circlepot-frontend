@@ -9,6 +9,9 @@ export interface PersonalGoal {
   contributionAmount: bigint;
   deadline: bigint;
   isActive: boolean;
+  isYieldEnabled: boolean;
+  token: string;
+  yieldAPY?: bigint; // uint256 (in basis points, 500 = 5%)
   createdAt: bigint;
   user: {
     id: string;
@@ -40,6 +43,9 @@ export interface CreateGoalParams {
   contributionAmount: bigint;
   frequency: 0 | 1 | 2; // 0 = Daily, 1 = Weekly, 2 = Monthly
   deadline: bigint;
+  enableYield: boolean;
+  token: string;
+  yieldAPY: bigint; // APY in basis points for creation (e.g., 500 = 5%)
 }
 
 // Interfaces for goal withdrawal modal
@@ -67,13 +73,16 @@ export interface Goal {
   formattedDeadline: string;
   nextContribution: string;
   frequency: number;
+  isYieldEnabled: boolean;
+  token: string;
+  yieldAPY?: bigint;
 }
 
 export interface ActiveGoalsListProps {
   goals: Goal[];
   isLoading: boolean;
   contributingGoalId: bigint | null;
-  onContribute: (goalId: bigint, amount: bigint) => Promise<void>;
+  onContribute: (goalId: bigint, amount: bigint, tokenAddress: string) => Promise<void>;
   onWithdraw: (goalId: bigint) => Promise<void>;
   contributions: Array<{
     goalId: bigint;
@@ -124,6 +133,8 @@ export interface ActiveCircle {
   withdrawalReason?: 'vote_failed' | 'below_threshold';
   creatorDeadFee?: bigint; // Fee for creators (0 for non-creators)
   netWithdrawalAmount?: bigint; // Amount after fee deduction
+  isYieldEnabled?: boolean;
+  yieldAPY?: bigint;
 }
 
 export interface Circle {
@@ -155,6 +166,9 @@ export interface Circle {
     startVoteTotal: bigint;
     withdrawVoteTotal: bigint;
   };
+  isYieldEnabled: boolean;
+  yieldAPY?: bigint;
+  token: string;
 }
 
 export interface CircleJoined {
@@ -193,6 +207,9 @@ export interface CreateCircleParams {
   frequency: 0 | 1 | 2;
   maxMembers: bigint;
   visibility: 0 | 1;
+  enableYield: boolean;
+  token: string;
+  yieldAPY: bigint;
 }
 
 // Voting-related interfaces

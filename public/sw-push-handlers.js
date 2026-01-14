@@ -113,7 +113,6 @@ self.addEventListener("notificationclick", (event) => {
 
 // Notification close event - handle when notification is dismissed
 self.addEventListener("notificationclose", (event) => {
-  console.log("[SW Push] Notification closed:", event.notification.tag);
   // You could track dismissals here for analytics
 });
 

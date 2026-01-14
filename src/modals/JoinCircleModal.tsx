@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 import { Circle } from "../interfaces/interfaces";
 import { toast } from "sonner";
@@ -170,10 +171,23 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
             <div className="space-y-6">
               <div className="text-center">
                 <h3
-                  className="text-lg font-bold mb-2"
+                  className="text-lg font-bold mb-2 flex items-center justify-center gap-2"
                   style={{ color: colors.text }}
                 >
                   Circle Overview
+                  {circle.isYieldEnabled && (
+                    <div
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                      style={{
+                        backgroundColor: `${colors.primary}15`,
+                        color: colors.primary,
+                        border: `1px solid ${colors.primary}30`,
+                      }}
+                    >
+                      <TrendingUp size={8} />
+                      YIELD
+                    </div>
+                  )}
                 </h3>
                 <p className="text-sm" style={{ color: colors.textLight }}>
                   Review the circle details before joining
@@ -351,6 +365,12 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
                 >
                   <div>• Collateral is returned after circle completion</div>
                   <div>• Late payments deduct from collateral (1% fee)</div>
+                  {circle.isYieldEnabled && (
+                    <div className="flex items-center gap-1 font-semibold text-green-600">
+                      <TrendingUp size={14} />• This collateral earns yield and
+                      performance rewards!
+                    </div>
+                  )}
                   <div>
                     • You can withdraw if circle doesn't start after ultimatum
                   </div>
@@ -412,17 +432,21 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
                         fix fee for above $1000 (creators exempt)
                       </li>
                       <li>Accept 1% late fee for delayed contributions</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4
-                      className="font-semibold mb-2"
-                      style={{ color: colors.text }}
-                    >
-                      Smart Contract Terms
-                    </h4>
-                    <ul className="list-disc list-inside space-y-1">
+                      {circle.isYieldEnabled && (
+                        <>
+                          <li className="text-green-600 font-medium">
+                            Earn yield on locked collateral through DeFi
+                            protocols
+                          </li>
+                          <li className="text-green-600 font-medium">
+                            Earn Performance Points for on-time payments to win
+                            community rewards
+                          </li>
+                          <li className="text-green-600 font-medium">
+                            Late fees contribute to the community reward pool
+                          </li>
+                        </>
+                      )}
                       <li>All transactions are executed by smart contracts</li>
                       <li>
                         Circle starts when {minMembersToStart} members join (60%
@@ -445,6 +469,12 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
                     </h4>
                     <ul className="list-disc list-inside space-y-1">
                       <li>Circle may not start if insufficient members join</li>
+                      {circle.isYieldEnabled && (
+                        <li className="text-orange-600">
+                          Yield is variable and depends on DeFi protocol
+                          performance
+                        </li>
+                      )}
                       <li>
                         Late payments result in reputation score reduction
                       </li>

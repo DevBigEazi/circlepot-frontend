@@ -43,6 +43,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     contribute,
     forfeitMember,
     inviteMembers,
+    vaultProjects,
   } = useCircleSavings(client);
 
   const [showCircleDetails, setShowCircleDetails] = useState(false);
@@ -254,6 +255,11 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
                 getWithdrawalInfo={getWithdrawalInfo}
                 getLateMembersForCircle={getLateMembersForCircle}
                 onInviteMembers={() => handleInviteClick(circle)}
+                projectName={
+                  circle.rawCircle?.token
+                    ? vaultProjects[circle.rawCircle.token.toLowerCase()]
+                    : undefined
+                }
               />
             ))
         )}

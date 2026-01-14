@@ -102,11 +102,12 @@ const Goals: React.FC = () => {
   // Handle contribute to goal
   const handleContribute = async (
     goalId: bigint,
-    contributionAmount: bigint
+    contributionAmount: bigint,
+    tokenAddress: string
   ) => {
     setContributingGoalId(goalId);
     try {
-      await contributeToGoal(goalId, contributionAmount);
+      await contributeToGoal(goalId, contributionAmount, tokenAddress);
       toast.custom(
         () => (
           <div

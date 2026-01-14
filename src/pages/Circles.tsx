@@ -42,6 +42,7 @@ const Circles: React.FC = () => {
     contribute,
     forfeitMember,
     inviteMembers,
+    vaultProjects,
   } = useCircleSavings(client);
 
   // Modal states
@@ -362,6 +363,11 @@ const Circles: React.FC = () => {
                     getWithdrawalInfo={getWithdrawalInfo}
                     getLateMembersForCircle={getLateMembersForCircle}
                     onInviteMembers={() => handleInviteClick(circle)}
+                    projectName={
+                      circle.rawCircle?.token
+                        ? vaultProjects[circle.rawCircle.token.toLowerCase()]
+                        : undefined
+                    }
                   />
                 ))}
               </div>
