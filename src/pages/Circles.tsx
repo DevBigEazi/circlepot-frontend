@@ -615,7 +615,6 @@ const Circles: React.FC = () => {
       {showChatModal && selectedCircle && (
         <CircleChatModal
           circle={selectedCircle}
-          currentUser={account?.address || "You"}
           onClose={() => setShowChatModal(false)}
           colors={colors}
         />

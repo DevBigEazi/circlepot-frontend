@@ -300,7 +300,6 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
       {showChatModal && selectedCircle && (
         <CircleChatModal
           circle={selectedCircle}
-          currentUser={account?.address || "You"}
           onClose={() => setShowChatModal(false)}
           colors={colors}
         />

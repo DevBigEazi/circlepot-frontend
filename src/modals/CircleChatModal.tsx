@@ -1,45 +1,17 @@
-import React, { useState } from "react";
-import { X, Send, MessageCircle } from "lucide-react";
+import React from "react";
+import { X, MessageCircle } from "lucide-react";
 
 interface CircleChatModalProps {
   circle: any;
-  currentUser: string;
   onClose: () => void;
   colors: any;
 }
 
 const CircleChatModal: React.FC<CircleChatModalProps> = ({
   circle,
-  currentUser,
   onClose,
   colors,
 }) => {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "System",
-      text: `Welcome to the ${circle.name} chat!`,
-      timestamp: "Now",
-    },
-  ]);
-
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim()) return;
-
-    setMessages([
-      ...messages,
-      {
-        id: Date.now(),
-        sender: currentUser,
-        text: message,
-        timestamp: "Just now",
-      },
-    ]);
-    setMessage("");
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div
@@ -66,72 +38,22 @@ const CircleChatModal: React.FC<CircleChatModalProps> = ({
           </button>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex flex-col ${
-                msg.sender === currentUser ? "items-end" : "items-start"
-              }`}
-            >
-              <div
-                className={`max-w-[80%] p-3 rounded-xl ${
-                  msg.sender === currentUser
-                    ? "rounded-tr-none text-white"
-                    : "rounded-tl-none"
-                }`}
-                style={{
-                  background:
-                    msg.sender === currentUser
-                      ? colors.primary
-                      : colors.background,
-                  color: msg.sender === currentUser ? "#fff" : colors.text,
-                }}
-              >
-                <p className="text-sm">{msg.text}</p>
-              </div>
-              <span
-                className="text-[10px] mt-1 px-1"
-                style={{ color: colors.textLight }}
-              >
-                {msg.sender} • {msg.timestamp}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Input */}
-        <form
-          onSubmit={handleSend}
-          className="p-4 border-t"
-          style={{ borderColor: colors.border }}
-        >
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-2 rounded-xl border focus:outline-none focus:ring-2"
-              style={
-                {
-                  backgroundColor: colors.background,
-                  borderColor: colors.border,
-                  color: colors.text,
-                  "--tw-ring-color": colors.primary,
-                } as any
-              }
-            />
-            <button
-              type="submit"
-              className="p-2 rounded-xl text-white transition hover:opacity-90"
-              style={{ background: colors.primary }}
-            >
-              <Send size={20} />
-            </button>
+        {/* Coming Soon Message */}
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+            style={{ backgroundColor: colors.background }}
+          >
+            <MessageCircle size={40} style={{ color: colors.primary }} />
           </div>
-        </form>
+          <h4 className="text-xl font-bold mb-2" style={{ color: colors.text }}>
+            Coming Soon
+          </h4>
+          <p className="text-sm max-w-xs" style={{ color: colors.textLight }}>
+            Circle chat feature is currently under development. Stay tuned for
+            updates!
+          </p>
+        </div>
       </div>
     </div>
   );
