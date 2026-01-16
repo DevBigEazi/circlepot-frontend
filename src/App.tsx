@@ -9,10 +9,16 @@ import AutoConnectWallet from "./components/AutoConnectWallet";
 import { BiometricProvider } from "./contexts/BiometricContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import SkeletonPage from "./components/SkeletonPage";
 import DataErrorState from "./components/DataErrorState";
+import { useEffect } from "react";
+import {
+  getReferralFromURL,
+  saveReferralCode,
+  cleanURL,
+} from "./utils/referral";
 
 // Lazy load page components for code-splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -87,6 +93,20 @@ function App({ client }: AppProps) {
     }
     return false;
   };
+
+  // Capture referral code from URL
+  useEffect(() => {
+    const code = getReferralFromURL();
+    if (code) {
+      if (hasProfile === false || hasProfile === null) {
+        saveReferralCode(code);
+        toast.success("Welcome to Circlepot!", {
+          description: `You've been referred by ${code}. Create your profile to join the community.`,
+        });
+      }
+      cleanURL();
+    }
+  }, [hasProfile]);
 
   return (
     <main className="min-h-screen">
