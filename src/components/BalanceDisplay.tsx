@@ -295,7 +295,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
               className="text-lg font-bold"
               style={{ color: creditScore?.categoryColor || colors.text }}
             >
-              {creditScore?.score || 0}
+              {creditScore?.score || 300}
             </span>
             <div
               className="text-[10px] font-medium"
@@ -314,7 +314,7 @@ const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
             className="absolute top-0 left-0 h-full transition-all duration-1000 ease-out"
             style={{
               width: `${
-                (((creditScore?.score || 0) - 300) / (850 - 300)) * 100
+                (((creditScore?.score || 300) - 300) / (850 - 300)) * 100
               }%`,
               backgroundColor: creditScore?.categoryColor || colors.primary,
             }}
