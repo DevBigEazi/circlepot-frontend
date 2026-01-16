@@ -307,7 +307,7 @@ export const useCreditScore = () => {
       } else {
         // Default score for new users
         setCreditScore({
-          score: 0,
+          score: 300,
           category: ScoreCategory.POOR,
           categoryLabel: getCategoryLabel(ScoreCategory.POOR),
           categoryColor: getCategoryColor(ScoreCategory.POOR),
@@ -409,7 +409,7 @@ export const useCreditScore = () => {
 
   // Calculate score progress percentage (300-850 range)
   const scoreProgress = useMemo(() => {
-    if (!creditScore) return 0;
+    if (!creditScore) return 300;
     const minScore = 300;
     const maxScore = 850;
     const range = maxScore - minScore;
