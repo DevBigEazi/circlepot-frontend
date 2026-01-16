@@ -12,6 +12,7 @@ import {
   Wallet,
   Send,
   Download,
+  Gift,
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import {
@@ -49,6 +50,8 @@ const TransactionsHistory: React.FC = () => {
         return Send;
       case "USDm_receive":
         return Download;
+      case "referral_reward":
+        return Gift;
       // Future transaction types (placeholders)
       case "bank_withdrawal" as any:
         return Building;
@@ -82,6 +85,8 @@ const TransactionsHistory: React.FC = () => {
       case "USDm_send":
       case "dead_circle_fee":
         return "bg-red-100 text-red-600";
+      case "referral_reward":
+        return "bg-green-100 text-green-600";
       default:
         return "bg-gray-100 text-gray-600";
     }
@@ -112,6 +117,8 @@ const TransactionsHistory: React.FC = () => {
         return "Sent USDm";
       case "USDm_receive":
         return "Received USDm";
+      case "referral_reward":
+        return "Referral Reward";
       default:
         return transaction.type;
     }
@@ -126,6 +133,7 @@ const TransactionsHistory: React.FC = () => {
       "collateral_withdrawal",
       "collateral_return",
       "USDm_receive",
+      "referral_reward",
     ].includes(type);
   };
 

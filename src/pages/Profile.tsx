@@ -20,6 +20,7 @@ import { client } from "../thirdwebClient";
 import { Skeleton } from "../components/Skeleton";
 import UpdateContactModal from "../modals/UpdateContactModal";
 import { getInitials } from "../utils/helpers";
+import ReferralSection from "../components/ReferralSection";
 
 const Profile: React.FC = () => {
   const colors = useThemeColors();
@@ -567,6 +568,14 @@ const Profile: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Minimal Referral Section */}
+                  {profile && (
+                    <ReferralSection
+                      userAddress={profile.userAddress}
+                      username={profile.username}
+                    />
+                  )}
                 </div>
               </div>
             )}

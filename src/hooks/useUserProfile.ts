@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract } from "thirdweb";
+import { prepareContractCall, getContract, readContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
 import { USER_PROFILE_ABI } from "../abis/UserProfile";
@@ -154,7 +154,8 @@ export const useUserProfile = (client: ThirdwebClient) => {
       username: string,
       fullName: string,
       photo: string = "",
-      phoneNumber: string = ""
+      phoneNumber: string = "",
+      referrer: string = "0x0000000000000000000000000000000000000000"
     ) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
@@ -176,11 +177,12 @@ export const useUserProfile = (client: ThirdwebClient) => {
         const emailParam = email?.trim() || "";
         const phoneParam = phoneNumber?.trim() || "";
         const photoUrl = photo?.trim() || "";
+        const referrerParam = referrer || "0x0000000000000000000000000000000000000000";
 
         const transaction = prepareContractCall({
           contract,
           method: "createProfile",
-          params: [emailParam, phoneParam, username, fullName, photoUrl],
+          params: [emailParam, phoneParam, username, fullName, photoUrl, referrerParam],
         });
         return new Promise((resolve, reject) => {
           sendTransaction(transaction, {
@@ -501,6 +503,59 @@ export const useUserProfile = (client: ThirdwebClient) => {
     }
   }, []);
 
+  const resolveReferrer = useCallback(
+    async (code: string): Promise<string> => {
+      const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+      if (!code) return ZERO_ADDRESS;
+
+      const performResolve = async (attempt: number = 1): Promise<string> => {
+        try {
+          // 1. Try resolving as username
+          const result: any = await request({
+            url: SUBGRAPH_URL,
+            document: gql`
+              query GetUserByUsername($username: String!) {
+                users(where: { usernameLowercase: $username }) {
+                  id
+                }
+              }
+            `,
+            variables: { username: code.toLowerCase() },
+            requestHeaders: SUBGRAPH_HEADERS,
+            signal: AbortSignal.timeout(10000), // 10s timeout
+          });
+
+          const foundAddress = result.users?.[0]?.id;
+
+          // 2. Fallback to code if it's an address
+          const addressToVerify =
+            foundAddress || (code.startsWith("0x") && code.length === 42 ? code : null);
+
+          if (addressToVerify) {
+            const hasProfile = await readContract({
+              contract,
+              method: "hasProfile",
+              params: [addressToVerify],
+            });
+            if (hasProfile) return addressToVerify;
+          }
+
+          return ZERO_ADDRESS;
+        } catch (err) {
+          if (attempt < 2) {
+            console.warn(`Referral resolution attempt ${attempt} failed, retrying...`, err);
+            return performResolve(attempt + 1);
+          }
+          console.error("Referral resolution error after retries:", err);
+          return ZERO_ADDRESS;
+        }
+      };
+
+      return performResolve();
+    },
+    [contract]
+  );
+
   return {
     hasProfile,
     profile,
@@ -518,6 +573,7 @@ export const useUserProfile = (client: ThirdwebClient) => {
     getProfileByAccountId,
     getProfileByEmail,
     getProfileByUsername,
+    resolveReferrer,
     refreshProfile: refetchUser,
     contract,
   };
