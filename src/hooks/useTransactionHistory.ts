@@ -12,6 +12,7 @@ import {
   CHAIN_ID,
   PERSONAL_SAVINGS_ADDRESS,
   CIRCLE_SAVINGS_ADDRESS,
+  USER_PROFILE_ADDRESS,
   PLATFORM_FEE_RECIPIENT,
 } from "../constants/constants";
 
@@ -204,12 +205,28 @@ const transactionHistoryQuery = gql`
       circleName
     }
 
-    # Get goal details for all goals user created
+    # Personal goals
     personalGoals(where: { user: $userId }) {
       id
       goalId
       goalName
       goalAmount
+    }
+
+    # Referral rewards paid
+    referralRewardPaids(
+      where: { referrer: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      token
+      rewardAmount
+      referee
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
     }
   }
 `;
@@ -249,7 +266,8 @@ export interface Transaction {
   | "collateral_return"
   | "dead_circle_fee"
   | "USDm_send"
-  | "USDm_receive";
+  | "USDm_receive"
+  | "referral_reward";
   amount: bigint;
   currency: string;
   timestamp: bigint;
@@ -350,6 +368,7 @@ export const useTransactionHistory = () => {
         // Combine and filter out internal contract transfers
         const personalSavingsAddr = PERSONAL_SAVINGS_ADDRESS?.toLowerCase();
         const circleSavingsAddr = CIRCLE_SAVINGS_ADDRESS?.toLowerCase();
+        const userProfileAddr = USER_PROFILE_ADDRESS?.toLowerCase();
 
         const rawUSDmTransfers = [
           ...sentTransfers,
@@ -363,7 +382,9 @@ export const useTransactionHistory = () => {
             from === personalSavingsAddr ||
             to === personalSavingsAddr ||
             from === circleSavingsAddr ||
-            to === circleSavingsAddr;
+            to === circleSavingsAddr ||
+            from === userProfileAddr ||
+            to === userProfileAddr;
 
           return !isInternalTransfer;
         });
@@ -783,6 +804,23 @@ export const useTransactionHistory = () => {
           transactionsData.circleNamesMap.get(cr.circleId) || "Unknown Circle",
         circleId: BigInt(cr.circleId),
         note: "Circle completed",
+      });
+    });
+
+    // Process referral rewards paid
+    transactionsData.referralRewardPaids?.forEach((reward: any) => {
+      allTransactions.push({
+        id: reward.id,
+        type: "referral_reward",
+        amount: BigInt(reward.rewardAmount),
+        currency: "USDm",
+        timestamp: BigInt(reward.transaction.blockTimestamp),
+        transactionHash: reward.transaction.transactionHash,
+        status: "success",
+        fee: 0n,
+        note: reward.referee === "0x0000000000000000000000000000000000000000"
+          ? "Bulk referral payout"
+          : "Referral reward received",
       });
     });
 

@@ -16,6 +16,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import LinkContactModal from "./LinkContactModal";
+import { getStoredReferral, clearReferral } from "../utils/referral";
 
 interface ProfileCreationModalProps {
   client: any;
@@ -29,8 +30,12 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
 }) => {
   const colors = useThemeColors();
   const account = useActiveAccount();
-  const { createProfile, checkUsernameAvailability, isLoading } =
-    useUserProfile(client);
+  const {
+    createProfile,
+    checkUsernameAvailability,
+    isLoading,
+    resolveReferrer,
+  } = useUserProfile(client);
   const { uploadImage, isUploading, uploadProgress } =
     useThirdwebStorage(client);
 
@@ -192,12 +197,32 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         profilePhotoUrl = uploadResult.ipfsUrl;
       }
 
+      // Referral logic
+      const storedRef = getStoredReferral();
+      let referrerAddr = undefined;
+
+      if (storedRef) {
+        referrerAddr = await resolveReferrer(storedRef);
+
+        // If resolution returned zero address but we had a code, it failed
+        if (referrerAddr === "0x0000000000000000000000000000000000000000") {
+          console.warn(`Could not resolve referral code: ${storedRef}`);
+          // We'll proceed with zero address to not block the user,
+          // but logging it helps debug.
+        }
+      }
+
       await createProfile(
-        userEmail,
+        userEmail || "",
         userName.trim(),
         fullName.trim(),
-        profilePhotoUrl
+        profilePhotoUrl,
+        "",
+        referrerAddr
       );
+
+      // Clear referral on success
+      if (storedRef) clearReferral();
 
       confetti({
         particleCount: 100,
