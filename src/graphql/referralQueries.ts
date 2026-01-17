@@ -26,3 +26,24 @@ export const GET_REFERRAL_SETTINGS = gql`
     }
   }
 `;
+export const GET_REFERRAL_REWARDS = gql`
+  query GetReferralRewards($userId: String!) {
+    referralRewardPaids(
+      where: { referrer: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+      first: 20
+    ) {
+      id
+      referee {
+        id
+        username
+      }
+      rewardAmount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+  }
+`;

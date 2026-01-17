@@ -69,12 +69,10 @@ const CircleRulesTab: React.FC<CircleRulesTabProps> = ({
               className="text-sm space-y-1"
               style={{ color: colors.textLight }}
             >
-              <li>
-                • Positions are assigned based on credit score and reputation
-              </li>
+              <li>• Positions are assigned based on your credit score</li>
               <li>• Circle creator always gets position #1</li>
               <li>
-                • Other positions assigned by reputation (higher = better
+                • Other positions assigned by credit score (higher = better
                 position)
               </li>
               {circle.status !== "dead" && (

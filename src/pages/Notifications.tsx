@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Info,
   Vote,
+  Settings,
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useNotifications } from "../contexts/NotificationsContext";
@@ -45,7 +46,7 @@ const Notifications: React.FC = () => {
   };
 
   const getNotificationColor = (type: string, priority: string) => {
-    if (priority === "high") return "bg-red-100 text-red-600";
+    if (priority === "high") return "bg-red-100 text-green-600";
     if (priority === "medium") return "bg-yellow-100 text-yellow-600";
     if (priority === "low") return "bg-blue-100 text-blue-600";
 
@@ -122,6 +123,15 @@ const Notifications: React.FC = () => {
         colors={colors}
         actionButtonText={unreadCount > 0 ? "Mark All Read" : undefined}
         onActionClick={markAllAsRead}
+        actions={
+          <button
+            onClick={() => navigate("/notifications/settings")}
+            className="p-2 rounded-xl transition hover:opacity-80"
+            style={{ color: colors.text }}
+          >
+            <Settings size={20} />
+          </button>
+        }
       />
 
       <div

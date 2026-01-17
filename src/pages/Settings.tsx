@@ -34,12 +34,10 @@ const Settings: React.FC = () => {
   const wallet = useActiveWallet();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { availableCurrencies } = useCurrencyConverter();
-  const { isPushSupported, isSubscribed, togglePushNotifications } =
-    useNotifications();
+  useNotifications();
 
   // State for logout and loading
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [isPushLoading, setIsPushLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
   const [currencySearch, setCurrencySearch] = useState("");
@@ -122,24 +120,6 @@ const Settings: React.FC = () => {
       disableBiometric();
       setIsBiometricEnabled(false);
       toast.success("Biometric disabled");
-    }
-  };
-
-  const handlePushToggle = async () => {
-    setIsPushLoading(true);
-    const wasSubscribed = isSubscribed;
-    try {
-      await togglePushNotifications();
-      toast.success(
-        wasSubscribed
-          ? "Push notifications disabled"
-          : "Push notifications enabled!"
-      );
-    } catch (err) {
-      const error = err as Error;
-      toast.error(error.message || "Failed to toggle push notifications");
-    } finally {
-      setIsPushLoading(false);
     }
   };
 
@@ -394,8 +374,10 @@ const Settings: React.FC = () => {
                     Notifications & Security
                   </h4>
 
-                  {/* Push Notifications */}
-                  <div className="flex items-center justify-between py-2">
+                  <div
+                    className="flex items-center justify-between py-2 cursor-pointer transition hover:opacity-70"
+                    onClick={() => navigate("/notifications/settings")}
+                  >
                     <div className="flex items-center gap-3">
                       <div
                         className="p-2 rounded-lg"
@@ -408,38 +390,20 @@ const Settings: React.FC = () => {
                           className="font-bold text-sm"
                           style={{ color: colors.text }}
                         >
-                          Push Notifications
+                          Notification Preferences
                         </h4>
                         <div
                           style={{ color: colors.textLight }}
                           className="text-xs"
                         >
-                          {isPushSupported
-                            ? "Get notified about circle activity, payouts & more"
-                            : "Your browser doesn't support push notifications"}
+                          Customize what alerts you receive
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={handlePushToggle}
-                      disabled={isPushLoading || !isPushSupported}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${
-                        isSubscribed ? "bg-lime-600" : "bg-gray-300"
-                      } ${
-                        !isPushSupported ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
-                          isSubscribed ? "right-1" : "left-1"
-                        }`}
-                      />
-                      {isPushLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-full">
-                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      )}
-                    </button>
+                    <ChevronRight
+                      size={18}
+                      style={{ color: colors.textLight }}
+                    />
                   </div>
 
                   {/* Biometric Security */}

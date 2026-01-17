@@ -1,9 +1,7 @@
 import type { PushSubscriptionData } from "../types/notifications";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-const NOTIFICATION_API_URL =
-  import.meta.env.VITE_NOTIFICATION_API_URL ||
-  "http://localhost:3001/api/notifications";
+const NOTIFICATION_API_URL = import.meta.env.VITE_NOTIFICATION_API_URL || "http://localhost:3001/api/notifications";
 
 /**
  * Utility function to convert a base64 string to Uint8Array
@@ -57,7 +55,7 @@ export function isPushNotificationSupported(): boolean {
 export async function subscribeToPushNotifications(
   userAddress: string,
   preferences: any
-): Promise<PushSubscriptionData | null> {
+): Promise<any> {
   if (!isPushNotificationSupported()) {
     return null;
   }
@@ -112,7 +110,8 @@ export async function subscribeToPushNotifications(
 
     // Send subscription to backend
     if (NOTIFICATION_API_URL) {
-      await sendSubscriptionToBackend(subscriptionData);
+      const backendResponse = await sendSubscriptionToBackend(subscriptionData);
+      return { ...subscriptionData, backendResponse };
     }
 
     return subscriptionData;
@@ -165,13 +164,13 @@ export async function unsubscribeFromPushNotifications(
 export async function updateNotificationPreferences(
   userAddress: string,
   preferences: any
-): Promise<void> {
+): Promise<any> {
   if (!NOTIFICATION_API_URL) {
     return;
   }
 
   try {
-    await fetch(`${NOTIFICATION_API_URL}/preferences`, {
+    const response = await fetch(`${NOTIFICATION_API_URL}/preferences`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -181,6 +180,13 @@ export async function updateNotificationPreferences(
         preferences,
       }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Failed to update preferences");
+    }
+
+    return await response.json();
   } catch (error) {
     throw error;
   }
@@ -191,7 +197,7 @@ export async function updateNotificationPreferences(
  */
 async function sendSubscriptionToBackend(
   subscriptionData: PushSubscriptionData
-): Promise<void> {
+): Promise<any> {
   try {
     const response = await fetch(`${NOTIFICATION_API_URL}/subscribe`, {
       method: "POST",
@@ -202,10 +208,13 @@ async function sendSubscriptionToBackend(
     });
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        `Failed to send subscription to backend: ${response.statusText}`
+        errorData.error || `Failed to send subscription to backend: ${response.statusText}`
       );
     }
+
+    return await response.json();
   } catch (error) {
     throw error;
   }
