@@ -9,7 +9,10 @@ import { useActiveAccount } from "thirdweb/react";
 export const useNotificationSync = (
   circles: any[] = [],
   goals: any[] = [],
-  transactions: any[] = []
+  transactions: any[] = [],
+  reputationHistory: any[] = [],
+  categoryChanges: any[] = [],
+  referralRewards: any[] = []
 ) => {
   const { addNotification, notificationsEnabled } = useNotifications();
   const account = useActiveAccount();
@@ -176,9 +179,8 @@ export const useNotificationSync = (
       ) {
         addNotification({
           title: "Payment Received",
-          message: `You received ${tx.amount} from "${
-            tx.circleName || "Circle"
-          }" payout.`,
+          message: `You received ${tx.amount} from "${tx.circleName || "Circle"
+            }" payout.`,
           type: "payment_received",
           priority: "medium",
           action: {
@@ -196,9 +198,8 @@ export const useNotificationSync = (
       ) {
         addNotification({
           title: "Late Payment Penalty",
-          message: `You were charged a late payment penalty for "${
-            tx.circleName || "Circle"
-          }".`,
+          message: `You were charged a late payment penalty for "${tx.circleName || "Circle"
+            }".`,
           type: "payment_late",
           priority: "high",
           action: {
@@ -208,8 +209,101 @@ export const useNotificationSync = (
         processedEvents.current.add(`late_${txId}`);
         saveProcessedEvents();
       }
+
+      // Contribution success notification
+      if (
+        tx.type === "contribution_made" &&
+        !processedEvents.current.has(`contribution_${txId}`)
+      ) {
+        addNotification({
+          title: "Contribution Successful ✅",
+          message: `Your contribution of ${tx.amount} to "${tx.circleName || "Circle"
+            }" was successful.`,
+          type: "circle_member_contributed",
+          priority: "medium",
+          action: {
+            action: "/transactions-history",
+          },
+        });
+        processedEvents.current.add(`contribution_${txId}`);
+        saveProcessedEvents();
+      }
     });
   }, [transactions, notificationsEnabled, account, addNotification]);
+
+  // Check for reputation events
+  useEffect(() => {
+    if (!notificationsEnabled || !account || !reputationHistory.length) return;
+
+    reputationHistory.forEach((event) => {
+      const eventKey = `rep_${event.type}_${event.id}`;
+      if (!processedEvents.current.has(eventKey)) {
+        const isIncrease = event.type === "increase";
+        addNotification({
+          title: isIncrease ? "Credit Score Boost! ⭐️" : "Credit Score Decreased ⚠️",
+          message: `Your credit score ${isIncrease ? "increased" : "decreased"
+            } by ${event.points} points. Reason: ${event.reason}`,
+          type: "credit_score_changed",
+          priority: isIncrease ? "medium" : "high",
+          action: { action: "/profile" },
+          data: { points: event.points, reason: event.reason },
+        });
+        processedEvents.current.add(eventKey);
+        saveProcessedEvents();
+      }
+    });
+  }, [reputationHistory, notificationsEnabled, account, addNotification]);
+
+  // Check for category changes
+  useEffect(() => {
+    if (!notificationsEnabled || !account || !categoryChanges.length) return;
+
+    const categories = ["Newbie", "Basic", "Bronze", "Silver", "Gold", "Platinum"];
+    categoryChanges.forEach((event) => {
+      const eventKey = `cat_change_${event.id}`;
+      if (!processedEvents.current.has(eventKey)) {
+        const newCat = categories[event.newCategory] || "Elite";
+        const improved = event.newCategory > event.oldCategory;
+
+        addNotification({
+          title: improved ? "Category Level Up! 📈" : "Category Changed",
+          message: improved
+            ? `Congratulations! You've been promoted to the ${newCat} category.`
+            : `Your credit category has changed to ${newCat}.`,
+          type: "credit_score_changed",
+          priority: "high",
+          action: { action: "/profile" },
+          data: { newCategory: event.newCategory },
+        });
+        processedEvents.current.add(eventKey);
+        saveProcessedEvents();
+      }
+    });
+  }, [categoryChanges, notificationsEnabled, account, addNotification]);
+
+  // Check for referral rewards
+  useEffect(() => {
+    if (!notificationsEnabled || !account || !referralRewards.length) return;
+
+    referralRewards.forEach((event) => {
+      const eventKey = `ref_reward_${event.id}`;
+      if (!processedEvents.current.has(eventKey)) {
+        const amount = (Number(event.rewardAmount) / 1e18).toFixed(2);
+        const friend = event.referee?.username || "A friend";
+
+        addNotification({
+          title: "Referral Bonus! 🎁",
+          message: `You earned $${amount} because ${friend} completed their first goal!`,
+          type: "payment_received",
+          priority: "high",
+          action: { action: "/profile" },
+          data: { amount: event.rewardAmount },
+        });
+        processedEvents.current.add(eventKey);
+        saveProcessedEvents();
+      }
+    });
+  }, [referralRewards, notificationsEnabled, account, addNotification]);
 
   return {
     processedEventsCount: processedEvents.current.size,

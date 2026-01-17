@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { useActiveAccount } from "thirdweb/react";
+import { toast } from "sonner";
 import type {
   Notification,
   NotificationPreferences,
@@ -206,20 +207,29 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         if (success) {
           setIsSubscribed(false);
           setPreferences((prev) => ({ ...prev, pushEnabled: false }));
+          toast.success("Push notifications disabled");
         }
       } else {
         // Subscribe
-        const subscription = await subscribeToPushNotifications(
-          normalizedAddress,
-          { ...preferences, pushEnabled: true }
-        );
-        if (subscription) {
+        const result = await subscribeToPushNotifications(normalizedAddress, {
+          ...preferences,
+          pushEnabled: true,
+        });
+        if (result) {
           setIsSubscribed(true);
           setPreferences((prev) => ({ ...prev, pushEnabled: true }));
+
+          // Show message from backend if available
+          if (result.backendResponse?.message) {
+            toast.success(result.backendResponse.message);
+          } else {
+            toast.success("Push notifications enabled!");
+          }
         }
       }
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      console.error("Push notification error:", error);
+      toast.error(error.message || "Failed to handle push notifications");
     }
   }, [account?.address, isSubscribed, isPushSupported, preferences]);
 
@@ -228,15 +238,20 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
       const updatedPreferences = { ...preferences, ...newPreferences };
       setPreferences(updatedPreferences);
 
-      // Update backend if push is enabled
+      // Update backend if subscribed
       if (account?.address && isSubscribed) {
         try {
-          await updateNotificationPreferences(
+          const result = await updateNotificationPreferences(
             account.address.toLowerCase(),
             updatedPreferences
           );
-        } catch (error) {
-          // Handle silently
+
+          if (result?.message) {
+            toast.success(result.message);
+          }
+        } catch (error: any) {
+          console.error("Preference update error:", error);
+          toast.error("Failed to sync preferences with server");
         }
       }
     },
@@ -285,14 +300,15 @@ function getPrefKeyFromType(
   const mapping: Record<NotificationType, keyof NotificationPreferences> = {
     circle_member_joined: "circleMemberJoined",
     circle_payout: "circleMemberPayout",
+    circle_member_payout: "circleMemberPayout",
     circle_member_contributed: "circleMemberContributed",
     circle_member_withdrew: "circleMemberWithdrew",
     circle_started: "circleStarted",
     circle_completed: "circleCompleted",
     circle_dead: "circleDead",
     contribution_due: "contributionDue",
-    vote_required: "voteRequired",
-    vote_executed: "voteExecuted",
+    vote_required: "circleVoting",
+    vote_executed: "circleVoting",
     member_forfeited: "memberForfeited",
     late_payment_warning: "latePaymentWarning",
     position_assigned: "positionAssigned",

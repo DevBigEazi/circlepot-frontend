@@ -34,6 +34,8 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({
       return result.user;
     },
     enabled: !!userAddress,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache stale results
   });
 
   const { data: settings, isLoading: isLoadingSettings } = useQuery({
@@ -75,6 +77,11 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({
   };
 
   const isEnabled = settings?.rewardsEnabled;
+
+  const pendingAmountVal = Number(stats?.pendingRewardsEarned || 0);
+
+  // The value is directly assigned above
+
   // Find the first token with a bonus
   const activeToken = settings?.supportedTokens?.find(
     (t: any) => Number(t.bonusAmount) > 0
@@ -143,15 +150,12 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({
               {isLoadingStats
                 ? "..."
                 : `$${(
-                    (Number(stats?.totalReferralRewardsEarned || 0) -
-                      Number(stats?.pendingRewardsEarned || 0)) /
-                    1e18
+                    Number(stats?.totalReferralRewardsEarned || 0) / 1e18
                   ).toFixed(2)}`}
             </p>
-            {Number(stats?.pendingRewardsEarned || 0) > 0 && (
+            {pendingAmountVal > 0 && (
               <span className="text-[10px] font-medium text-amber-500 mt-1">
-                + ${(Number(stats.pendingRewardsEarned) / 1e18).toFixed(2)}{" "}
-                Pending
+                Incl. ${(pendingAmountVal / 1e18).toFixed(2)} Pending
               </span>
             )}
           </div>

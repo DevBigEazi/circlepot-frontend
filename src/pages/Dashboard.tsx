@@ -9,6 +9,10 @@ import { useNotifications } from "../contexts/NotificationsContext";
 import { client } from "../thirdwebClient";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useCreditScore } from "../hooks/useCreditScore";
+import { useQuery } from "@tanstack/react-query";
+import { request } from "graphql-request";
+import { SUBGRAPH_URL, SUBGRAPH_HEADERS } from "../constants/constants";
+import { GET_REFERRAL_REWARDS } from "../graphql/referralQueries";
 import { Settings, Bell, History } from "lucide-react";
 import { normalizeIpfsUrl } from "../utils/ipfs";
 import NavBar from "../components/NavBar";
@@ -43,8 +47,29 @@ const Dashboard: React.FC = () => {
     isLoading: isCirclesLoading,
   } = useCircleSavings(client);
   const { goals, isLoading: isGoalsLoading } = usePersonalGoals(client);
-  const { creditScore, isLoading: isReputationLoading } = useCreditScore();
+  const {
+    creditScore,
+    reputationHistory,
+    categoryChanges,
+    isLoading: isCreditScoreLoading,
+  } = useCreditScore();
   const { unreadCount } = useNotifications();
+
+  // Fetch referral rewards for notification sync
+  const { data: referralRewards } = useQuery({
+    queryKey: ["referralRewards", account?.address],
+    queryFn: async () => {
+      if (!account?.address) return [];
+      const result: any = await request(
+        SUBGRAPH_URL,
+        GET_REFERRAL_REWARDS,
+        { userId: account.address.toLowerCase() },
+        SUBGRAPH_HEADERS
+      );
+      return result.referralRewardPaids || [];
+    },
+    enabled: !!account?.address,
+  });
 
   // Transform circles for notification sync
   const transformedCircles = useMemo(
@@ -79,8 +104,46 @@ const Dashboard: React.FC = () => {
     ]
   );
 
+  // Format transactions for notification sync
+  const formattedTransactions = useMemo(() => {
+    const txs: any[] = [];
+
+    // Add contributions
+    contributions.forEach((c) => {
+      const circle = circles.find((cir) => cir.circleId === c.circleId);
+      txs.push({
+        id: c.id,
+        type: "contribution_made",
+        amount: `$${(Number(c.amount) / 1e18).toFixed(2)}`,
+        circleName: circle?.circleName || "Circle",
+        timestamp: Number(c.timestamp),
+      });
+    });
+
+    // Add payouts
+    payouts.forEach((p) => {
+      const circle = circles.find((cir) => cir.circleId === p.circleId);
+      txs.push({
+        id: p.id,
+        type: "circle_payout",
+        amount: `$${(Number(p.payoutAmount) / 1e18).toFixed(2)}`,
+        circleName: circle?.circleName || "Circle",
+        timestamp: Number(p.timestamp),
+      });
+    });
+
+    return txs.sort((a, b) => b.timestamp - a.timestamp);
+  }, [contributions, payouts, circles]);
+
   // Sync notifications with app events
-  useNotificationSync(transformedCircles, goals, []);
+  useNotificationSync(
+    transformedCircles,
+    goals,
+    formattedTransactions,
+    reputationHistory,
+    categoryChanges,
+    referralRewards || []
+  );
 
   // Normalize IPFS URL to ensure it's properly formatted
   const profileImageUrl = useMemo(() => {
@@ -239,7 +302,7 @@ const Dashboard: React.FC = () => {
                 colors={colors}
                 creditScore={creditScore}
                 isLoading={
-                  isReputationLoading ||
+                  isCreditScoreLoading ||
                   isBalanceLoading ||
                   isCirclesLoading ||
                   isGoalsLoading

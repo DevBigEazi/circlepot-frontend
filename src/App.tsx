@@ -25,6 +25,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const NotificationSettings = lazy(() => import("./pages/NotificationSettings"));
 const TransactionsHistory = lazy(() => import("./pages/TransactionsHistory"));
 const Goals = lazy(() => import("./pages/Goals"));
 const CreateCircle = lazy(() => import("./pages/CreateCircle"));
@@ -171,6 +172,10 @@ function App({ client }: AppProps) {
                       element={<TransactionsHistory />}
                     />
                     <Route path="/notifications" element={<Notifications />} />
+                    <Route
+                      path="/notifications/settings"
+                      element={<NotificationSettings />}
+                    />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/local-methods" element={<LocalMethods />} />

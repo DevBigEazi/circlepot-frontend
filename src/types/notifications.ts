@@ -3,6 +3,7 @@ export type NotificationType =
     // Circle notifications
     | "circle_member_joined"
     | "circle_payout"
+    | "circle_member_payout"
     | "circle_member_contributed"
     | "circle_member_withdrew"
     | "circle_started"
@@ -150,6 +151,12 @@ export const NOTIFICATION_CONFIGS: Record<NotificationType, NotificationConfig> 
         type: "circle_payout",
         defaultPriority: "medium",
         defaultAction: "/transactions-history",
+        requiresAction: false,
+    },
+    circle_member_payout: {
+        type: "circle_member_payout",
+        defaultPriority: "medium",
+        defaultAction: "/circles",
         requiresAction: false,
     },
     circle_member_contributed: {

@@ -111,15 +111,18 @@ const NavBar: React.FC<NavBarProps> = ({
                 </div>
               )}
             </div>
-            {actionButtonText && (
-              <button
-                onClick={onActionClick}
-                className="px-4 py-2 rounded-lg font-semibold text-sm transition border hover:opacity-80"
-                style={{ borderColor: colors.border, color: colors.text }}
-              >
-                {actionButtonText}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {actionButtonText && (
+                <button
+                  onClick={onActionClick}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition border hover:opacity-80"
+                  style={{ borderColor: colors.border, color: colors.text }}
+                >
+                  {actionButtonText}
+                </button>
+              )}
+              {actions}
+            </div>
           </div>
         </div>
       </div>
