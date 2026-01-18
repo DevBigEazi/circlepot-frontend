@@ -60,8 +60,8 @@ const Browse: React.FC = () => {
       // Type/frequency filter
       const matchesFilter =
         activeFilter === "all" ||
-        (activeFilter === "public" && circle.visibility === 0) ||
-        (activeFilter === "private" && circle.visibility === 1) ||
+        (activeFilter === "public" && circle.visibility === 1) ||
+        (activeFilter === "private" && circle.visibility === 0) ||
         (activeFilter === "daily" && circle.frequency === 0) ||
         (activeFilter === "weekly" && circle.frequency === 1) ||
         (activeFilter === "monthly" && circle.frequency === 2);
