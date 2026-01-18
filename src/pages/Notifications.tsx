@@ -243,7 +243,7 @@ const Notifications: React.FC = () => {
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`sm:w-10 sm:h-10 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${getNotificationColor(
+                        className={`sm:w-10 sm:h-10 w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${getNotificationColor(
                           notification.type,
                           notification.priority,
                         )}`}
