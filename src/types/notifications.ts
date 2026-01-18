@@ -15,6 +15,7 @@ export type NotificationType =
     | "member_forfeited"
     | "late_payment_warning"
     | "position_assigned"
+    | "circle_contribution_self"
     // Goal notifications
     | "goal_deadline_2days"
     | "goal_deadline_1day"
@@ -36,7 +37,8 @@ export type NotificationType =
     | "system_update"
     | "security_alert"
     | "circle_joined"
-    | "circle_voting";
+    | "circle_voting"
+    | "referral_reward";
 
 export type NotificationPriority = "high" | "medium" | "low";
 
@@ -77,6 +79,7 @@ export interface NotificationPreferences {
     positionAssigned: boolean;
     circleJoined: boolean;
     circleVoting: boolean;
+    circleContributionSelf: boolean;
 
     // Goal notifications
     goalDeadline2Days: boolean;
@@ -100,6 +103,7 @@ export interface NotificationPreferences {
     systemMaintenance: boolean;
     systemUpdate: boolean;
     securityAlert: boolean;
+    referralReward: boolean;
 }
 
 export interface PushSubscription {
@@ -341,6 +345,18 @@ export const NOTIFICATION_CONFIGS: Record<NotificationType, NotificationConfig> 
         defaultAction: "/",
         requiresAction: true,
     },
+    referral_reward: {
+        type: "referral_reward",
+        defaultPriority: "medium",
+        defaultAction: "/profile",
+        requiresAction: false,
+    },
+    circle_contribution_self: {
+        type: "circle_contribution_self",
+        defaultPriority: "medium",
+        defaultAction: "/transactions-history",
+        requiresAction: false,
+    },
 };
 
 // Default notification preferences
@@ -351,7 +367,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     // Circle notifications (high priority enabled by default)
     circleMemberJoined: true,
     circleMemberPayout: true,
-    circleMemberContributed: false,
+    circleMemberContributed: true,
     circleMemberWithdrew: true,
     circleStarted: true,
     circleCompleted: true,
@@ -365,6 +381,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     positionAssigned: true,
     circleJoined: true,
     circleVoting: true,
+    circleContributionSelf: true,
 
     // Goal notifications
     goalDeadline2Days: true,
@@ -388,4 +405,5 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     systemMaintenance: true,
     systemUpdate: true,
     securityAlert: true,
+    referralReward: true,
 };

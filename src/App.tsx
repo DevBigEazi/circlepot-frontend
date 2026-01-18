@@ -41,6 +41,7 @@ const WithdrawLocal = lazy(() => import("./pages/WithdrawLocal"));
 const WithdrawExternal = lazy(() => import("./pages/WithdrawExternal"));
 const Error404 = lazy(() => import("./pages/404"));
 const Layout = lazy(() => import("./layouts/Layout"));
+import GlobalNotificationSync from "./components/GlobalNotificationSync";
 
 interface AppProps {
   client: any; // thirdweb client
@@ -113,6 +114,7 @@ function App({ client }: AppProps) {
     <main className="min-h-screen">
       <Toaster position="top-center" />
       <NotificationsProvider>
+        <GlobalNotificationSync />
         <CurrencyProvider>
           <BiometricProvider
             userId={profile?.accountId ? String(profile.accountId) : ""}

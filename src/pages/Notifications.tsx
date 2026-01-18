@@ -29,13 +29,21 @@ const Notifications: React.FC = () => {
         return Users;
       case "circle_voting":
         return Vote;
+      case "member_forfeited":
+        return AlertCircle;
       case "goal_reminder":
       case "goal_completed":
         return Target;
       case "contribution_due":
       case "payment_received":
       case "circle_payout":
+      case "circle_member_payout":
+      case "circle_member_contributed":
+      case "circle_contribution_self":
+      case "collateral_returned":
         return DollarSign;
+      case "circle_member_withdrew":
+        return Users;
       case "payment_late":
         return AlertCircle;
       case "system_update":
@@ -46,19 +54,27 @@ const Notifications: React.FC = () => {
   };
 
   const getNotificationColor = (type: string, priority: string) => {
-    if (priority === "high") return "bg-red-100 text-green-600";
-    if (priority === "medium") return "bg-yellow-100 text-yellow-600";
-    if (priority === "low") return "bg-blue-100 text-blue-600";
+    if (priority === "high") return "bg-green-100 text-green-700";
+    if (priority === "medium") return "bg-yellow-50 text-yellow-700";
+    if (priority === "low") return "bg-blue-50 text-blue-700";
 
     switch (type) {
       case "circle_invite":
       case "circle_joined":
+      case "circle_member_joined":
+      case "circle_member_withdrew":
         return "bg-blue-100 text-blue-600";
       case "goal_completed":
       case "payment_received":
       case "circle_payout":
+      case "circle_member_payout":
+      case "circle_member_contributed":
+      case "circle_contribution_self":
+      case "collateral_returned":
+      case "referral_reward":
         return "bg-green-100 text-green-600";
       case "payment_late":
+      case "member_forfeited":
         return "bg-red-100 text-red-600";
       case "contribution_due":
         return "bg-orange-100 text-orange-600";
@@ -68,6 +84,12 @@ const Notifications: React.FC = () => {
   };
 
   const handleNotificationClick = (notification: any) => {
+    //console.log("[Notifications] Notification Clicked:", notification);
+    //console.log(
+    //  "[Notifications] Navigating to:",
+    //  notification.action?.action || "/",
+    //);
+
     // Mark as read
     if (!notification.read) {
       markAsRead(notification.id);
@@ -80,6 +102,7 @@ const Notifications: React.FC = () => {
   };
 
   const filteredNotifications = notifications.filter((notification) => {
+    // console.log(`[Notifications] Filtering: type=${notification.type}, activeTab=${activeTab}`);
     if (activeTab === "all") return true;
     if (activeTab === "unread") return !notification.read;
     if (activeTab === "circles")
@@ -88,13 +111,29 @@ const Notifications: React.FC = () => {
         "circle_joined",
         "circle_started",
         "circle_payout",
+        "circle_member_payout",
         "circle_voting",
+        "circle_member_contributed",
+        "circle_member_joined",
+        "circle_member_withdrew",
+        "member_forfeited",
+        "circle_contribution_self",
+        "payment_received",
+        "payment_late",
+        "contribution_due",
+        "vote_required",
+        "vote_executed",
+        "collateral_returned",
       ].includes(notification.type);
     if (activeTab === "goals")
       return ["goal_reminder", "goal_completed"].includes(notification.type);
     if (activeTab === "payments")
-      return ["contribution_due", "payment_received", "payment_late"].includes(
-        notification.type
+      return ["referral_reward", "withdrawal_fee_applied"].includes(
+        notification.type,
+      );
+    if (activeTab === "profile")
+      return ["credit_score_changed"].includes(
+        notification.type,
       );
     return true;
   });
@@ -105,6 +144,7 @@ const Notifications: React.FC = () => {
     { id: "circles", label: "Circles" },
     { id: "goals", label: "Goals" },
     { id: "payments", label: "Payments" },
+    { id: "profile", label: "Profile" },
   ];
 
   return (
@@ -203,9 +243,9 @@ const Notifications: React.FC = () => {
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`sm:w-10 sm:h-10 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${getNotificationColor(
+                        className={`sm:w-10 sm:h-10 w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${getNotificationColor(
                           notification.type,
-                          notification.priority
+                          notification.priority,
                         )}`}
                       >
                         <IconComponent className="sm:size-6 size-4" />

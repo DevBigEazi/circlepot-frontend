@@ -4,15 +4,10 @@ import { useActiveAccount } from "thirdweb/react";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
-import { useNotificationSync } from "../hooks/useNotificationSync";
 import { useNotifications } from "../contexts/NotificationsContext";
 import { client } from "../thirdwebClient";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useCreditScore } from "../hooks/useCreditScore";
-import { useQuery } from "@tanstack/react-query";
-import { request } from "graphql-request";
-import { SUBGRAPH_URL, SUBGRAPH_HEADERS } from "../constants/constants";
-import { GET_REFERRAL_REWARDS } from "../graphql/referralQueries";
 import { Settings, Bell, History } from "lucide-react";
 import { normalizeIpfsUrl } from "../utils/ipfs";
 import NavBar from "../components/NavBar";
@@ -22,14 +17,14 @@ import ActiveCircles from "../components/ActiveCircles";
 import AddFundsModal from "../modals/AddFundsModal";
 import WithdrawModal from "../modals/WithdrawModal";
 import { transformCircles } from "../utils/circleTransformer";
-
 import { useBalance } from "../hooks/useBalance";
 
 const Dashboard: React.FC = () => {
   const account = useActiveAccount();
   const { balance: balanceData, isLoading: isBalanceLoading } = useBalance();
-
   const { profile } = useUserProfile(client);
+  const navigate = useNavigate();
+  const colors = useThemeColors();
 
   // Fetch circles and personal goals data
   const {
@@ -46,118 +41,22 @@ const Dashboard: React.FC = () => {
     forfeitures,
     isLoading: isCirclesLoading,
   } = useCircleSavings(client);
+
   const { goals, isLoading: isGoalsLoading } = usePersonalGoals(client);
-  const {
-    creditScore,
-    reputationHistory,
-    categoryChanges,
-    isLoading: isCreditScoreLoading,
-  } = useCreditScore();
+
+  const { creditScore, isLoading: isCreditScoreLoading } = useCreditScore();
+
   const { unreadCount } = useNotifications();
-
-  // Fetch referral rewards for notification sync
-  const { data: referralRewards } = useQuery({
-    queryKey: ["referralRewards", account?.address],
-    queryFn: async () => {
-      if (!account?.address) return [];
-      const result: any = await request(
-        SUBGRAPH_URL,
-        GET_REFERRAL_REWARDS,
-        { userId: account.address.toLowerCase() },
-        SUBGRAPH_HEADERS
-      );
-      return result.referralRewardPaids || [];
-    },
-    enabled: !!account?.address,
-  });
-
-  // Transform circles for notification sync
-  const transformedCircles = useMemo(
-    () =>
-      transformCircles(
-        circles,
-        joinedCircles,
-        account?.address,
-        votingEvents,
-        votes,
-        voteResults,
-        positions,
-        contributions,
-        payouts,
-        collateralWithdrawals,
-        forfeitures,
-        collateralReturns
-      ),
-    [
-      circles,
-      joinedCircles,
-      account?.address,
-      votingEvents,
-      votes,
-      voteResults,
-      positions,
-      contributions,
-      payouts,
-      collateralWithdrawals,
-      forfeitures,
-      collateralReturns,
-    ]
-  );
-
-  // Format transactions for notification sync
-  const formattedTransactions = useMemo(() => {
-    const txs: any[] = [];
-
-    // Add contributions
-    contributions.forEach((c) => {
-      const circle = circles.find((cir) => cir.circleId === c.circleId);
-      txs.push({
-        id: c.id,
-        type: "contribution_made",
-        amount: `$${(Number(c.amount) / 1e18).toFixed(2)}`,
-        circleName: circle?.circleName || "Circle",
-        timestamp: Number(c.timestamp),
-      });
-    });
-
-    // Add payouts
-    payouts.forEach((p) => {
-      const circle = circles.find((cir) => cir.circleId === p.circleId);
-      txs.push({
-        id: p.id,
-        type: "circle_payout",
-        amount: `$${(Number(p.payoutAmount) / 1e18).toFixed(2)}`,
-        circleName: circle?.circleName || "Circle",
-        timestamp: Number(p.timestamp),
-      });
-    });
-
-    return txs.sort((a, b) => b.timestamp - a.timestamp);
-  }, [contributions, payouts, circles]);
-
-  // Sync notifications with app events
-  useNotificationSync(
-    transformedCircles,
-    goals,
-    formattedTransactions,
-    reputationHistory,
-    categoryChanges,
-    referralRewards || []
-  );
-
-  // Normalize IPFS URL to ensure it's properly formatted
-  const profileImageUrl = useMemo(() => {
-    if (!profile?.photo) return null;
-    const normalized = normalizeIpfsUrl(profile.photo);
-    return normalized;
-  }, [profile?.photo]);
-
-  const navigate = useNavigate();
-  const colors = useThemeColors();
 
   // Modal states
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+  // Normalize IPFS URL to ensure it's properly formatted
+  const profileImageUrl = useMemo(() => {
+    if (!profile?.photo) return null;
+    return normalizeIpfsUrl(profile.photo);
+  }, [profile?.photo]);
 
   // Calculate total committed in circles with breakdown
   const {
@@ -177,18 +76,15 @@ const Dashboard: React.FC = () => {
       payouts,
       collateralWithdrawals,
       forfeitures,
-      collateralReturns
+      collateralReturns,
     );
 
     return activeCircles.reduce(
       (acc, circle) => {
-        // If circle is finished or user already withdrew, skip everything
         if (circle.status === "completed" || circle.hasWithdrawn) {
           return acc;
         }
 
-        // Use the actual collateral amount that the user deposited
-        // and subtract any deductions from late payments/forfeitures
         const initialCollateral = circle.rawCircle?.collateralAmount
           ? Number(circle.rawCircle.collateralAmount) / 1e18
           : 0;
@@ -200,14 +96,12 @@ const Dashboard: React.FC = () => {
 
         const collateralAmount = Math.max(0, initialCollateral - deductions);
 
-        // For dead circles, contributions are lost, so only collateral is "committed"
-        // For other active states, both are committed
         const contributedAmount =
           circle.status === "dead"
             ? 0
             : circle.userTotalContributed
-            ? Number(circle.userTotalContributed) / 1e18
-            : 0;
+              ? Number(circle.userTotalContributed) / 1e18
+              : 0;
 
         return {
           total: acc.total + collateralAmount + contributedAmount,
@@ -215,7 +109,7 @@ const Dashboard: React.FC = () => {
           contributions: acc.contributions + contributedAmount,
         };
       },
-      { total: 0, collateral: 0, contributions: 0 }
+      { total: 0, collateral: 0, contributions: 0 },
     );
   }, [
     circles,
@@ -237,7 +131,6 @@ const Dashboard: React.FC = () => {
     const activeGoals = goals.filter((goal) => goal.isActive);
 
     return activeGoals.reduce((sum, goal) => {
-      // Convert bigint to number (18 decimals)
       const currentAmount = Number(goal.currentAmount) / 1e18;
       return sum + currentAmount;
     }, 0);
@@ -287,7 +180,6 @@ const Dashboard: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Left Column - Balance and Overview */}
             <div className="lg:col-span-2 space-y-6">
               <BalanceDisplay
                 currentBalances={{
@@ -308,21 +200,16 @@ const Dashboard: React.FC = () => {
                   isGoalsLoading
                 }
               />
-
-              {/* Personal Goals Section */}
               <PersonalGoals />
             </div>
 
-            {/* Right Column - Active Circles and Analytics */}
             <div className="lg:col-span-3 space-y-6">
-              {/* ActiveCircles */}
               <ActiveCircles colors={colors} client={client} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
       <AddFundsModal
         isOpen={showAddFundsModal}
         onClose={() => setShowAddFundsModal(false)}
