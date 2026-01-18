@@ -471,6 +471,26 @@ const circlesByIdsQuery = gql`
         transactionHash
       }
     }
+    # All contributions for these circles
+    contributionMades(
+      where: { circleId_in: $circleIds }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+        username
+        fullName
+      }
+      circleId
+      round
+      amount
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
     # All collateral withdrawals for these circles
     collateralWithdrawns(
       where: { circleId_in: $circleIds }
@@ -738,9 +758,12 @@ export const useCircleSavings = (
           signal: AbortSignal.timeout(7000),
         });
 
-        // 2. Extract unique circle IDs from join events
+        // 2. Extract unique circle IDs from join events and created circles
         const joinedCircleIds = [
-          ...new Set(userResult.circleJoineds.map((j: any) => j.circleId)),
+          ...new Set([
+            ...userResult.circleJoineds.map((j: any) => j.circleId),
+            ...(userResult.createdCircles?.map((c: any) => c.circleId) || [])
+          ]),
         ];
 
         // 3. Fetch details for joined circles
@@ -749,6 +772,7 @@ export const useCircleSavings = (
         let joinedCirclesVotingEvents = [];
         let joinedCirclesVoteResults = [];
         let joinedCirclesPayouts = [];
+        let joinedCirclesContributions = [];
         let joinedCirclesCollateralWithdrawals = [];
         let joinedCirclesCollateralReturns = [];
         if (joinedCircleIds.length > 0) {
@@ -764,6 +788,7 @@ export const useCircleSavings = (
           joinedCirclesVotingEvents = circlesResult.votingInitiateds;
           joinedCirclesVoteResults = circlesResult.voteExecuteds;
           joinedCirclesPayouts = circlesResult.payoutDistributeds;
+          joinedCirclesContributions = circlesResult.contributionMades;
           joinedCirclesCollateralWithdrawals = circlesResult.collateralWithdrawns;
           joinedCirclesCollateralReturns = circlesResult.collateralReturneds;
           // No need to calculate currentRound - subgraph now tracks it directly
@@ -776,6 +801,7 @@ export const useCircleSavings = (
           joinedCirclesVotingEvents,
           joinedCirclesVoteResults,
           joinedCirclesPayouts,
+          joinedCirclesContributions,
           joinedCirclesCollateralWithdrawals,
           joinedCirclesCollateralReturns,
         };
@@ -923,8 +949,20 @@ export const useCircleSavings = (
         }));
         setJoinedCircles(processedJoined);
 
-        // Process contributions
-        const processedContributions = circlesData.contributionMades.map(
+        // Process contributions - combine user contributions and all circle contributions
+        const allContributionsMap = new Map();
+
+        // Add user contributions first
+        circlesData.contributionMades.forEach((c: any) =>
+          allContributionsMap.set(c.id, c)
+        );
+
+        // Add joined circles contributions (may overlap)
+        circlesData.joinedCirclesContributions?.forEach((c: any) =>
+          allContributionsMap.set(c.id, c)
+        );
+
+        const processedContributions = Array.from(allContributionsMap.values()).map(
           (contrib: any) => ({
             id: contrib.id,
             circleId: BigInt(contrib.circleId),

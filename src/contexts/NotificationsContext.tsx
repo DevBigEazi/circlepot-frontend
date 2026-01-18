@@ -33,7 +33,7 @@ interface NotificationsContextType {
 
   // Notification management
   addNotification: (
-    notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">
+    notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">,
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -44,7 +44,7 @@ interface NotificationsContextType {
   toggleNotifications: (enabled: boolean) => void;
   togglePushNotifications: () => Promise<void>;
   updatePreferences: (
-    newPreferences: Partial<NotificationPreferences>
+    newPreferences: Partial<NotificationPreferences>,
   ) => Promise<void>;
 }
 
@@ -76,7 +76,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
   const account = useActiveAccount();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [preferences, setPreferences] = useState<NotificationPreferences>(
-    DEFAULT_NOTIFICATION_PREFERENCES
+    DEFAULT_NOTIFICATION_PREFERENCES,
   );
   const [isSubscribed, setIsSubscribed] = useState(false);
   const isPushSupported = isPushNotificationSupported();
@@ -88,10 +88,24 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
       try {
         const loadedNotifications = JSON.parse(stored);
         const migratedNotifications = loadedNotifications.map(
-          (n: Notification) => ({
-            ...n,
-            timeAgo: getTimeAgo(n.timestamp),
-          })
+          (n: Notification) => {
+            let type = n.type;
+            // Migrate legacy types based on titles for better filtering
+            if (n.type === ("payment_received" as any)) {
+              if (n.title.toLowerCase().includes("referral bonus")) {
+                type = "referral_reward";
+              } else if (
+                n.title.toLowerCase().includes("contribution successful")
+              ) {
+                type = "circle_contribution_self";
+              }
+            }
+            return {
+              ...n,
+              type,
+              timeAgo: getTimeAgo(n.timestamp),
+            };
+          },
         );
         setNotifications(migratedNotifications);
       } catch (error) {
@@ -139,33 +153,51 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
 
   const addNotification = useCallback(
     (
-      notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">
+      notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">,
     ) => {
-      if (!preferences.inAppEnabled) return;
+      console.log(
+        "[NotificationsContext] addNotification called:",
+        notification.type,
+        notification.title,
+      );
+      if (!preferences.inAppEnabled) {
+        console.log(
+          "[NotificationsContext] In-app notifications disabled in preferences",
+        );
+        return;
+      }
 
       // Check if this notification type is enabled
       const prefKey = getPrefKeyFromType(notification.type);
       if (prefKey && !preferences[prefKey]) {
+        console.log(
+          `[NotificationsContext] Notification type "${notification.type}" (pref: ${String(prefKey)}) is disabled`,
+        );
         return; // User has disabled this notification type
       }
 
       const timestamp = Date.now();
+      const uniqueId = `${timestamp}-${Math.random().toString(36).substring(2, 9)}`;
       const newNotification: Notification = {
         ...notification,
-        id: timestamp.toString(),
+        id: uniqueId,
         timestamp,
         timeAgo: getTimeAgo(timestamp),
         read: false,
       };
 
+      console.log(
+        "[NotificationsContext] Adding new notification to state:",
+        newNotification,
+      );
       setNotifications((prev) => [newNotification, ...prev]);
     },
-    [preferences]
+    [preferences],
   );
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
   }, []);
 
@@ -201,9 +233,8 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
     try {
       if (isSubscribed) {
         // Unsubscribe
-        const success = await unsubscribeFromPushNotifications(
-          normalizedAddress
-        );
+        const success =
+          await unsubscribeFromPushNotifications(normalizedAddress);
         if (success) {
           setIsSubscribed(false);
           setPreferences((prev) => ({ ...prev, pushEnabled: false }));
@@ -243,7 +274,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         try {
           const result = await updateNotificationPreferences(
             account.address.toLowerCase(),
-            updatedPreferences
+            updatedPreferences,
           );
 
           if (result?.message) {
@@ -255,7 +286,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         }
       }
     },
-    [account?.address, isSubscribed, preferences]
+    [account?.address, isSubscribed, preferences],
   );
 
   return (
@@ -287,7 +318,7 @@ export const useNotifications = () => {
   const context = useContext(NotificationsContext);
   if (context === undefined) {
     throw new Error(
-      "useNotifications must be used within a NotificationsProvider"
+      "useNotifications must be used within a NotificationsProvider",
     );
   }
   return context;
@@ -295,11 +326,11 @@ export const useNotifications = () => {
 
 // Helper to map notification type to preference key
 function getPrefKeyFromType(
-  type: NotificationType
+  type: NotificationType,
 ): keyof NotificationPreferences | null {
   const mapping: Record<NotificationType, keyof NotificationPreferences> = {
     circle_member_joined: "circleMemberJoined",
-    circle_payout: "circleMemberPayout",
+    circle_payout: "paymentReceived",
     circle_member_payout: "circleMemberPayout",
     circle_member_contributed: "circleMemberContributed",
     circle_member_withdrew: "circleMemberWithdrew",
@@ -330,6 +361,8 @@ function getPrefKeyFromType(
     security_alert: "securityAlert",
     circle_joined: "circleJoined",
     circle_voting: "circleVoting",
+    referral_reward: "referralReward",
+    circle_contribution_self: "circleContributionSelf",
   };
 
   return mapping[type] || null;

@@ -189,6 +189,11 @@ export interface Contribution {
   circleId: bigint;
   round: bigint;
   amount: bigint;
+  user?: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
   timestamp: bigint;
 }
 
@@ -197,6 +202,11 @@ export interface Payout {
   circleId: bigint;
   round: bigint;
   payoutAmount: bigint;
+  user?: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
   timestamp: bigint;
 }
 
@@ -313,6 +323,11 @@ export interface MemberForfeited {
 export interface CollateralWithdrawn {
   id: string;
   circleId: bigint;
+  user: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
   amount: bigint;
   timestamp: bigint;
   transactionHash: string;
