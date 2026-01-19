@@ -813,12 +813,14 @@ export const useCircleSavings = (
       }
     },
     enabled: !!account?.address,
+    staleTime: 30000, // Consider data fresh for 30 seconds
     refetchInterval: enablePolling ? 5000 : 0, // Poll only if enablePolling is true
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (reduced from 30)
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnReconnect: true, // Refetch on network reconnect
-    refetchOnMount: true, // Refetch when component mounts
-    retry: 0,
+    refetchOnMount: false, // Don't refetch on component mount if data exists
+    retry: 2, // Retry failed requests only twice
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   const queryError = useMemo(() => {

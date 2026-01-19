@@ -46,6 +46,9 @@ interface NotificationsContextType {
   updatePreferences: (
     newPreferences: Partial<NotificationPreferences>,
   ) => Promise<void>;
+
+  // Utility to get real-time timeAgo
+  getTimeAgo: (timestamp: number) => string;
 }
 
 const NotificationsContext = createContext<
@@ -54,6 +57,26 @@ const NotificationsContext = createContext<
 
 const STORAGE_KEY = "Circlepot_notifications";
 const PREFERENCES_KEY = "Circlepot_notification_preferences";
+
+// Helper function to serialize notifications with BigInt support
+const serializeNotifications = (notifications: Notification[]): string => {
+  return JSON.stringify(notifications, (_key, value) => {
+    if (typeof value === "bigint") {
+      return value.toString() + "n"; // Mark as BigInt with 'n' suffix
+    }
+    return value;
+  });
+};
+
+// Helper function to deserialize notifications with BigInt support
+const deserializeNotifications = (jsonString: string): Notification[] => {
+  return JSON.parse(jsonString, (_key, value) => {
+    if (typeof value === "string" && /^\d+n$/.test(value)) {
+      return BigInt(value.slice(0, -1)); // Remove 'n' and convert to BigInt
+    }
+    return value;
+  });
+};
 
 // Helper function to calculate time ago
 const getTimeAgo = (timestamp: number): string => {
@@ -86,7 +109,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        const loadedNotifications = JSON.parse(stored);
+        const loadedNotifications = deserializeNotifications(stored);
         const migratedNotifications = loadedNotifications.map(
           (n: Notification) => {
             let type = n.type;
@@ -103,12 +126,15 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
             return {
               ...n,
               type,
+              // timeAgo will be calculated dynamically, so we keep it for backward compatibility
+              // but it will be recalculated on render
               timeAgo: getTimeAgo(n.timestamp),
             };
           },
         );
         setNotifications(migratedNotifications);
       } catch (error) {
+        console.error("Failed to load notifications:", error);
         setNotifications([]);
       }
     }
@@ -137,10 +163,31 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [account?.address, isPushSupported]);
 
+  // Update timeAgo for all notifications periodically (every 30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNotifications((prev) =>
+        prev.map((n) => ({
+          ...n,
+          timeAgo: getTimeAgo(n.timestamp),
+        })),
+      );
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Save notifications to localStorage whenever they change
   useEffect(() => {
     if (notifications.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          serializeNotifications(notifications),
+        );
+      } catch (error) {
+        console.error("Failed to save notifications:", error);
+      }
     }
   }, [notifications]);
 
@@ -307,6 +354,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         clearAllNotifications,
         togglePushNotifications,
         updatePreferences,
+        getTimeAgo,
       }}
     >
       {children}
