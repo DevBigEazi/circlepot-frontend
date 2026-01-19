@@ -50,7 +50,7 @@ const Circles: React.FC = () => {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<ActiveCircle | null>(
-    null
+    null,
   );
 
   // Transform circles data
@@ -67,7 +67,7 @@ const Circles: React.FC = () => {
       payouts,
       collateralWithdrawals,
       forfeitures,
-      collateralReturns
+      collateralReturns,
     );
   }, [
     circles,
@@ -132,7 +132,7 @@ const Circles: React.FC = () => {
         c.payouts &&
         c.payouts.some(
           (p: any) =>
-            p.user?.id?.toLowerCase() === account.address.toLowerCase()
+            p.user?.id?.toLowerCase() === account.address.toLowerCase(),
         )
       ) {
         return true;
@@ -163,8 +163,8 @@ const Circles: React.FC = () => {
           circle.status === "dead"
             ? 0
             : circle.userTotalContributed
-            ? Number(circle.userTotalContributed) / 1e18
-            : 0;
+              ? Number(circle.userTotalContributed) / 1e18
+              : 0;
 
         return sum + collateralAmount + contributedAmount;
       }, 0)
@@ -205,7 +205,7 @@ const Circles: React.FC = () => {
           {/* Summary Cards */}
           <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-5 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-48 md:w-auto md:col-span-1 snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-48 md:w-auto md:col-span-1 snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -232,7 +232,7 @@ const Circles: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -253,7 +253,7 @@ const Circles: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -274,7 +274,7 @@ const Circles: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -289,14 +289,14 @@ const Circles: React.FC = () => {
               <div className="text-xl md:text-2xl font-bold text-orange-800">
                 {
                   historyCircles.filter(
-                    (c) => c.status === "dead" || c.hasWithdrawn
+                    (c) => c.status === "dead" || c.hasWithdrawn,
                   ).length
                 }
               </div>
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -394,7 +394,7 @@ const Circles: React.FC = () => {
                   const userPayout = circle.payouts?.find(
                     (p: any) =>
                       p.user?.id?.toLowerCase() ===
-                      account?.address?.toLowerCase()
+                      account?.address?.toLowerCase(),
                   );
                   // Only consider actually withdrawn from DEAD circles, not completed circles
                   const hasWithdrawn =
@@ -496,7 +496,7 @@ const Circles: React.FC = () => {
                               BigInt(cr.circleId).toString() ===
                                 circle.rawCircle.circleId.toString() &&
                               cr.user?.id?.toLowerCase() ===
-                                account?.address?.toLowerCase()
+                                account?.address?.toLowerCase(),
                           );
 
                           const returnedAmount = userCollateralReturn
@@ -546,8 +546,8 @@ const Circles: React.FC = () => {
                               {circle.frequency === 0
                                 ? "Daily"
                                 : circle.frequency === 1
-                                ? "Weekly"
-                                : "Monthly"}
+                                  ? "Weekly"
+                                  : "Monthly"}
                             </span>
                           </div>
                         </div>
@@ -567,7 +567,7 @@ const Circles: React.FC = () => {
                               {(
                                 (Number(circle.forfeitedAmount || 0n) +
                                   Number(
-                                    circle.forfeitedContributionPortion || 0n
+                                    circle.forfeitedContributionPortion || 0n,
                                   )) /
                                 1e18
                               ).toLocaleString("en-US", {

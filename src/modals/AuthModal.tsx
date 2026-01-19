@@ -193,7 +193,7 @@ const AuthModal: React.FC = () => {
               className="text-sm text-center mb-3"
               style={{ color: colors.textLight }}
             >
-              Join thousands saving together with zero transaction fees
+              Join thousands saving together globally
             </p>
           </div>
         )}
@@ -290,7 +290,7 @@ const AuthModal: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs" style={{ color: colors.textLight }}>
-                Secure digital wallet • Zero transaction fees • Easy recovery
+                Secure dollar wallet • Easy recovery
               </p>
             </div>
 
@@ -315,7 +315,7 @@ const AuthModal: React.FC = () => {
                 style={{ color: colors.textLight }}
               >
                 <BiCheckCircle size={14} style={{ color: colors.primary }} />
-                <span>All transactions are free</span>
+                <span>Self custody</span>
               </div>
             </div>
           </div>

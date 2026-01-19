@@ -79,7 +79,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
               animation: "slideIn 0.3s ease-out",
             }}
           >
-            <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
+            <CheckCircle size={20} className="text-green-600 shrink-0" />
             <span className="text-sm font-semibold text-green-600">
               Successfully joined {circle.circleName}!
             </span>
@@ -88,7 +88,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
 
       // Trigger confetti
@@ -112,7 +112,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
               animation: "slideIn 0.3s ease-out",
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {error?.message || "Failed to join circle"}
             </span>
@@ -121,7 +121,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     }
   };
@@ -317,7 +317,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
                     <span style={{ color: colors.text }}>
                       $
                       {formatCurrency(
-                        circle.contributionAmount * circle.maxMembers
+                        circle.contributionAmount * circle.maxMembers,
                       )}
                     </span>
                   </div>
@@ -329,7 +329,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
                       $
                       {formatCurrency(
                         circle.collateralAmount -
-                          circle.contributionAmount * circle.maxMembers
+                          circle.contributionAmount * circle.maxMembers,
                       )}
                     </span>
                   </div>
@@ -540,8 +540,8 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
               {isJoining
                 ? "Joining..."
                 : step === 3
-                ? "Join Circle & Lock Collateral"
-                : "Continue"}
+                  ? "Join Circle & Lock Collateral"
+                  : "Continue"}
             </button>
           </div>
         </div>

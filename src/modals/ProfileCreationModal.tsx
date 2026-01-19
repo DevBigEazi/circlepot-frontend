@@ -275,7 +275,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {errorMessage}
             </span>
@@ -458,7 +458,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                   {userEmail || "No email available"}
                 </span>
                 {userEmail && (
-                  <Check size={16} className="text-lime-900 flex-shrink-0" />
+                  <Check size={16} className="text-lime-900 shrink-0" />
                 )}
               </div>
               <p className="text-xs mt-1" style={{ color: colors.textLight }}>
@@ -490,7 +490,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                     : "No wallet connected"}
                 </span>
                 {account?.address && (
-                  <Check size={16} className="text-lime-900 flex-shrink-0" />
+                  <Check size={16} className="text-lime-900 shrink-0" />
                 )}
               </div>
               <p className="text-xs mt-1" style={{ color: colors.textLight }}>

@@ -144,7 +144,7 @@ const WithdrawInternal: React.FC = () => {
               borderColor: colors.primary + "30",
             }}
           >
-            <div className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0">
+            <div className="p-2 rounded-xl bg-white shadow-sm shrink-0">
               <Info size={20} style={{ color: colors.primary }} />
             </div>
             <div className="space-y-1">

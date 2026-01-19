@@ -84,13 +84,13 @@ const Profile: React.FC = () => {
     nextAllowedUpdate.setDate(nextAllowedUpdate.getDate() + 30);
     const daysLeft = Math.ceil(
       (nextAllowedUpdate.getTime() - new Date().getTime()) /
-        (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24),
     );
     return daysLeft > 0 ? daysLeft : 0;
   };
 
   const handleImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     const file = event.target.files?.[0];
     if (file) {
@@ -183,7 +183,7 @@ const Profile: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     toast.success(
-      `${field.charAt(0).toUpperCase() + field.slice(1)} copied to clipboard`
+      `${field.charAt(0).toUpperCase() + field.slice(1)} copied to clipboard`,
     );
     setTimeout(() => setCopiedField(null), 2000);
   };
@@ -220,7 +220,7 @@ const Profile: React.FC = () => {
         />
         <button
           onClick={() => copyToClipboard(value, field)}
-          className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl border transition flex items-center justify-center flex-shrink-0 hover:opacity-80"
+          className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl border transition flex items-center justify-center shrink-0 hover:opacity-80"
           style={{
             borderColor: colors.border,
             backgroundColor: colors.background,
@@ -441,7 +441,7 @@ const Profile: React.FC = () => {
                             <button
                               onClick={handleSaveProfile}
                               disabled={isProcessing}
-                              className="px-3 sm:px-4 rounded-xl text-white text-xs font-bold transition hover:opacity-90 flex items-center justify-center flex-shrink-0"
+                              className="px-3 sm:px-4 rounded-xl text-white text-xs font-bold transition hover:opacity-90 flex items-center justify-center shrink-0"
                               style={{ backgroundColor: colors.primary }}
                               title="Save changes"
                             >

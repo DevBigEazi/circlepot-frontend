@@ -88,7 +88,10 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
     if (positions.length > 0) {
       // Create a map of userId to position
       const positionMap = new Map(
-        positions.map((p: any) => [p.user.id.toLowerCase(), Number(p.position)])
+        positions.map((p: any) => [
+          p.user.id.toLowerCase(),
+          Number(p.position),
+        ]),
       );
 
       // Sort users by their assigned position
@@ -171,7 +174,7 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
                   {/* Member Info Row */}
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <div
-                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm shrink-0"
                       style={{ backgroundColor: colors.primary }}
                     >
                       {position}
@@ -251,7 +254,7 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
                   )}
                 </div>
               );
-            }
+            },
           )}
         </div>
       </div>

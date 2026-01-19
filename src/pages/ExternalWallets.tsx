@@ -97,7 +97,7 @@ const ExternalWallets: React.FC = () => {
                     <button
                       onClick={handleCopy}
                       disabled={!address}
-                      className="p-2 sm:p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 disabled:opacity-50 flex-shrink-0"
+                      className="p-2 sm:p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 disabled:opacity-50 shrink-0"
                       style={{
                         backgroundColor: copied
                           ? colors.successBg
@@ -113,7 +113,7 @@ const ExternalWallets: React.FC = () => {
                       <button
                         onClick={handleShare}
                         disabled={!address}
-                        className="p-2 sm:p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 disabled:opacity-50 flex-shrink-0"
+                        className="p-2 sm:p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 disabled:opacity-50 shrink-0"
                         style={{
                           backgroundColor: colors.surface,
                           color: colors.text,

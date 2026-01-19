@@ -72,7 +72,7 @@ const CreatePersonalGoal: React.FC = () => {
     try {
       const vault = await checkVaultAddress(USDm_ADDRESS);
       setIsYieldAvailable(
-        vault !== "0x0000000000000000000000000000000000000000"
+        vault !== "0x0000000000000000000000000000000000000000",
       );
     } catch (err) {
       setIsYieldAvailable(false);
@@ -130,11 +130,11 @@ const CreatePersonalGoal: React.FC = () => {
         return new Date(today.getTime() + periodsNeeded * 24 * 60 * 60 * 1000);
       case "weekly":
         return new Date(
-          today.getTime() + periodsNeeded * 7 * 24 * 60 * 60 * 1000
+          today.getTime() + periodsNeeded * 7 * 24 * 60 * 60 * 1000,
         );
       case "monthly":
         return new Date(
-          today.getTime() + periodsNeeded * 30 * 24 * 60 * 60 * 1000
+          today.getTime() + periodsNeeded * 30 * 24 * 60 * 60 * 1000,
         );
       default:
         return null;
@@ -189,7 +189,7 @@ const CreatePersonalGoal: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {formError}
             </span>
@@ -198,7 +198,7 @@ const CreatePersonalGoal: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
       return;
     }
@@ -256,7 +256,7 @@ const CreatePersonalGoal: React.FC = () => {
             <CheckCircle
               size={20}
               style={{ color: colors.primary }}
-              className="flex-shrink-0"
+              className="shrink-0"
             />
             <div>
               <span
@@ -274,7 +274,7 @@ const CreatePersonalGoal: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
 
       // small delay before navigating back to goals page
@@ -293,7 +293,7 @@ const CreatePersonalGoal: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <div>
               <span className="text-sm font-bold block text-red-600">
                 ✖️ Failed to create your goal!
@@ -305,7 +305,7 @@ const CreatePersonalGoal: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
       setIsCreating(false);
     }
@@ -369,14 +369,14 @@ const CreatePersonalGoal: React.FC = () => {
                           s === step
                             ? colors.primary
                             : s < step
-                            ? `${colors.primary}20`
-                            : colors.surface,
+                              ? `${colors.primary}20`
+                              : colors.surface,
                         color:
                           s === step
                             ? "#FFF"
                             : s < step
-                            ? colors.primary
-                            : colors.textLight,
+                              ? colors.primary
+                              : colors.textLight,
                         border:
                           s === step
                             ? "none"
@@ -664,7 +664,7 @@ const CreatePersonalGoal: React.FC = () => {
                         >
                           {Math.ceil(
                             parseFloat(goalForm.targetAmount) /
-                              parseFloat(goalForm.contribution)
+                              parseFloat(goalForm.contribution),
                           )}{" "}
                           {goalForm.frequency}
                         </span>
@@ -925,7 +925,7 @@ const CreatePersonalGoal: React.FC = () => {
                       <AlertTriangle
                         size={14}
                         style={{ color: colors.secondary }}
-                        className="mt-0.5 flex-shrink-0"
+                        className="mt-0.5 shrink-0"
                       />
                       <p
                         className="text-[11px] leading-relaxed"
@@ -950,7 +950,7 @@ const CreatePersonalGoal: React.FC = () => {
                         <div className="flex items-start gap-2 mb-2">
                           <Info
                             size={16}
-                            className="mt-0.5 flex-shrink-0"
+                            className="mt-0.5 shrink-0"
                             style={{ color: colors.primary }}
                           />
                           <p
@@ -968,7 +968,7 @@ const CreatePersonalGoal: React.FC = () => {
                         className="flex items-start gap-3 p-4 rounded-xl"
                         style={{ backgroundColor: colors.warningBg }}
                       >
-                        <div className="flex-shrink-0 mt-1">
+                        <div className="shrink-0 mt-1">
                           <input
                             type="checkbox"
                             id="risk-agreement"

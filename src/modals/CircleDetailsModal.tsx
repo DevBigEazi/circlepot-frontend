@@ -85,7 +85,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
 
       await updateCircleVisibility(
         circle.rawCircle.circleId,
-        newVisibility as 0 | 1
+        newVisibility as 0 | 1,
       );
 
       setLocalVisibility(newVisibility as 0 | 1);
@@ -101,7 +101,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {err.message || "Failed to update visibility"}
             </span>
@@ -110,7 +110,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
       setIsUpdatingVisibility(false);
     }
@@ -183,7 +183,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
 
   // Collateral Locked: Based on maxMembers (what was originally proposed and locked)
   const maxMembers = Number(
-    circle.rawCircle?.maxMembers || circle.totalPositions
+    circle.rawCircle?.maxMembers || circle.totalPositions,
   );
   // Show 0 for dead circles (hasWithdrawn) or completed circles (status === 'completed')
   const collateralLocked =
@@ -191,12 +191,12 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
       ? 0
       : Math.max(
           0,
-          calculateCollateral(circle.contribution, maxMembers) - deductions
+          calculateCollateral(circle.contribution, maxMembers) - deductions,
         );
 
   // Collateral Required: Based on currentMembers (what's actually needed for the circle)
   const currentMembers = Number(
-    circle.rawCircle?.currentMembers || circle.totalPositions
+    circle.rawCircle?.currentMembers || circle.totalPositions,
   );
   // Show 0 for dead circles (hasWithdrawn) or completed circles (status === 'completed')
   const collateralRequired =

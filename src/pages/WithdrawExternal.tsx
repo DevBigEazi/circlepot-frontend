@@ -56,7 +56,7 @@ const WithdrawExternal: React.FC = () => {
 
     if (balance && totalRequired > balance) {
       toast.error(
-        `Insufficient balance. You need ${amount} + ${withdrawalFee} USDm fee.`
+        `Insufficient balance. You need ${amount} + ${withdrawalFee} USDm fee.`,
       );
       return;
     }
@@ -127,7 +127,7 @@ const WithdrawExternal: React.FC = () => {
               borderColor: colors.primary + "20",
             }}
           >
-            <div className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0">
+            <div className="p-2 rounded-xl bg-white shadow-sm shrink-0">
               <Info size={20} style={{ color: colors.primary }} />
             </div>
             <div className="space-y-2">
@@ -165,7 +165,7 @@ const WithdrawExternal: React.FC = () => {
             }}
           >
             <div
-              className="p-2 rounded-xl bg-white shadow-sm flex-shrink-0"
+              className="p-2 rounded-xl bg-white shadow-sm shrink-0"
               style={{ color: colors.primary }}
             >
               <ArrowRight size={16} />

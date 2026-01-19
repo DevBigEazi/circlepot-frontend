@@ -33,7 +33,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
         style={{ backgroundColor: colors.surface }}
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-600">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-red-600">
             <AlertCircle className="text-white" size={20} />
           </div>
           <h2
