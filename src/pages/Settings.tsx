@@ -61,7 +61,7 @@ const Settings: React.FC = () => {
   useEffect(() => {
     if (accountId) {
       const biometricState = localStorage.getItem(
-        `biometric_state_${accountId}`
+        `biometric_state_${accountId}`,
       );
       if (biometricState) {
         try {
@@ -201,7 +201,7 @@ const Settings: React.FC = () => {
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-6">
                 <div
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
                   <MdRoomPreferences className="white" size={18} />
@@ -457,7 +457,7 @@ const Settings: React.FC = () => {
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-4">
                 <div
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0"
                   style={{ backgroundColor: colors.primary }}
                 >
                   <div className="text-white text-lg font-bold">?</div>
@@ -541,7 +541,7 @@ const Settings: React.FC = () => {
               }}
             >
               <div
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0"
                 style={{ backgroundColor: "#DC2626" }}
               >
                 <LogOut className="text-white" size={18} />

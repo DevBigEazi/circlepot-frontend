@@ -153,7 +153,7 @@ const NavBar: React.FC<NavBarProps> = ({
                   <div className="h-10 flex items-center gap-2">
                     {titleIcon && (
                       <div
-                        className="flex-shrink-0"
+                        className="shrink-0"
                         style={{ color: colors.primary }}
                       >
                         {titleIcon}

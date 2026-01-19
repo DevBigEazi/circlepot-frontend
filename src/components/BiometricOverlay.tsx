@@ -106,7 +106,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
             }}
           >
             <AlertCircle
-              className="w-5 h-5 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 shrink-0 mt-0.5"
               style={{ color: colors.error }}
             />
             <div>

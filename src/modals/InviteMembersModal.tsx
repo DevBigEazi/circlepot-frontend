@@ -91,10 +91,10 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
           searchType === "email"
             ? "No user found with this email"
             : searchType === "accountId"
-            ? "No user found with this Account ID"
-            : searchType === "username"
-            ? "No user found with this username"
-            : "User not found";
+              ? "No user found with this Account ID"
+              : searchType === "username"
+                ? "No user found with this username"
+                : "User not found";
 
         updateInvitee(id, {
           status: "invalid",
@@ -113,7 +113,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
 
   const updateInvitee = (id: string, updates: Partial<InviteeInput>) => {
     setInvitees((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, ...updates } : inv))
+      prev.map((inv) => (inv.id === id ? { ...inv, ...updates } : inv)),
     );
   };
 
@@ -129,7 +129,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
   const handleInvite = async () => {
     // Get all valid addresses
     const validInvitees = invitees.filter(
-      (inv) => inv.status === "valid" && inv.address
+      (inv) => inv.status === "valid" && inv.address,
     );
 
     if (validInvitees.length === 0) {
@@ -142,13 +142,13 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               Please add at least one valid user to invite
             </span>
           </div>
         ),
-        { duration: 3000, position: "top-center" }
+        { duration: 3000, position: "top-center" },
       );
       return;
     }
@@ -167,13 +167,13 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               You have duplicate users in the list
             </span>
           </div>
         ),
-        { duration: 3000, position: "top-center" }
+        { duration: 3000, position: "top-center" },
       );
       return;
     }
@@ -191,7 +191,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <Check className="w-6 h-6 text-green-600 flex-shrink-0" />
+            <Check className="w-6 h-6 text-green-600 shrink-0" />
             <div>
               <h3 className="font-semibold text-green-800">
                 Invitations Sent!
@@ -203,7 +203,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             </div>
           </div>
         ),
-        { duration: 3000, position: "top-center" }
+        { duration: 3000, position: "top-center" },
       );
 
       // Close modal after 2 seconds
@@ -224,7 +224,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-600 shrink-0" />
             <div>
               <span className="text-sm font-semibold text-red-600 block">
                 Error Inviting Members
@@ -233,7 +233,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             </div>
           </div>
         ),
-        { duration: 4000, position: "top-center" }
+        { duration: 4000, position: "top-center" },
       );
     } finally {
       setIsInviting(false);
@@ -341,8 +341,8 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
                           invitee.status === "valid"
                             ? "#10B981"
                             : invitee.status === "invalid"
-                            ? "#EF4444"
-                            : colors.border,
+                              ? "#EF4444"
+                              : colors.border,
                         color: colors.text,
                       }}
                     />

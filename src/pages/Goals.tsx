@@ -26,14 +26,14 @@ const Goals: React.FC = () => {
     completeGoal,
   } = usePersonalGoals(client);
   const [contributingGoalId, setContributingGoalId] = useState<bigint | null>(
-    null
+    null,
   );
 
   // Calculate total saved across all goals
   const totalBalance = useMemo(() => {
     return goals.reduce(
       (sum, goal) => sum + formatBalance(goal.currentAmount),
-      0
+      0,
     );
   }, [goals]);
 
@@ -63,7 +63,7 @@ const Goals: React.FC = () => {
         nextContribution: calculateNextContribution(
           goal.goalId,
           goal.frequency,
-          contributions
+          contributions,
         ),
       };
     });
@@ -95,7 +95,7 @@ const Goals: React.FC = () => {
 
     // Sort by most recent first (using createdAt as timestamp)
     return categorized.sort(
-      (a, b) => Number(b.createdAt) - Number(a.createdAt)
+      (a, b) => Number(b.createdAt) - Number(a.createdAt),
     );
   }, [goalsWithProgress, contributions]);
 
@@ -103,7 +103,7 @@ const Goals: React.FC = () => {
   const handleContribute = async (
     goalId: bigint,
     contributionAmount: bigint,
-    tokenAddress: string
+    tokenAddress: string,
   ) => {
     setContributingGoalId(goalId);
     try {
@@ -117,7 +117,7 @@ const Goals: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-green-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-green-600 shrink-0" />
             <span className="text-sm font-semibold text-green-600">
               Contribution successful!
             </span>
@@ -126,7 +126,7 @@ const Goals: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     } catch (err: any) {
       toast.custom(
@@ -138,7 +138,7 @@ const Goals: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {err?.message || "Contribution failed"}
             </span>
@@ -147,7 +147,7 @@ const Goals: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     } finally {
       setContributingGoalId(null);
@@ -168,7 +168,7 @@ const Goals: React.FC = () => {
                 animation: `slideIn 0.3s ease-out`,
               }}
             >
-              <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+              <AlertTriangle size={20} className="text-red-600 shrink-0" />
               <span className="text-sm font-semibold text-red-600">
                 Goal not found
               </span>
@@ -177,7 +177,7 @@ const Goals: React.FC = () => {
           {
             duration: 4000,
             position: "top-center",
-          }
+          },
         );
         return;
       }
@@ -197,7 +197,7 @@ const Goals: React.FC = () => {
                 animation: `slideIn 0.3s ease-out`,
               }}
             >
-              <AlertCircle size={20} className="text-green-600 flex-shrink-0" />
+              <AlertCircle size={20} className="text-green-600 shrink-0" />
               <span className="text-sm font-semibold text-green-600">
                 Goal completed successfully!
               </span>
@@ -206,7 +206,7 @@ const Goals: React.FC = () => {
           {
             duration: 4000,
             position: "top-center",
-          }
+          },
         );
 
         confetti({
@@ -226,10 +226,7 @@ const Goals: React.FC = () => {
                 animation: `slideIn 0.3s ease-out`,
               }}
             >
-              <AlertTriangle
-                size={20}
-                className="text-orange-600 flex-shrink-0"
-              />
+              <AlertTriangle size={20} className="text-orange-600 shrink-0" />
               <span className="text-sm font-semibold text-orange-600">
                 Early withdrawal completed with penalty
               </span>
@@ -238,7 +235,7 @@ const Goals: React.FC = () => {
           {
             duration: 4000,
             position: "top-center",
-          }
+          },
         );
       }
     } catch (err: any) {
@@ -251,7 +248,7 @@ const Goals: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {err?.message || "Withdrawal failed"}
             </span>
@@ -260,7 +257,7 @@ const Goals: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     }
   };
@@ -283,7 +280,7 @@ const Goals: React.FC = () => {
           {/* Summary Cards */}
           <div className="flex overflow-x-auto pb-4 gap-3 mb-8 md:gap-4 md:grid md:grid-cols-4 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-48 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-48 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -310,7 +307,7 @@ const Goals: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -331,7 +328,7 @@ const Goals: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
@@ -352,7 +349,7 @@ const Goals: React.FC = () => {
             </div>
 
             <div
-              className="rounded-xl p-4 md:p-6 border flex-shrink-0 w-32 md:w-auto snap-start"
+              className="rounded-xl p-4 md:p-6 border shrink-0 w-32 md:w-auto snap-start"
               style={{
                 backgroundColor: colors.surface,
                 borderColor: colors.border,

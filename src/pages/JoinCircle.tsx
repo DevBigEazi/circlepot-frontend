@@ -69,7 +69,7 @@ const JoinCircle: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               Please connect your wallet first
             </span>
@@ -78,7 +78,7 @@ const JoinCircle: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
       return;
     }
@@ -107,7 +107,7 @@ const JoinCircle: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
+            <CheckCircle size={20} className="text-green-600 shrink-0" />
             <span className="text-sm font-semibold text-green-600">
               Successfully joined the circle!
             </span>
@@ -116,7 +116,7 @@ const JoinCircle: React.FC = () => {
         {
           duration: 3000,
           position: "top-center",
-        }
+        },
       );
 
       // Redirect to dashboard after 2 seconds
@@ -133,7 +133,7 @@ const JoinCircle: React.FC = () => {
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {err.message || "Failed to join circle"}
             </span>
@@ -142,7 +142,7 @@ const JoinCircle: React.FC = () => {
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     } finally {
       setIsJoining(false);
@@ -457,8 +457,8 @@ const JoinCircle: React.FC = () => {
                   {isFull
                     ? "This circle is full"
                     : isActive
-                    ? "This circle has already started"
-                    : "You cannot join this circle"}
+                      ? "This circle has already started"
+                      : "You cannot join this circle"}
                 </p>
               </div>
             ) : (

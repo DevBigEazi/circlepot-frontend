@@ -92,7 +92,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     try {
       await handleAction(
         () => onWithdrawCollateral(circle.rawCircle.circleId),
-        "Withdraw collateral"
+        "Withdraw collateral",
       );
       setShowWithdrawModal(false);
     } catch (error) {
@@ -102,7 +102,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
 
   const handleAction = async (
     action: () => Promise<any>,
-    actionName: string
+    actionName: string,
   ) => {
     try {
       setIsLoading(true);
@@ -116,7 +116,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertCircle size={20} className="text-green-600 flex-shrink-0" />
+            <AlertCircle size={20} className="text-green-600 shrink-0" />
             <span className="text-sm font-semibold text-green-600">
               {actionName} successful!
             </span>
@@ -125,7 +125,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     } catch (error: any) {
       toast.custom(
@@ -137,7 +137,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               animation: `slideIn 0.3s ease-out`,
             }}
           >
-            <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
+            <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               {error?.message || `${actionName} failed`}
             </span>
@@ -146,7 +146,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         {
           duration: 4000,
           position: "top-center",
-        }
+        },
       );
     } finally {
       setIsLoading(false);
@@ -178,7 +178,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         </span>
       ) : (
         <>
-          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform flex-shrink-0" />
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform shrink-0" />
           <span className="whitespace-nowrap">
             <span className="hidden sm:inline">Withdraw Collateral</span>
             <span className="sm:hidden">Withdraw</span>
@@ -308,7 +308,8 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       // 2. Voting phase active
       if (votingIsActive) {
         const userVote = circle.votes?.find(
-          (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
+          (v: any) =>
+            v.voter.id.toLowerCase() === account.address.toLowerCase(),
         );
         if (!!userVote) return renderInviteShareButtons();
 
@@ -341,7 +342,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
                 onClick={() =>
                   handleAction(
                     () => onInitiateVoting(circleId),
-                    "Initiate voting"
+                    "Initiate voting",
                   )
                 }
                 disabled={isLoading}
@@ -392,7 +393,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       }
 
       const userVote = circle.votes?.find(
-        (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase()
+        (v: any) => v.voter.id.toLowerCase() === account.address.toLowerCase(),
       );
       if (!!userVote) return renderInviteShareButtons();
 
@@ -417,7 +418,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       const isRecipient = circle.currentPosition === currentRound;
       const hasReceivedPayout =
         circle.payouts?.some(
-          (payout: any) => Number(payout.round) === currentRound
+          (payout: any) => Number(payout.round) === currentRound,
         ) || false;
 
       if (isRecipient) {
@@ -428,7 +429,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
                 const lateMembers = getLateMembersForCircle(circleId);
                 handleAction(
                   () => onForfeitMember(circleId, lateMembers),
-                  "Forfeit member"
+                  "Forfeit member",
                 );
               }}
               disabled={isLoading}
@@ -452,7 +453,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               onClick={() =>
                 handleAction(
                   () => onContribute(circleId, contributionAmount),
-                  "Contribution"
+                  "Contribution",
                 )
               }
               disabled={isLoading}
@@ -493,7 +494,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             onClick={() =>
               handleAction(
                 () => onContribute(circleId, contributionAmount),
-                "Contribution"
+                "Contribution",
               )
             }
             disabled={isLoading}
@@ -517,7 +518,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
               const lateMembers = getLateMembersForCircle(circleId);
               handleAction(
                 () => onForfeitMember(circleId, lateMembers),
-                "Forfeit member"
+                "Forfeit member",
               );
             }}
             disabled={isLoading}
@@ -565,7 +566,7 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           onVoteWithdraw={async () => {
             await handleAction(
               () => onCastVote(circleId, 2),
-              "Vote to withdraw"
+              "Vote to withdraw",
             );
             setIsVoteModalOpen(false);
           }}
