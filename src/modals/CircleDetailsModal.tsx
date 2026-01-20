@@ -46,7 +46,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
   getLateMembersForCircle,
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
-  const { updateCircleVisibility, vaultProjects } = useCircleSavings(client);
+  const { updateCircleVisibility, vaultProjects } = useCircleSavings(client, true);
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [localVisibility, setLocalVisibility] = useState<0 | 1 | null>(null);

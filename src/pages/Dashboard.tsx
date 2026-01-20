@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
     collateralReturns,
     forfeitures,
     isLoading: isCirclesLoading,
-  } = useCircleSavings(client);
+  } = useCircleSavings(client, true);
 
   const { goals, isLoading: isGoalsLoading } = usePersonalGoals(client);
 

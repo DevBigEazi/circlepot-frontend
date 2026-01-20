@@ -43,7 +43,7 @@ const Circles: React.FC = () => {
     forfeitMember,
     inviteMembers,
     vaultProjects,
-  } = useCircleSavings(client);
+  } = useCircleSavings(client, true);
 
   // Modal states
   const [showCircleDetails, setShowCircleDetails] = useState(false);
