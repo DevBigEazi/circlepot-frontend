@@ -5,7 +5,6 @@ import {
   Check,
   AlertCircle,
   Upload,
-  AlertTriangle,
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
@@ -46,7 +45,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
-    null
+    null,
   );
   const [showLinkContactModal, setShowLinkContactModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,7 +60,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         setUserEmail(email ?? null);
       } catch (err) {
         toast.error(
-          "Failed to retrieve your email. Please try signing in again."
+          "Failed to retrieve your email. Please try signing in again.",
         );
       }
     };
@@ -96,7 +95,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         }
       }, 800);
     },
-    [checkUsernameAvailability]
+    [checkUsernameAvailability],
   );
 
   useEffect(() => {
@@ -145,7 +144,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
 
     if (!userEmail) {
       toast.error(
-        "Email is required. Please make sure you signed in with email."
+        "Email is required. Please make sure you signed in with email.",
       );
       setIsSubmitting(false);
       return;
@@ -218,7 +217,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         fullName.trim(),
         profilePhotoUrl,
         "",
-        referrerAddr
+        referrerAddr,
       );
 
       // Clear referral on success
@@ -266,26 +265,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         errorMessage = "This username is already taken. Please choose another.";
       }
 
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {errorMessage}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        }
-      );
+      toast.error(errorMessage);
     }
   };
 
@@ -614,8 +594,8 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
                     isUploading
                       ? "Uploading to IPFS..."
                       : isLoading
-                      ? "Creating Profile..."
-                      : "Processing..."
+                        ? "Creating Profile..."
+                        : "Processing..."
                   }
                 />
               ) : (

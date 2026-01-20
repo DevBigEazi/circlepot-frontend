@@ -1,14 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import {
-  X,
-  Users,
-  DollarSign,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-} from "lucide-react";
+import { X, Users, DollarSign, Clock, TrendingUp, CheckCircle } from "lucide-react";
 import { Circle } from "../interfaces/interfaces";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -70,26 +62,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
       await onJoin(circle.circleId, circle.collateralAmount);
 
       // Show success toast
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#dcfce7",
-              animation: "slideIn 0.3s ease-out",
-            }}
-          >
-            <CheckCircle size={20} className="text-green-600 shrink-0" />
-            <span className="text-sm font-semibold text-green-600">
-              Successfully joined {circle.circleName}!
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.success(`Successfully joined ${circle.circleName}!`);
 
       // Trigger confetti
       confetti({
@@ -103,26 +76,7 @@ const JoinCircleModal: React.FC<JoinCircleModalProps> = ({
       navigate("/");
     } catch (error: any) {
       // Show error toast
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: "slideIn 0.3s ease-out",
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {error?.message || "Failed to join circle"}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(error?.message || "Failed to join circle");
     }
   };
 

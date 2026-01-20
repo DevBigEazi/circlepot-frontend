@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useActiveAccount } from "thirdweb/react";
-import { X, Users, Lock, Globe, AlertCircle } from "lucide-react";
+import { X, Users, Lock, Globe } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { useCircleSavings } from "../hooks/useCircleSavings";
 import { ThirdwebClient } from "thirdweb";
@@ -46,7 +46,10 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
   getLateMembersForCircle,
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
-  const { updateCircleVisibility, vaultProjects } = useCircleSavings(client, true);
+  const { updateCircleVisibility, vaultProjects } = useCircleSavings(
+    client,
+    true,
+  );
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [localVisibility, setLocalVisibility] = useState<0 | 1 | null>(null);
@@ -92,26 +95,7 @@ const CircleDetailsModal: React.FC<CircleDetailsModalProps> = ({
       setIsUpdatingVisibility(false);
     } catch (error) {
       const err = error as Error;
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {err.message || "Failed to update visibility"}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(err.message || "Failed to update visibility");
       setIsUpdatingVisibility(false);
     }
   };
