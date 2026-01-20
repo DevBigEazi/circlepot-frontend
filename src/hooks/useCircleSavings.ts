@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract, readContract } from "thirdweb";
+import { prepareContractCall, getContract, readContract, watchContractEvents, prepareEvent } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
 import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavings";
@@ -814,7 +814,7 @@ export const useCircleSavings = (
     },
     enabled: !!account?.address,
     staleTime: 30000, // Consider data fresh for 30 seconds
-    refetchInterval: enablePolling ? 5000 : 0, // Poll only if enablePolling is true
+    refetchInterval: enablePolling ? 30000 : 0, // Poll every 30s as a safety net if enablePolling is true
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (reduced from 30)
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnReconnect: true, // Refetch on network reconnect
@@ -822,6 +822,33 @@ export const useCircleSavings = (
     retry: 2, // Retry failed requests only twice
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
+
+  // Event listeners for real-time updates
+  useEffect(() => {
+    if (!account?.address || !enablePolling) return;
+
+    const events = [
+      prepareEvent({ signature: "event CircleCreated(uint256 indexed circleId, string title, string description, address indexed creator, uint256 indexed contributionAmount, uint8 frequency, uint256 maxMembers, uint8 visibility, uint256 createdAt, uint256 collateralLocked, address token, uint256 yieldAPY)" }),
+      prepareEvent({ signature: "event CircleJoined(uint256 indexed circleId, address indexed member, uint256 indexed currentMembers, uint8 state)" }),
+      prepareEvent({ signature: "event CircleStarted(uint256 indexed circleId, uint256 startedAt, uint8 state)" }),
+      prepareEvent({ signature: "event ContributionMade(uint256 indexed circleId, uint256 round, address member, uint256 indexed amount, address token)" }),
+      prepareEvent({ signature: "event PayoutDistributed(uint256 indexed circleId, uint256 indexed round, address indexed recipient, uint256 amount, address token)" }),
+      prepareEvent({ signature: "event VoteExecuted(uint256 indexed circleId, bool circleStarted, uint256 startVoteCount, uint256 withdrawVoteCount)" })
+    ];
+
+    const unwatch = watchContractEvents({
+      contract,
+      events,
+      onEvents: () => {
+        // Trigger refetch with a slight delay to allow subgraph indexing
+        setTimeout(() => {
+          refetchCircles();
+        }, 2000);
+      },
+    });
+
+    return () => unwatch();
+  }, [account?.address, contract, enablePolling, refetchCircles]);
 
   const queryError = useMemo(() => {
     // If we have an error, show it regardless of loading state

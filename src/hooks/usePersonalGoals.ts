@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract } from "thirdweb";
+import { prepareContractCall, getContract, watchContractEvents, prepareEvent } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
 import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavings";
@@ -221,6 +221,30 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     retry: 2, // Retry failed requests only twice
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
+
+  // Event listeners for real-time updates
+  useEffect(() => {
+    if (!account?.address) return;
+
+    const events = [
+      prepareEvent({ signature: "event PersonalGoalCreated(uint256 indexed goalId, address indexed owner, string name, uint256 indexed amount, uint256 currentAmount, uint8 frequency, uint256 deadline, bool isActive, address token, uint256 yieldAPY)" }),
+      prepareEvent({ signature: "event GoalContribution(uint256 indexed goalId, address indexed owner, uint256 amount, uint256 currentAmount, address token)" }),
+      prepareEvent({ signature: "event GoalWithdrawn(uint256 indexed goalId, address indexed owner, uint256 amount, uint256 penalty, address token)" })
+    ];
+
+    const unwatch = watchContractEvents({
+      contract,
+      events,
+      onEvents: () => {
+        // Trigger refetch with a slight delay to allow subgraph indexing
+        setTimeout(() => {
+          refetchGoals();
+        }, 2000);
+      },
+    });
+
+    return () => unwatch();
+  }, [account?.address, contract, refetchGoals]);
 
   const queryError = useMemo(() => {
     // If we have an error, show it regardless of loading state
