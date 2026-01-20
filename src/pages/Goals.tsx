@@ -63,9 +63,16 @@ const Goals: React.FC = () => {
       );
       const isCompleted = totalContributed >= goal.targetAmount;
 
+      // Recalculate progress based on actual contributions
+      const progress =
+        goal.targetAmount > 0
+          ? Math.min((totalContributed / goal.targetAmount) * 100, 100)
+          : 0;
+
       return {
         ...goal,
         savedAmount: totalContributed,
+        progress, // Use recalculated progress
         status: isCompleted
           ? ("completed" as const)
           : ("earlyWithdrawn" as const),

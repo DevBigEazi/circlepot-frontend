@@ -594,8 +594,12 @@ const CreatePersonalGoal: React.FC = () => {
                           {Math.ceil(
                             parseFloat(goalForm.targetAmount) /
                               parseFloat(goalForm.contribution),
-                          )}{" "}
-                          {goalForm.frequency}
+                          )}
+                          {goalForm.frequency === "daily"
+                            ? " days"
+                            : goalForm.frequency === "weekly"
+                              ? " weeks"
+                              : " months"}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -606,7 +610,8 @@ const CreatePersonalGoal: React.FC = () => {
                           className="font-semibold"
                           style={{ color: colors.primary }}
                         >
-                          ${goalForm.contribution} / {goalForm.frequency}
+                          ${goalForm.contribution} {""}
+                          {goalForm.frequency}
                         </span>
                       </div>
                     </div>
@@ -712,6 +717,7 @@ const CreatePersonalGoal: React.FC = () => {
                         text: "On-chain credit score for completion",
                       },
                       { icon: "🔒", text: "Secure digital wallet" },
+                      { icon: "💰", text: "Earn yield on your savings" },
                     ].map((benefit, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <span>{benefit.icon}</span>
