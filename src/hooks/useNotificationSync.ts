@@ -299,8 +299,7 @@ export const useNotificationSync = (
         const isIncrease = event.type === "increase";
         addNotification({
           title: isIncrease ? "Credit Score Boost! ⭐️" : "Credit Score Decreased ⚠️",
-          message: `Your credit score ${isIncrease ? "increased" : "decreased"
-            } by ${event.points} points. Reason: ${event.reason}`,
+          message: `Your credit score ${isIncrease ? "increased" : "decreased"}. Reason: ${event.reason}`,
           type: "credit_score_changed",
           priority: isIncrease ? "medium" : "high",
           action: { action: "/profile" },

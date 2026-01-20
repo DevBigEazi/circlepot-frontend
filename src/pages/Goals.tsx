@@ -1,264 +1,124 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { TrendingUp, AlertCircle, AlertTriangle } from "lucide-react";
+import { TrendingUp, AlertTriangle } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
 import { usePersonalGoals } from "../hooks/usePersonalGoals";
 import { ActiveGoalsList } from "../components/ActiveGoalsList";
+import { GoalWithdrawalModal } from "../modals/GoalWithdrawalModal";
+import { GoalContributionModal } from "../modals/GoalContributionModal";
 import { client } from "../thirdwebClient";
-import {
-  calculateNextContribution,
-  formatBalance,
-  formatTimestamp,
-} from "../utils/helpers";
+import { formatBalance } from "../utils/helpers";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
 const Goals: React.FC = () => {
   const navigate = useNavigate();
   const colors = useThemeColors();
-  const {
-    goals,
-    contributions,
-    isLoading,
-    contributeToGoal,
-    withdrawFromGoal,
-    completeGoal,
-  } = usePersonalGoals(client);
+  const { goals, contributions, isLoading, contributeToGoal, withdraw } =
+    usePersonalGoals(client);
+
   const [contributingGoalId, setContributingGoalId] = useState<bigint | null>(
     null,
   );
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isContributing, setIsContributing] = useState(false);
 
-  // Calculate total saved across all goals
+  const [withdrawalModal, setWithdrawalModal] = useState<{
+    isOpen: boolean;
+    goal: any | null;
+  }>({
+    isOpen: false,
+    goal: null,
+  });
+
+  const [contributionModal, setContributionModal] = useState<{
+    isOpen: boolean;
+    goal: any | null;
+  }>({
+    isOpen: false,
+    goal: null,
+  });
+
+  // Calculate total saved across all active goals
   const totalBalance = useMemo(() => {
-    return goals.reduce(
-      (sum, goal) => sum + formatBalance(goal.currentAmount),
-      0,
-    );
+    return goals
+      .filter((g) => g.isActive)
+      .reduce((sum, goal) => sum + goal.savedAmount, 0);
   }, [goals]);
 
-  // Calculate progress percentage for each goal
-  const goalsWithProgress = useMemo(() => {
-    return goals.map((goal) => {
-      const target = formatBalance(goal.goalAmount);
-      let saved = formatBalance(goal.currentAmount);
+  const activeGoals = useMemo(() => goals.filter((g) => g.isActive), [goals]);
 
-      // For inactive goals with 0 current amount, get the actual withdrawn amount from contributions
-      if (!goal.isActive && goal.currentAmount === BigInt(0)) {
-        // Sum all contributions for this goal
-        const totalContributed = contributions
-          .filter((c) => c.goalId === goal.goalId)
-          .reduce((sum, c) => sum + formatBalance(c.amount), 0);
-        saved = totalContributed;
-      }
-
-      const progress = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
-
-      return {
-        ...goal,
-        progress,
-        savedAmount: saved,
-        targetAmount: target,
-        formattedDeadline: formatTimestamp(goal.deadline),
-        nextContribution: calculateNextContribution(
-          goal.goalId,
-          goal.frequency,
-          contributions,
-        ),
-      };
-    });
-  }, [goals, contributions]);
-
-  const activeGoals = goalsWithProgress.filter((g) => g.isActive);
-
-  // Merge completed and early withdrawn goals into history
   const goalsHistory = useMemo(() => {
-    const inactiveGoals = goalsWithProgress.filter((g) => !g.isActive);
+    const inactiveGoals = goals.filter((g) => !g.isActive);
 
     const categorized = inactiveGoals.map((goal) => {
       // For inactive goals, check total contributions to determine if completed
-      const totalContributed = contributions
-        .filter((c) => c.goalId === goal.goalId)
-        .reduce((sum, c) => sum + formatBalance(c.amount), 0);
-
-      // A goal is completed if total contributions reached the target
+      const goalContributions = contributions.filter(
+        (c) => c.goalId === goal.goalId,
+      );
+      const totalContributed = goalContributions.reduce(
+        (sum, c) => sum + formatBalance(c.amount),
+        0,
+      );
       const isCompleted = totalContributed >= goal.targetAmount;
 
       return {
         ...goal,
-        savedAmount: totalContributed, // Use total contributed for display
+        savedAmount: totalContributed,
         status: isCompleted
           ? ("completed" as const)
           : ("earlyWithdrawn" as const),
       };
     });
 
-    // Sort by most recent first (using createdAt as timestamp)
     return categorized.sort(
       (a, b) => Number(b.createdAt) - Number(a.createdAt),
     );
-  }, [goalsWithProgress, contributions]);
+  }, [goals, contributions]);
 
-  // Handle contribute to goal
-  const handleContribute = async (
-    goalId: bigint,
-    contributionAmount: bigint,
-    tokenAddress: string,
-  ) => {
-    setContributingGoalId(goalId);
+  const handleContribute = async (amount: number) => {
+    if (!contributionModal.goal) return;
+    const goal = contributionModal.goal;
+    setContributingGoalId(goal.goalId);
+    setIsContributing(true);
     try {
-      await contributeToGoal(goalId, contributionAmount, tokenAddress);
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#dcfce7",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-green-600 shrink-0" />
-            <span className="text-sm font-semibold text-green-600">
-              Contribution successful!
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      const amountWei = BigInt(Math.floor(amount * 1e18));
+      await contributeToGoal(goal.goalId, amountWei, goal.token);
+      setContributionModal({ isOpen: false, goal: null });
+      toast.success("Contribution successful!");
     } catch (err: any) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {err?.message || "Contribution failed"}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(err?.message || "Contribution failed");
     } finally {
       setContributingGoalId(null);
+      setIsContributing(false);
     }
   };
 
-  // Handle withdraw from goal
-  const handleWithdraw = async (goalId: bigint) => {
+  const handleWithdraw = async (amount?: number) => {
+    if (!withdrawalModal.goal) return;
+    const goal = withdrawalModal.goal;
+    setIsWithdrawing(true);
     try {
-      const goal = goals.find((g) => g.goalId === goalId);
-      if (!goal) {
-        toast.custom(
-          () => (
-            <div
-              className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-              style={{
-                backgroundColor: "#fee2e2",
-                animation: `slideIn 0.3s ease-out`,
-              }}
-            >
-              <AlertTriangle size={20} className="text-red-600 shrink-0" />
-              <span className="text-sm font-semibold text-red-600">
-                Goal not found
-              </span>
-            </div>
-          ),
-          {
-            duration: 4000,
-            position: "top-center",
-          },
-        );
-        return;
-      }
+      const amountWei = amount ? BigInt(Math.floor(amount * 1e18)) : undefined;
+      await withdraw(goal.goalId, amountWei);
 
-      // Check if goal is complete using raw bigint values (not formatted)
-      const isGoalComplete = goal.currentAmount >= goal.goalAmount;
-
-      if (isGoalComplete) {
-        // Complete withdrawal - no penalty, withdraw full amount
-        await completeGoal(goalId);
-        toast.custom(
-          () => (
-            <div
-              className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
-              style={{
-                backgroundColor: "#dcfce7",
-                animation: `slideIn 0.3s ease-out`,
-              }}
-            >
-              <AlertCircle size={20} className="text-green-600 shrink-0" />
-              <span className="text-sm font-semibold text-green-600">
-                Goal completed successfully!
-              </span>
-            </div>
-          ),
-          {
-            duration: 4000,
-            position: "top-center",
-          },
-        );
-
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
+      const isComplete = !amountWei || amountWei >= goal.currentAmount;
+      if (isComplete && goal.currentAmount >= goal.goalAmount) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        toast.success("Goal completed successfully!");
       } else {
-        // Early withdrawal - with penalty
-        await withdrawFromGoal(goalId, goal.currentAmount);
-        toast.custom(
-          () => (
-            <div
-              className="rounded-2xl p-4 shadow-lg border-2 border-orange-500 flex items-center gap-3 max-w-sm"
-              style={{
-                backgroundColor: "#fff7ed",
-                animation: `slideIn 0.3s ease-out`,
-              }}
-            >
-              <AlertTriangle size={20} className="text-orange-600 shrink-0" />
-              <span className="text-sm font-semibold text-orange-600">
-                Early withdrawal completed with penalty
-              </span>
-            </div>
-          ),
-          {
-            duration: 4000,
-            position: "top-center",
-          },
+        toast.success(
+          goal.progress >= 100
+            ? "Withdrawal successful"
+            : "Early withdrawal completed with penalty",
         );
       }
+      setWithdrawalModal({ isOpen: false, goal: null });
     } catch (err: any) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {err?.message || "Withdrawal failed"}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(err?.message || "Withdrawal failed");
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -378,9 +238,12 @@ const Goals: React.FC = () => {
             goals={activeGoals}
             isLoading={isLoading}
             contributingGoalId={contributingGoalId}
-            onContribute={handleContribute}
-            onWithdraw={handleWithdraw}
-            contributions={contributions}
+            onContributeClick={(goal) =>
+              setContributionModal({ isOpen: true, goal })
+            }
+            onWithdrawClick={(goal) =>
+              setWithdrawalModal({ isOpen: true, goal })
+            }
           />
 
           {/* Goals History Section */}
@@ -456,6 +319,32 @@ const Goals: React.FC = () => {
           )}
         </div>
       </div>
+
+      {withdrawalModal.goal && (
+        <GoalWithdrawalModal
+          isOpen={withdrawalModal.isOpen}
+          goalName={withdrawalModal.goal.goalName}
+          currentAmount={withdrawalModal.goal.savedAmount}
+          targetAmount={withdrawalModal.goal.targetAmount}
+          isLoading={isWithdrawing}
+          onClose={() => setWithdrawalModal({ isOpen: false, goal: null })}
+          onCompleteWithdraw={() => handleWithdraw()}
+          onEarlyWithdraw={(amount) => handleWithdraw(amount)}
+        />
+      )}
+
+      {contributionModal.goal && (
+        <GoalContributionModal
+          isOpen={contributionModal.isOpen}
+          goalName={contributionModal.goal.goalName}
+          defaultAmount={
+            Number(contributionModal.goal.contributionAmount) / 1e18
+          }
+          isLoading={isContributing}
+          onClose={() => setContributionModal({ isOpen: false, goal: null })}
+          onContribute={handleContribute}
+        />
+      )}
     </>
   );
 };

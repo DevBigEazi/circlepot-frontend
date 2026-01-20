@@ -18,6 +18,12 @@ export interface PersonalGoal {
     username: string;
     fullName: string;
   };
+  // Enriched fields added by hook
+  progress: number;
+  savedAmount: number;
+  targetAmount: number;
+  nextContributionTime: number;
+  canContribute: boolean;
 }
 
 export interface GoalContribution {
@@ -57,7 +63,7 @@ export interface GoalWithdrawalModalProps {
   isLoading: boolean;
   onClose: () => void;
   onCompleteWithdraw: () => void;
-  onEarlyWithdraw: () => void;
+  onEarlyWithdraw: (amount: number) => void;
   goalCard?: React.ReactNode;
 }
 
@@ -79,15 +85,11 @@ export interface Goal {
 }
 
 export interface ActiveGoalsListProps {
-  goals: Goal[];
+  goals: any[]; // These will be the enriched goals from usePersonalGoals
   isLoading: boolean;
+  onContributeClick: (goal: any) => void;
+  onWithdrawClick: (goal: any) => void;
   contributingGoalId: bigint | null;
-  onContribute: (goalId: bigint, amount: bigint, tokenAddress: string) => Promise<void>;
-  onWithdraw: (goalId: bigint) => Promise<void>;
-  contributions: Array<{
-    goalId: bigint;
-    timestamp: bigint;
-  }>;
 }
 
 // Interfaces for circles

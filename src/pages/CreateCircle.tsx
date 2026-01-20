@@ -763,7 +763,7 @@ const CreateCircle: React.FC = () => {
                   </button>
                   <button
                     onClick={nextStep}
-                    className="flex-[2] py-4 font-bold rounded-xl transition shadow-lg text-white"
+                    className="flex-2 py-4 font-bold rounded-xl transition shadow-lg text-white"
                     style={{ background: colors.primary }}
                   >
                     Continue to Finalize
@@ -1039,7 +1039,7 @@ const CreateCircle: React.FC = () => {
                         isCreating ||
                         isLoading
                       }
-                      className={`flex-[2] py-4 font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2 ${
+                      className={`flex-2 py-4 font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2 ${
                         hasSufficientBalance &&
                         circleForm.name &&
                         circleForm.contribution &&
