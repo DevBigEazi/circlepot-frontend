@@ -8,7 +8,6 @@ import {
   Lock,
   Globe,
   ArrowLeft,
-  CheckCircle,
   AlertCircle,
   Loader2,
 } from "lucide-react";
@@ -60,26 +59,7 @@ const JoinCircle: React.FC = () => {
 
   const handleJoinCircle = async () => {
     if (!account?.address) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              Please connect your wallet first
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error("Please connect your wallet first");
       return;
     }
 
@@ -98,52 +78,14 @@ const JoinCircle: React.FC = () => {
 
       await joinCircle(BigInt(circleId!), collateral);
 
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#dcfce7",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <CheckCircle size={20} className="text-green-600 shrink-0" />
-            <span className="text-sm font-semibold text-green-600">
-              Successfully joined the circle!
-            </span>
-          </div>
-        ),
-        {
-          duration: 3000,
-          position: "top-center",
-        },
-      );
+      toast.success("Successfully joined the circle!");
 
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
         navigate("/");
       }, 2000);
     } catch (err: any) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {err.message || "Failed to join circle"}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(err.message || "Failed to join circle");
     } finally {
       setIsJoining(false);
     }

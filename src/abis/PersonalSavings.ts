@@ -395,7 +395,8 @@ export const PERSONAL_SAVING_ABI = [
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_goalId", "type": "uint256" }
+      { "internalType": "uint256", "name": "_goalId", "type": "uint256" },
+      { "internalType": "uint256", "name": "_amount", "type": "uint256" }
     ],
     "name": "contributeToGoal",
     "outputs": [],

@@ -44,7 +44,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
     forfeitMember,
     inviteMembers,
     vaultProjects,
-  } = useCircleSavings(client);
+  } = useCircleSavings(client, true);
 
   const [showCircleDetails, setShowCircleDetails] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);

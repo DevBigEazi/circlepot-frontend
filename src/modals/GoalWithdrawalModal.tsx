@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { AlertCircle, X, Loader } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { GoalWithdrawalModalProps } from "../interfaces/interfaces";
@@ -15,6 +15,14 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
   goalCard,
 }) => {
   const colors = useThemeColors();
+  const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+
+  // Initialize withdrawAmount with currentAmount when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setWithdrawAmount(currentAmount.toString());
+    }
+  }, [isOpen, currentAmount]);
 
   const progress = useMemo(() => {
     return targetAmount > 0 ? (currentAmount / targetAmount) * 100 : 0;
@@ -31,9 +39,20 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
     return 0;
   };
 
+  const amountToWithdraw = parseFloat(withdrawAmount) || 0;
   const penaltyPercentage = calculatePenalty(progress);
-  const penaltyAmount = (currentAmount * penaltyPercentage) / 100;
-  const netAmount = currentAmount - penaltyAmount;
+  const penaltyAmount = (amountToWithdraw * penaltyPercentage) / 100;
+  const netAmount = amountToWithdraw - penaltyAmount;
+
+  const handleMax = () => {
+    setWithdrawAmount(currentAmount.toString());
+  };
+
+  const handleEarlyWithdrawClick = () => {
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0 || amount > currentAmount) return;
+    onEarlyWithdraw(amount);
+  };
 
   if (!isOpen) return null;
 
@@ -77,12 +96,17 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
             className="flex items-center justify-between p-4 sm:p-6 border-b"
             style={{ borderColor: colors.border }}
           >
-            <h2
-              className="text-lg sm:text-xl font-bold"
-              style={{ color: colors.text }}
-            >
-              Withdraw from Goal
-            </h2>
+            <div className="flex flex-col">
+              <h2
+                className="text-lg sm:text-xl font-bold"
+                style={{ color: colors.text }}
+              >
+                Withdraw from Goal
+              </h2>
+              <span className="text-xs" style={{ color: colors.textLight }}>
+                {goalName}
+              </span>
+            </div>
             <button
               onClick={onClose}
               className="p-1 hover:opacity-70 transition"
@@ -94,44 +118,34 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
 
           {/* Content */}
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Goal Info */}
-            <div>
-              <p
-                className="text-xs sm:text-sm mb-2"
-                style={{ color: colors.textLight }}
-              >
-                Goal Name
-              </p>
-              <p
-                className="text-base sm:text-lg font-semibold"
-                style={{ color: colors.text }}
-              >
-                {goalName}
-              </p>
-            </div>
-
-            {/* Progress Info */}
-            <div>
+            {/* Goal Info & Progress */}
+            <div
+              className="rounded-xl p-4 border border-dashed"
+              style={{
+                borderColor: colors.border,
+                backgroundColor: `${colors.primary}05`,
+              }}
+            >
               <div className="flex justify-between items-center mb-2">
                 <p
-                  className="text-xs sm:text-sm"
+                  className="text-xs font-semibold"
                   style={{ color: colors.textLight }}
                 >
-                  Progress
+                  Progress to Goal
                 </p>
                 <p
-                  className="text-xs sm:text-sm font-semibold"
+                  className="text-xs font-bold"
                   style={{ color: colors.primary }}
                 >
                   {progress.toFixed(0)}%
                 </p>
               </div>
               <div
-                className="w-full rounded-full h-2"
+                className="w-full rounded-full h-1.5"
                 style={{ backgroundColor: colors.border }}
               >
                 <div
-                  className="h-2 rounded-full transition-all"
+                  className="h-1.5 rounded-full transition-all"
                   style={{
                     backgroundColor: colors.primary,
                     width: `${Math.min(progress, 100)}%`,
@@ -140,138 +154,184 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
               </div>
             </div>
 
-            {/* Withdrawal Info */}
-            <div
-              className="rounded-lg p-3 sm:p-4"
-              style={{ backgroundColor: colors.background }}
-            >
-              <p
-                className="text-xs mb-2 sm:mb-3"
-                style={{ color: colors.textLight }}
-              >
-                Current Amount
-              </p>
-              <p
-                className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
-                style={{ color: colors.text }}
-              >
-                $
-                {currentAmount.toLocaleString("en-US", {
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-
-              {!isGoalComplete && penaltyPercentage > 0 && (
-                <div
-                  className="space-y-2 pt-3 sm:pt-4 border-t"
-                  style={{ borderColor: colors.border }}
+            {/* Withdrawal Amount Input */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center px-1">
+                <label
+                  className="text-xs font-bold uppercase tracking-wider"
+                  style={{ color: colors.textLight }}
                 >
-                  <div className="flex justify-between">
-                    <span
-                      style={{ color: colors.textLight }}
-                      className="text-xs"
-                    >
-                      Early Withdrawal Penalty
+                  Withdrawal Amount
+                </label>
+                <div className="flex items-center gap-1">
+                  <span
+                    className="text-[10px]"
+                    style={{ color: colors.textLight }}
+                  >
+                    Available:
+                  </span>
+                  <span
+                    className="text-[10px] font-bold"
+                    style={{ color: colors.text }}
+                  >
+                    ${currentAmount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="relative group">
+                <div
+                  className="absolute left-4 top-1/2 -translate-y-1/2 font-bold"
+                  style={{ color: colors.textLight }}
+                >
+                  $
+                </div>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  disabled={isLoading || isGoalComplete}
+                  className="w-full pl-8 pr-16 py-4 rounded-xl border-2 transition-all focus:ring-0 text-lg font-bold"
+                  style={{
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                    color: colors.text,
+                  }}
+                />
+                {!isGoalComplete && (
+                  <button
+                    onClick={handleMax}
+                    disabled={isLoading}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      backgroundColor: `${colors.primary}20`,
+                      color: colors.primary,
+                    }}
+                  >
+                    Max
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Summary Box */}
+            <div
+              className="rounded-2xl p-4 space-y-3"
+              style={{
+                backgroundColor: colors.background,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              {!isGoalComplete && penaltyPercentage > 0 && (
+                <>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.textLight }}>
+                      Penalty Fee ({penaltyPercentage.toFixed(1)}%)
                     </span>
-                    <span
-                      style={{ color: "#ef4444" }}
-                      className="text-xs font-semibold"
-                    >
-                      {penaltyPercentage.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span
-                      style={{ color: colors.textLight }}
-                      className="text-xs"
-                    >
-                      Penalty Amount
-                    </span>
-                    <span
-                      style={{ color: "#ef4444" }}
-                      className="text-xs font-semibold"
-                    >
-                      $
+                    <span style={{ color: "#ef4444" }} className="font-bold">
+                      -$
                       {penaltyAmount.toLocaleString("en-US", {
                         maximumFractionDigits: 2,
                       })}
                     </span>
                   </div>
                   <div
-                    className="flex justify-between pt-2 border-t"
-                    style={{ borderColor: colors.border }}
-                  >
-                    <span
-                      style={{ color: colors.text }}
-                      className="text-xs sm:text-sm font-semibold"
-                    >
-                      You Receive
-                    </span>
-                    <span
-                      style={{ color: colors.primary }}
-                      className="text-xs sm:text-sm font-semibold"
-                    >
-                      $
-                      {netAmount.toLocaleString("en-US", {
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                </div>
+                    className="h-px w-full"
+                    style={{ backgroundColor: colors.border }}
+                  />
+                </>
               )}
+              <div className="flex justify-between items-center">
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: colors.text }}
+                >
+                  Expected Return
+                </span>
+                <span
+                  className="text-lg font-black"
+                  style={{ color: colors.primary }}
+                >
+                  $
+                  {netAmount.toLocaleString("en-US", {
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
             </div>
 
-            {/* Warning */}
-            {!isGoalComplete && (
+            {/* Warning/Info Alerts */}
+            {!isGoalComplete ? (
               <div
-                className="rounded-lg p-3 flex gap-2"
+                className="rounded-2xl p-4 flex gap-3 border shadow-sm"
                 style={{ backgroundColor: "#fef2f2", borderColor: "#fee2e2" }}
               >
                 <AlertCircle
-                  size={16}
-                  style={{ color: "#ef4444", flexShrink: 0, marginTop: "2px" }}
+                  size={20}
+                  className="shrink-0"
+                  style={{ color: "#ef4444" }}
                 />
-                <p
-                  style={{ color: "#991b1b" }}
-                  className="text-xs leading-relaxed"
-                >
-                  Withdrawing early will result in a penalty and a reputation
-                  decrease of 5 points.
-                </p>
+                <div className="space-y-1">
+                  <p
+                    style={{ color: "#991b1b" }}
+                    className="text-xs font-bold uppercase tracking-tight"
+                  >
+                    Early Withdrawal Warning
+                  </p>
+                  <p
+                    style={{ color: "#b91c1c" }}
+                    className="text-[11px] leading-relaxed"
+                  >
+                    Withdrawing before reaching your goal will incur a{" "}
+                    <span className="font-bold">
+                      {penaltyPercentage}% penalty
+                    </span>{" "}
+                    and decrease your reputation.
+                  </p>
+                </div>
               </div>
-            )}
-
-            {isGoalComplete && (
+            ) : (
               <div
-                className="rounded-lg p-3 flex gap-2"
+                className="rounded-2xl p-4 flex gap-3 border shadow-sm"
                 style={{ backgroundColor: "#f0fdf4", borderColor: "#dcfce7" }}
               >
                 <AlertCircle
-                  size={16}
-                  style={{ color: "#22c55e", flexShrink: 0, marginTop: "2px" }}
+                  size={20}
+                  className="shrink-0"
+                  style={{ color: "#22c55e" }}
                 />
-                <p
-                  style={{ color: "#166534" }}
-                  className="text-xs leading-relaxed"
-                >
-                  Goal target reached! Withdraw your full amount without penalty
-                  and gain 10 reputation points. You can also keep your goal
-                  active to save more.
-                </p>
+                <div className="space-y-1">
+                  <p
+                    style={{ color: "#166534" }}
+                    className="text-xs font-bold uppercase tracking-tight"
+                  >
+                    Goal Completed!
+                  </p>
+                  <p
+                    style={{ color: "#15803d" }}
+                    className="text-[11px] leading-relaxed"
+                  >
+                    Congratulations! You've reached your target. Withdraw your
+                    full amount with{" "}
+                    <span className="font-bold">0 penalty</span> and earn{" "}
+                    <span className="font-bold">reputation points</span>.
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
           {/* Actions */}
           <div
-            className="flex flex-col-reverse sm:flex-row gap-2 p-4 sm:p-6 border-t"
+            className="p-4 sm:p-6 border-t"
             style={{ borderColor: colors.border }}
           >
             {isGoalComplete ? (
               <button
                 onClick={onCompleteWithdraw}
                 disabled={isLoading}
-                className="w-full px-4 py-3 sm:py-2 rounded-lg font-medium transition hover:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
+                className="w-full py-4 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                 style={{
                   backgroundColor: colors.primary,
                   color: "#ffffff",
@@ -279,18 +339,22 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
               >
                 {isLoading ? (
                   <>
-                    <Loader size={16} className="animate-spin" />
-                    Withdrawing...
+                    <Loader size={18} className="animate-spin" />
+                    Processing...
                   </>
                 ) : (
-                  "Complete & Withdraw"
+                  "Complete & Withdraw All"
                 )}
               </button>
             ) : (
               <button
-                onClick={onEarlyWithdraw}
-                disabled={isLoading}
-                className="w-full px-4 py-3 sm:py-2 rounded-lg font-medium transition hover:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
+                onClick={handleEarlyWithdrawClick}
+                disabled={
+                  isLoading ||
+                  amountToWithdraw <= 0 ||
+                  amountToWithdraw > currentAmount
+                }
+                className="w-full py-4 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                 style={{
                   backgroundColor: "#ef4444",
                   color: "#ffffff",
@@ -298,11 +362,11 @@ export const GoalWithdrawalModal: React.FC<GoalWithdrawalModalProps> = ({
               >
                 {isLoading ? (
                   <>
-                    <Loader size={16} className="animate-spin" />
-                    Withdrawing...
+                    <Loader size={18} className="animate-spin" />
+                    Processing...
                   </>
                 ) : (
-                  "Withdraw Early"
+                  `Withdraw $${amountToWithdraw.toLocaleString()}`
                 )}
               </button>
             )}

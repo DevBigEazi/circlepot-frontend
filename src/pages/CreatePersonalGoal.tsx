@@ -180,26 +180,7 @@ const CreatePersonalGoal: React.FC = () => {
     // Validate before proceeding
     const formError = validateForm();
     if (formError) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {formError}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(formError);
       return;
     }
 
@@ -243,39 +224,9 @@ const CreatePersonalGoal: React.FC = () => {
       });
 
       // Show success message
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm mt-20"
-            style={{
-              backgroundColor: `${colors.primary}75`,
-              borderColor: colors.primary,
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <CheckCircle
-              size={20}
-              style={{ color: colors.primary }}
-              className="shrink-0"
-            />
-            <div>
-              <span
-                className="text-sm font-bold block"
-                style={{ color: colors.text }}
-              >
-                🎯 Goal "{goalForm.name}" created successfully!
-              </span>
-              <span className="text-xs" style={{ color: colors.textLight }}>
-                Your savings goal is now active. Happy saving!
-              </span>
-            </div>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.success(`🎯 Goal "${goalForm.name}" created successfully!`, {
+        description: "Your savings goal is now active. Happy saving!",
+      });
 
       // small delay before navigating back to goals page
       setTimeout(() => {
@@ -284,29 +235,7 @@ const CreatePersonalGoal: React.FC = () => {
     } catch (err) {
       const error = err as Error;
       // Show error message
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm mt-20"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <div>
-              <span className="text-sm font-bold block text-red-600">
-                ✖️ Failed to create your goal!
-              </span>
-              <span className="text-xs text-red-500">{error.message}</span>
-            </div>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(error.message || "Failed to create your goal!");
       setIsCreating(false);
     }
   };
@@ -1015,7 +944,7 @@ const CreatePersonalGoal: React.FC = () => {
                     onClick={handleCreateGoal}
                     type="button"
                     disabled={!isFormValid}
-                    className={`flex-[2] py-4 font-bold rounded-2xl transition shadow-lg flex items-center justify-center gap-2 ${
+                    className={`flex-2 py-4 font-bold rounded-2xl transition shadow-lg flex items-center justify-center gap-2 ${
                       isFormValid
                         ? "text-white hover:shadow-xl transform hover:scale-105"
                         : "cursor-not-allowed opacity-50"

@@ -243,23 +243,61 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
             });
           }
 
-          const processedGoals = goalsData.personalGoals.map((goal: any) => ({
-            id: goal.id,
-            goalId: BigInt(goal.goalId),
-            goalName: goal.goalName,
-            goalAmount: BigInt(goal.goalAmount),
-            contributionAmount: BigInt(goal.contributionAmount),
-            currentAmount: BigInt(goal.currentAmount),
-            frequency: goal.frequency,
-            deadline: BigInt(goal.deadline),
-            isActive: goal.isActive,
-            isYieldEnabled: goal.isYieldEnabled,
-            token: goal.token,
-            yieldAPY: apyMap.get(goal.goalId) || BigInt(0),
-            createdAt: BigInt(goal.createdAt),
-            user: goal.user,
-          }));
-          setGoals(processedGoals);
+          const processedGoals = goalsData.personalGoals.map((goal: any) => {
+            const goalAmount = BigInt(goal.goalAmount);
+            const currentAmount = BigInt(goal.currentAmount);
+            const target = Number(goalAmount) / 1e18;
+            const saved = Number(currentAmount) / 1e18;
+            const progress = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
+
+            // Helper for frequency index to seconds
+            const freqSeconds = (f: number) => {
+              if (f === 0) return 86400; // Daily
+              if (f === 1) return 604800; // Weekly
+              return 2592000; // Monthly (30 days)
+            };
+
+            const goalIdBigInt = BigInt(goal.goalId);
+            const goalContributions = (goalsData.goalContributions || [])
+              .filter((c: any) => BigInt(c.goalId) === goalIdBigInt)
+              .map((c: any) => ({
+                timestamp: BigInt(c.transaction.blockTimestamp)
+              }));
+
+            let nextContributionTime = 0;
+            if (goalContributions.length > 0) {
+              const lastContribution = goalContributions.reduce((latest: any, current: any) =>
+                current.timestamp > latest.timestamp ? current : latest
+              );
+              nextContributionTime = (Number(lastContribution.timestamp) + freqSeconds(goal.frequency)) * 1000;
+            }
+
+            const canContribute = nextContributionTime === 0 || Date.now() >= nextContributionTime;
+
+            return {
+              id: goal.id,
+              goalId: goalIdBigInt,
+              goalName: goal.goalName,
+              goalAmount: goalAmount,
+              contributionAmount: BigInt(goal.contributionAmount),
+              currentAmount: currentAmount,
+              frequency: goal.frequency,
+              deadline: BigInt(goal.deadline),
+              isActive: goal.isActive,
+              isYieldEnabled: goal.isYieldEnabled,
+              token: goal.token,
+              yieldAPY: apyMap.get(goal.goalId) || BigInt(0),
+              createdAt: BigInt(goal.createdAt),
+              user: goal.user,
+              // Enriched fields
+              progress,
+              savedAmount: saved,
+              targetAmount: target,
+              nextContributionTime,
+              canContribute,
+            };
+          });
+          setGoals(processedGoals as any);
         }
 
         // Process contributions
@@ -420,7 +458,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
                 const contributeTransaction = prepareContractCall({
                   contract,
                   method: "contributeToGoal",
-                  params: [goalId],
+                  params: [goalId, contributionAmount],
                 });
 
                 sendTransaction(contributeTransaction, {
@@ -577,6 +615,17 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     contributeToGoal,
     withdrawFromGoal,
     completeGoal,
+    withdraw: async (goalId: bigint, amount?: bigint) => {
+      const goal = goals.find(g => g.goalId === goalId);
+      if (!goal) throw new Error("Goal not found");
+
+      const isComplete = goal.currentAmount >= goal.goalAmount;
+      if (isComplete && (!amount || amount >= goal.currentAmount)) {
+        return completeGoal(goalId);
+      } else {
+        return withdrawFromGoal(goalId, amount || goal.currentAmount);
+      }
+    },
     getGoalById,
     checkVaultAddress,
     refreshGoals: refetchGoals,

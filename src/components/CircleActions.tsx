@@ -9,7 +9,6 @@ import {
   Share2,
   Check,
   UserPlus,
-  AlertCircle,
 } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { toast } from "sonner";
@@ -107,47 +106,9 @@ const CircleActions: React.FC<CircleActionsProps> = ({
     try {
       setIsLoading(true);
       await action();
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#dcfce7",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-green-600 shrink-0" />
-            <span className="text-sm font-semibold text-green-600">
-              {actionName} successful!
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.success(`${actionName} successful!`);
     } catch (error: any) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertTriangle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              {error?.message || `${actionName} failed`}
-            </span>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(error?.message || `${actionName} failed`);
     } finally {
       setIsLoading(false);
     }

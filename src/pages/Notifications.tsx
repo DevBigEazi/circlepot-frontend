@@ -54,7 +54,7 @@ const Notifications: React.FC = () => {
   };
 
   const getNotificationColor = (type: string, priority: string) => {
-    if (priority === "high") return "bg-green-100 text-green-700";
+    if (priority === "high") return "bg-lime-100 text-lime-700";
     if (priority === "medium") return "bg-yellow-50 text-yellow-700";
     if (priority === "low") return "bg-blue-50 text-blue-700";
 

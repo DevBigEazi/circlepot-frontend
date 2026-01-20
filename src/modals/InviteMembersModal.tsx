@@ -133,23 +133,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
     );
 
     if (validInvitees.length === 0) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              Please add at least one valid user to invite
-            </span>
-          </div>
-        ),
-        { duration: 3000, position: "top-center" },
-      );
+      toast.error("Please add at least one valid user to invite");
       return;
     }
 
@@ -158,23 +142,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
     const uniqueAddresses = [...new Set(addresses)];
 
     if (addresses.length !== uniqueAddresses.length) {
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <span className="text-sm font-semibold text-red-600">
-              You have duplicate users in the list
-            </span>
-          </div>
-        ),
-        { duration: 3000, position: "top-center" },
-      );
+      toast.error("You have duplicate users in the list");
       return;
     }
 
@@ -182,28 +150,8 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
       setIsInviting(true);
       await onInvite(circleId, uniqueAddresses);
 
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-green-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#dcfce7",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <Check className="w-6 h-6 text-green-600 shrink-0" />
-            <div>
-              <h3 className="font-semibold text-green-800">
-                Invitations Sent!
-              </h3>
-              <p className="text-sm text-green-700">
-                {validCount} member{validCount !== 1 ? "s" : ""} invited
-                successfully
-              </p>
-            </div>
-          </div>
-        ),
-        { duration: 3000, position: "top-center" },
+      toast.success(
+        `Invitations Sent! ${validCount} member${validCount !== 1 ? "s" : ""} invited successfully`,
       );
 
       // Close modal after 2 seconds
@@ -215,26 +163,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
     } catch (err: any) {
       const errorMessage = err.message || "Failed to invite members";
 
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <div>
-              <span className="text-sm font-semibold text-red-600 block">
-                Error Inviting Members
-              </span>
-              <span className="text-xs text-red-500">{errorMessage}</span>
-            </div>
-          </div>
-        ),
-        { duration: 4000, position: "top-center" },
-      );
+      toast.error(errorMessage);
     } finally {
       setIsInviting(false);
     }

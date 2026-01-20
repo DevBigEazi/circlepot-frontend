@@ -137,39 +137,9 @@ const CreateCircle: React.FC = () => {
         origin: { y: 0.6 },
       });
 
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 flex items-center gap-3 max-w-sm mt-20"
-            style={{
-              backgroundColor: `${colors.primary}75`,
-              borderColor: colors.primary,
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <Crown
-              size={20}
-              style={{ color: colors.primary }}
-              className="shrink-0"
-            />
-            <div>
-              <span
-                className="text-sm font-bold block"
-                style={{ color: colors.text }}
-              >
-                🎉 Circle "{circleForm.name}" created successfully!
-              </span>
-              <span className="text-xs" style={{ color: colors.textLight }}>
-                Your savings circle is now live and ready for members.
-              </span>
-            </div>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.success(`🎉 Circle "${circleForm.name}" created successfully!`, {
+        description: "Your savings circle is now live and ready for members.",
+      });
 
       // Navigate to dashboard after a short delay
       setTimeout(() => {
@@ -179,31 +149,7 @@ const CreateCircle: React.FC = () => {
       const error = err as Error;
 
       // Show error message
-      toast.custom(
-        () => (
-          <div
-            className="rounded-2xl p-4 shadow-lg border-2 border-red-500 flex items-center gap-3 max-w-sm mt-20"
-            style={{
-              backgroundColor: "#fee2e2",
-              animation: `slideIn 0.3s ease-out`,
-            }}
-          >
-            <AlertCircle size={20} className="text-red-600 shrink-0" />
-            <div>
-              <span className="text-sm font-bold block text-red-600">
-                ✖️ Failed to create circle!
-              </span>
-              <span className="text-xs text-red-500">
-                {error.message || "An unexpected error occurred"}
-              </span>
-            </div>
-          </div>
-        ),
-        {
-          duration: 4000,
-          position: "top-center",
-        },
-      );
+      toast.error(error.message || "Failed to create circle!");
     } finally {
       setIsCreating(false);
     }
@@ -763,7 +709,7 @@ const CreateCircle: React.FC = () => {
                   </button>
                   <button
                     onClick={nextStep}
-                    className="flex-[2] py-4 font-bold rounded-xl transition shadow-lg text-white"
+                    className="flex-2 py-4 font-bold rounded-xl transition shadow-lg text-white"
                     style={{ background: colors.primary }}
                   >
                     Continue to Finalize
@@ -1039,7 +985,7 @@ const CreateCircle: React.FC = () => {
                         isCreating ||
                         isLoading
                       }
-                      className={`flex-[2] py-4 font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2 ${
+                      className={`flex-2 py-4 font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2 ${
                         hasSufficientBalance &&
                         circleForm.name &&
                         circleForm.contribution &&
