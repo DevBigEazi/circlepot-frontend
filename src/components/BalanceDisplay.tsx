@@ -3,8 +3,8 @@ import { Wallet, Eye, EyeOff, Info, Star } from "lucide-react";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
 import image from "../constants/image";
-import { CreditScore } from "../hooks/useCreditScore";
 import { Skeleton } from "./Skeleton";
+import { CreditScore } from "../interfaces/interfaces";
 
 interface BalanceDisplayProps {
   currentBalances: {
