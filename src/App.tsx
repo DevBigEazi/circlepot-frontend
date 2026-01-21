@@ -19,6 +19,7 @@ import {
   saveReferralCode,
   cleanURL,
 } from "./utils/referral";
+import { CircleAndGoalsProvider } from "./contexts/CircleAndGoalsContext";
 
 // Lazy load page components for code-splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -114,133 +115,145 @@ function App({ client }: AppProps) {
     <main className="min-h-screen">
       <Toaster position="top-center" />
       <NotificationsProvider>
-        <GlobalNotificationSync />
-        <CurrencyProvider>
-          <BiometricProvider
-            userId={profile?.accountId ? String(profile.accountId) : ""}
-          >
-            {/* Enable auto-reconnection of wallet on page load */}
-            <AutoConnectWallet />
+        {/* Wrap with CircleAndGoalsProvider to centralize data fetching and prevent duplicate RPC calls */}
+        <CircleAndGoalsProvider client={client}>
+          <GlobalNotificationSync />
+          <CurrencyProvider>
+            <BiometricProvider
+              userId={profile?.accountId ? String(profile.accountId) : ""}
+            >
+              {/* Enable auto-reconnection of wallet on page load */}
+              <AutoConnectWallet />
 
-            {/* Loading state while checking profile or initializing */}
-            {account &&
-              (isLoading || (hasProfile === null && !profileError)) && (
-                <SkeletonPage />
+              {/* Loading state while checking profile or initializing */}
+              {account &&
+                (isLoading || (hasProfile === null && !profileError)) && (
+                  <SkeletonPage />
+                )}
+
+              {/* Error state if data fetching fails */}
+              {account && profileError && hasProfile === null && (
+                <DataErrorState
+                  onRetry={refreshProfile}
+                  message={
+                    profileError.includes("database unavailable")
+                      ? "Our database is currently taking a break. We're working to wake it up and get you back in!"
+                      : undefined
+                  }
+                />
               )}
 
-            {/* Error state if data fetching fails */}
-            {account && profileError && hasProfile === null && (
-              <DataErrorState
-                onRetry={refreshProfile}
-                message={
-                  profileError.includes("database unavailable")
-                    ? "Our database is currently taking a break. We're working to wake it up and get you back in!"
-                    : undefined
-                }
-              />
-            )}
-
-            {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
-            {showDashboard && !isLoading && !isInvalidDashboardId() && (
-              <Suspense fallback={<SkeletonPage />}>
-                <Routes>
-                  <Route element={<Layout />}>
-                    {/* Redirect root to dashboard with user ID */}
-                    <Route
-                      index
-                      element={
-                        <Navigate
-                          to={`/dashboard/${profile?.accountId}`}
-                          replace
-                        />
-                      }
-                    />
-                    <Route path="/dashboard/:userId" element={<Dashboard />} />
-                    <Route path="/create" element={<Create />} />
-                    <Route
-                      path="/create/personal-goal"
-                      element={<CreatePersonalGoal />}
-                    />
-                    <Route path="/create/circle" element={<CreateCircle />} />
-                    <Route
-                      path="/circles/join/:circleId"
-                      element={<JoinCircle />}
-                    />
-                    <Route path="/browse" element={<Browse />} />
-                    <Route path="/circles" element={<Circles />} />
-                    <Route path="/goals" element={<Goals />} />
-                    <Route
-                      path="/transactions-history"
-                      element={<TransactionsHistory />}
-                    />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route
-                      path="/notifications/settings"
-                      element={<NotificationSettings />}
-                    />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/local-methods" element={<LocalMethods />} />
-                    <Route
-                      path="/external-wallets"
-                      element={<ExternalWallets />}
-                    />
-                    <Route
-                      path="/withdraw/internal"
-                      element={<WithdrawInternal />}
-                    />
-                    <Route path="/withdraw/local" element={<WithdrawLocal />} />
-                    <Route
-                      path="/withdraw/external"
-                      element={<WithdrawExternal />}
-                    />
-                  </Route>
-
-                  {/* Not Found - outside Layout so no bottom nav */}
-                  <Route path="*" element={<Error404 />} />
-                </Routes>
-              </Suspense>
-            )}
-
-            {/* Show 404 without Layout for invalid dashboard IDs */}
-            {showDashboard && isInvalidDashboardId() && (
-              <Suspense fallback={<SkeletonPage />}>
-                <Error404 />
-              </Suspense>
-            )}
-
-            {/* Landing page + Auth Modal for unauthenticated users */}
-            {showAuthModal && (
-              <>
-                {/* Landing page background */}
+              {/* Private Routes - only show when authenticated, has profile, and profile is loaded */}
+              {showDashboard && !isLoading && !isInvalidDashboardId() && (
                 <Suspense fallback={<SkeletonPage />}>
-                  <Dashboard />
+                  <Routes>
+                    <Route element={<Layout />}>
+                      {/* Redirect root to dashboard with user ID */}
+                      <Route
+                        index
+                        element={
+                          <Navigate
+                            to={`/dashboard/${profile?.accountId}`}
+                            replace
+                          />
+                        }
+                      />
+                      <Route
+                        path="/dashboard/:userId"
+                        element={<Dashboard />}
+                      />
+                      <Route path="/create" element={<Create />} />
+                      <Route
+                        path="/create/personal-goal"
+                        element={<CreatePersonalGoal />}
+                      />
+                      <Route path="/create/circle" element={<CreateCircle />} />
+                      <Route
+                        path="/circles/join/:circleId"
+                        element={<JoinCircle />}
+                      />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/circles" element={<Circles />} />
+                      <Route path="/goals" element={<Goals />} />
+                      <Route
+                        path="/transactions-history"
+                        element={<TransactionsHistory />}
+                      />
+                      <Route
+                        path="/notifications"
+                        element={<Notifications />}
+                      />
+                      <Route
+                        path="/notifications/settings"
+                        element={<NotificationSettings />}
+                      />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/local-methods" element={<LocalMethods />} />
+                      <Route
+                        path="/external-wallets"
+                        element={<ExternalWallets />}
+                      />
+                      <Route
+                        path="/withdraw/internal"
+                        element={<WithdrawInternal />}
+                      />
+                      <Route
+                        path="/withdraw/local"
+                        element={<WithdrawLocal />}
+                      />
+                      <Route
+                        path="/withdraw/external"
+                        element={<WithdrawExternal />}
+                      />
+                    </Route>
+
+                    {/* Not Found - outside Layout so no bottom nav */}
+                    <Route path="*" element={<Error404 />} />
+                  </Routes>
                 </Suspense>
-                {/* Auth modal overlay */}
-                <AuthModal />
-              </>
-            )}
+              )}
 
-            {/* Profile Creation Modal - shows after auth but before profile creation */}
-            {showProfileModal && (
-              <ProfileCreationModal
-                client={client}
-                onProfileCreated={handleProfileCreated}
-              />
-            )}
+              {/* Show 404 without Layout for invalid dashboard IDs */}
+              {showDashboard && isInvalidDashboardId() && (
+                <Suspense fallback={<SkeletonPage />}>
+                  <Error404 />
+                </Suspense>
+              )}
 
-            {/* Link Contact Modal - shows when user is missing email or phone */}
-            {/* {showLinkContact && needsContactLink && (
+              {/* Landing page + Auth Modal for unauthenticated users */}
+              {showAuthModal && (
+                <>
+                  {/* Landing page background */}
+                  <Suspense fallback={<SkeletonPage />}>
+                    <Dashboard />
+                  </Suspense>
+                  {/* Auth modal overlay */}
+                  <AuthModal />
+                </>
+              )}
+
+              {/* Profile Creation Modal - shows after auth but before profile creation */}
+              {showProfileModal && (
+                <ProfileCreationModal
+                  client={client}
+                  onProfileCreated={handleProfileCreated}
+                />
+              )}
+
+              {/* Link Contact Modal - shows when user is missing email or phone */}
+              {/* {showLinkContact && needsContactLink && (
               <LinkContactModal
                 onClose={() => setShowLinkContact(false)}
                 onSkip={() => setShowLinkContact(false)}
               />
             )} */}
 
-            {/* PWA Install Prompt - Global, non-intrusive */}
-            <PWAInstallPrompt />
-          </BiometricProvider>
-        </CurrencyProvider>
+              {/* PWA Install Prompt - Global, non-intrusive */}
+              <PWAInstallPrompt />
+            </BiometricProvider>
+          </CurrencyProvider>
+        </CircleAndGoalsProvider>
       </NotificationsProvider>
     </main>
   );
