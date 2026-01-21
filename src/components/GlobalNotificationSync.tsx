@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { useActiveAccount } from "thirdweb/react";
-import { useCircleSavings } from "../hooks/useCircleSavings";
-import { usePersonalGoals } from "../hooks/usePersonalGoals";
+import { useCircleAndGoals } from "../contexts/CircleAndGoalsContext";
 import { useCreditScore } from "../hooks/useCreditScore";
 import { useNotificationSync } from "../hooks/useNotificationSync";
 import { useQuery } from "@tanstack/react-query";
@@ -9,17 +8,15 @@ import { request } from "graphql-request";
 import { SUBGRAPH_URL, SUBGRAPH_HEADERS } from "../constants/constants";
 import { GET_REFERRAL_REWARDS } from "../graphql/referralQueries";
 import { transformCircles } from "../utils/circleTransformer";
-import { client as thirdwebClient } from "../thirdwebClient";
 
 /**
  * Global component to handle notification synchronization across all pages.
- * It fetches the necessary data once and runs the sync hook.
- * Since most hooks use React Query, data is cached and shared with individual pages.
+ * Uses the shared CircleAndGoalsContext to avoid duplicate data fetching.
  */
 const GlobalNotificationSync: React.FC = () => {
   const account = useActiveAccount();
 
-  // Fetch all necessary data for notification sync
+  // Use shared context data
   const {
     circles,
     joinedCircles,
@@ -32,9 +29,8 @@ const GlobalNotificationSync: React.FC = () => {
     collateralWithdrawals,
     forfeitures,
     latePayments,
-  } = useCircleSavings(thirdwebClient);
-
-  const { goals } = usePersonalGoals(thirdwebClient);
+    goals,
+  } = useCircleAndGoals();
 
   const { reputationHistory, categoryChanges } = useCreditScore();
 

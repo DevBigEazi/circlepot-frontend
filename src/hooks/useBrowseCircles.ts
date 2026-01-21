@@ -78,13 +78,13 @@ export const useBrowseCircles = (enablePolling: boolean = true) => {
           SUBGRAPH_URL,
           allCirclesQuery,
           {},
-          SUBGRAPH_HEADERS
+          SUBGRAPH_HEADERS,
         );
 
         // Process circles
         const circles: Circle[] = result.circles.map((circle: any) => {
           const yieldData = result.circleCreateds?.find(
-            (c: any) => c.circleId === circle.circleId
+            (c: any) => c.circleId === circle.circleId,
           );
 
           return {
@@ -123,11 +123,12 @@ export const useBrowseCircles = (enablePolling: boolean = true) => {
         throw err;
       }
     },
-    refetchInterval: enablePolling ? 10000 : 0, // Poll every 10 seconds if enabled
+    refetchInterval: enablePolling ? 60000 : 0, // Poll every 60 seconds to reduce RPC calls
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    refetchOnWindowFocus: true,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: false, // Reduce unnecessary refetches
     refetchOnReconnect: true,
-    refetchOnMount: true,
+    refetchOnMount: false, // Use cached data on mount
     retry: 1,
   });
 
