@@ -237,7 +237,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
       });
 
       // Show link contact modal to add backup contact info
-      setShowLinkContactModal(true);
+      setShowLinkContactModal(false); // to do: change back to true when the implementation is ready
       setIsSubmitting(false);
     } catch (err: any) {
       setIsSubmitting(false);

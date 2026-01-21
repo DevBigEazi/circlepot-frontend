@@ -3,6 +3,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 import { SUBGRAPH_URL, SUBGRAPH_HEADERS } from "../constants/constants";
+import { CircleCompletion, CreditScore, GoalCompletion, LatePaymentRecord, ReputationDecrease, ReputationIncrease, ScoreCategory, ScoreCategoryChange } from "../interfaces/interfaces";
 
 // GraphQL Query for Reputation Data
 const reputationQuery = gql`
@@ -139,72 +140,6 @@ const reputationQuery = gql`
   }
 `;
 
-// Interfaces
-export interface ReputationIncrease {
-  id: string;
-  points: bigint;
-  reason: string;
-  timestamp: bigint;
-  transactionHash: string;
-}
-
-export interface ReputationDecrease {
-  id: string;
-  points: bigint;
-  reason: string;
-  timestamp: bigint;
-  transactionHash: string;
-}
-
-export interface ScoreCategoryChange {
-  id: string;
-  oldCategory: number;
-  newCategory: number;
-  timestamp: bigint;
-  transactionHash: string;
-}
-
-export interface CircleCompletion {
-  id: string;
-  circleId: bigint;
-  timestamp: bigint;
-  transactionHash: string;
-}
-
-export interface LatePaymentRecord {
-  id: string;
-  circleId: bigint;
-  round: bigint;
-  fee: bigint;
-  timestamp: bigint;
-  transactionHash: string;
-}
-
-export interface GoalCompletion {
-  id: string;
-  goalId: bigint;
-  timestamp: bigint;
-  transactionHash: string;
-}
-
-export interface CreditScore {
-  score: number;
-  category: ScoreCategory;
-  categoryLabel: string;
-  categoryColor: string;
-  totalCirclesCompleted: number;
-  totalGoalsCompleted: number;
-  totalLatePayments: number;
-}
-
-export enum ScoreCategory {
-  POOR = 0,
-  FAIR = 1,
-  GOOD = 2,
-  VERY_GOOD = 3,
-  EXCEPTIONAL = 4,
-}
-
 // Helper functions
 const getCategoryLabel = (category: number): string => {
   switch (category) {
@@ -250,7 +185,7 @@ export const useCreditScore = () => {
     ReputationDecrease[]
   >([]);
   const [categoryChanges, setCategoryChanges] = useState<ScoreCategoryChange[]>(
-    []
+    [],
   );
   const [circleCompletions, setCircleCompletions] = useState<
     CircleCompletion[]
@@ -274,7 +209,7 @@ export const useCreditScore = () => {
           SUBGRAPH_URL,
           reputationQuery,
           { userId: account.address.toLowerCase() },
-          SUBGRAPH_HEADERS
+          SUBGRAPH_HEADERS,
         );
 
         return result;
@@ -331,7 +266,7 @@ export const useCreditScore = () => {
           reason: inc.reason,
           timestamp: BigInt(inc.transaction.blockTimestamp),
           transactionHash: inc.transaction.transactionHash,
-        })
+        }),
       );
       setReputationIncreases(increases);
 
@@ -343,7 +278,7 @@ export const useCreditScore = () => {
           reason: dec.reason,
           timestamp: BigInt(dec.transaction.blockTimestamp),
           transactionHash: dec.transaction.transactionHash,
-        })
+        }),
       );
       setReputationDecreases(decreases);
 
@@ -355,7 +290,7 @@ export const useCreditScore = () => {
           newCategory: change.newCategory,
           timestamp: BigInt(change.transaction.blockTimestamp),
           transactionHash: change.transaction.transactionHash,
-        })
+        }),
       );
       setCategoryChanges(changes);
 
@@ -366,7 +301,7 @@ export const useCreditScore = () => {
           circleId: BigInt(circle.circleId),
           timestamp: BigInt(circle.transaction.blockTimestamp),
           transactionHash: circle.transaction.transactionHash,
-        })
+        }),
       );
       setCircleCompletions(circles);
 
@@ -379,7 +314,7 @@ export const useCreditScore = () => {
           fee: BigInt(late.fee),
           timestamp: BigInt(late.transaction.blockTimestamp),
           transactionHash: late.transaction.transactionHash,
-        })
+        }),
       );
       setLatePayments(lates);
 

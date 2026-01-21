@@ -50,7 +50,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<ActiveCircle | null>(
-    null
+    null,
   );
 
   // Transform circles data
@@ -67,7 +67,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
       payouts,
       collateralWithdrawals,
       forfeitures,
-      collateralReturns
+      collateralReturns,
     );
   }, [
     circles,
@@ -195,8 +195,7 @@ const ActiveCircles: React.FC<ActiveCirclesProps> = ({ colors, client }) => {
           style={{ color: colors.textLight }}
           className="text-sm max-w-xs mx-auto"
         >
-          We're having a little trouble finding your savings circles. We'll have
-          them back for you soon!
+          We'll have your saving circles back for you soon!
         </p>
       </div>
     );
