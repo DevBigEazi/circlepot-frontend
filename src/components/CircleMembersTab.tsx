@@ -72,10 +72,10 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
       return result;
     },
     enabled: !!circle.rawCircle?.circleId,
-    refetchInterval: isActiveCircle ? 5000 : false, // Refetch every 5s for active circles
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    staleTime: 0, // Always consider data stale
+    refetchInterval: isActiveCircle ? 30000 : false, // Refetch every 30s for active circles (reduced from 5s)
+    refetchOnWindowFocus: false, // Reduce unnecessary refetches
+    refetchOnMount: false, // Use cached data on mount
+    staleTime: 15000, // Consider data fresh for 15 seconds
   });
 
   const members = useMemo(() => {

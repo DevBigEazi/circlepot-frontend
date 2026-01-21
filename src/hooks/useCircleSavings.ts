@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract, readContract, watchContractEvents, prepareEvent } from "thirdweb";
+import {
+  prepareContractCall,
+  getContract,
+  readContract,
+  watchContractEvents,
+  prepareEvent,
+} from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
 import { CIRCLE_SAVINGS_ABI } from "../abis/CircleSavings";
@@ -337,7 +343,7 @@ const circlesByIdsQuery = gql`
       updatedAt
       isYieldEnabled
       token
-      
+
       # Vote tracking for withdrawal eligibility
       voteWithdrawWon
       lastVoteExecuted {
@@ -554,7 +560,7 @@ const singleCircleQuery = gql`
       updatedAt
       isYieldEnabled
       token
-      
+
       # Vote tracking for withdrawal eligibility
       voteWithdrawWon
       lastVoteExecuted {
@@ -696,7 +702,7 @@ const singleCircleQuery = gql`
 
 export const useCircleSavings = (
   client: ThirdwebClient,
-  enablePolling: boolean = false
+  enablePolling: boolean = false,
 ) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
@@ -719,9 +725,11 @@ export const useCircleSavings = (
     CollateralReturned[]
   >([]);
   const [deadCircleFees, setDeadCircleFees] = useState<DeadCircleFeeDeducted[]>(
-    []
+    [],
   );
-  const [vaultProjects, setVaultProjects] = useState<Record<string, string>>({});
+  const [vaultProjects, setVaultProjects] = useState<Record<string, string>>(
+    {},
+  );
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -734,7 +742,7 @@ export const useCircleSavings = (
         address: CIRCLE_SAVINGS_ADDRESS,
         abi: CIRCLE_SAVINGS_ABI,
       }),
-    [client, chain]
+    [client, chain],
   );
 
   // Fetch user circles from Subgraph
@@ -762,7 +770,7 @@ export const useCircleSavings = (
         const joinedCircleIds = [
           ...new Set([
             ...userResult.circleJoineds.map((j: any) => j.circleId),
-            ...(userResult.createdCircles?.map((c: any) => c.circleId) || [])
+            ...(userResult.createdCircles?.map((c: any) => c.circleId) || []),
           ]),
         ];
 
@@ -789,7 +797,8 @@ export const useCircleSavings = (
           joinedCirclesVoteResults = circlesResult.voteExecuteds;
           joinedCirclesPayouts = circlesResult.payoutDistributeds;
           joinedCirclesContributions = circlesResult.contributionMades;
-          joinedCirclesCollateralWithdrawals = circlesResult.collateralWithdrawns;
+          joinedCirclesCollateralWithdrawals =
+            circlesResult.collateralWithdrawns;
           joinedCirclesCollateralReturns = circlesResult.collateralReturneds;
           // No need to calculate currentRound - subgraph now tracks it directly
         }
@@ -806,15 +815,17 @@ export const useCircleSavings = (
           joinedCirclesCollateralReturns,
         };
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          throw new Error("Subgraph request timed out. Please check your connection.");
+        if (err instanceof Error && err.name === "AbortError") {
+          throw new Error(
+            "Subgraph request timed out. Please check your connection.",
+          );
         }
         throw err;
       }
     },
     enabled: !!account?.address,
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    refetchInterval: enablePolling ? 30000 : 0, // Poll every 30s as a safety net if enablePolling is true
+    staleTime: 60000, // Consider data fresh for 1 minute
+    refetchInterval: enablePolling ? 120000 : 0, // Poll every 2 minutes to reduce RPC calls
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (reduced from 30)
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnReconnect: true, // Refetch on network reconnect
@@ -828,12 +839,30 @@ export const useCircleSavings = (
     if (!account?.address || !enablePolling) return;
 
     const events = [
-      prepareEvent({ signature: "event CircleCreated(uint256 indexed circleId, string title, string description, address indexed creator, uint256 indexed contributionAmount, uint8 frequency, uint256 maxMembers, uint8 visibility, uint256 createdAt, uint256 collateralLocked, address token, uint256 yieldAPY)" }),
-      prepareEvent({ signature: "event CircleJoined(uint256 indexed circleId, address indexed member, uint256 indexed currentMembers, uint8 state)" }),
-      prepareEvent({ signature: "event CircleStarted(uint256 indexed circleId, uint256 startedAt, uint8 state)" }),
-      prepareEvent({ signature: "event ContributionMade(uint256 indexed circleId, uint256 round, address member, uint256 indexed amount, address token)" }),
-      prepareEvent({ signature: "event PayoutDistributed(uint256 indexed circleId, uint256 indexed round, address indexed recipient, uint256 amount, address token)" }),
-      prepareEvent({ signature: "event VoteExecuted(uint256 indexed circleId, bool circleStarted, uint256 startVoteCount, uint256 withdrawVoteCount)" })
+      prepareEvent({
+        signature:
+          "event CircleCreated(uint256 indexed circleId, string title, string description, address indexed creator, uint256 indexed contributionAmount, uint8 frequency, uint256 maxMembers, uint8 visibility, uint256 createdAt, uint256 collateralLocked, address token, uint256 yieldAPY)",
+      }),
+      prepareEvent({
+        signature:
+          "event CircleJoined(uint256 indexed circleId, address indexed member, uint256 indexed currentMembers, uint8 state)",
+      }),
+      prepareEvent({
+        signature:
+          "event CircleStarted(uint256 indexed circleId, uint256 startedAt, uint8 state)",
+      }),
+      prepareEvent({
+        signature:
+          "event ContributionMade(uint256 indexed circleId, uint256 round, address member, uint256 indexed amount, address token)",
+      }),
+      prepareEvent({
+        signature:
+          "event PayoutDistributed(uint256 indexed circleId, uint256 indexed round, address indexed recipient, uint256 amount, address token)",
+      }),
+      prepareEvent({
+        signature:
+          "event VoteExecuted(uint256 indexed circleId, bool circleStarted, uint256 startVoteCount, uint256 withdrawVoteCount)",
+      }),
     ];
 
     const unwatch = watchContractEvents({
@@ -852,7 +881,8 @@ export const useCircleSavings = (
 
   const queryError = useMemo(() => {
     // If we have an error, show it regardless of loading state
-    if (circlesDataError) return (circlesDataError as any)?.message || "Data server error";
+    if (circlesDataError)
+      return (circlesDataError as any)?.message || "Data server error";
     if (isCirclesLoading) return null;
     return null;
   }, [circlesDataError, isCirclesLoading]);
@@ -965,7 +995,7 @@ export const useCircleSavings = (
         const allJoinEvents = Array.from(allJoinEventsMap.values()).sort(
           (a: any, b: any) =>
             Number(a.transaction.blockTimestamp) -
-            Number(b.transaction.blockTimestamp)
+            Number(b.transaction.blockTimestamp),
         );
 
         const processedJoined = allJoinEvents.map((joined: any) => ({
@@ -983,24 +1013,24 @@ export const useCircleSavings = (
 
         // Add user contributions first
         circlesData.contributionMades.forEach((c: any) =>
-          allContributionsMap.set(c.id, c)
+          allContributionsMap.set(c.id, c),
         );
 
         // Add joined circles contributions (may overlap)
         circlesData.joinedCirclesContributions?.forEach((c: any) =>
-          allContributionsMap.set(c.id, c)
+          allContributionsMap.set(c.id, c),
         );
 
-        const processedContributions = Array.from(allContributionsMap.values()).map(
-          (contrib: any) => ({
-            id: contrib.id,
-            circleId: BigInt(contrib.circleId),
-            round: BigInt(contrib.round),
-            amount: BigInt(contrib.amount),
-            user: contrib.user,
-            timestamp: BigInt(contrib.transaction.blockTimestamp),
-          })
-        );
+        const processedContributions = Array.from(
+          allContributionsMap.values(),
+        ).map((contrib: any) => ({
+          id: contrib.id,
+          circleId: BigInt(contrib.circleId),
+          round: BigInt(contrib.round),
+          amount: BigInt(contrib.amount),
+          user: contrib.user,
+          timestamp: BigInt(contrib.transaction.blockTimestamp),
+        }));
         setContributions(processedContributions);
 
         // Process payouts - combine user payouts and all circle payouts
@@ -1008,12 +1038,12 @@ export const useCircleSavings = (
 
         // Add user payouts first
         circlesData.payoutDistributeds.forEach((p: any) =>
-          allPayoutsMap.set(p.id, p)
+          allPayoutsMap.set(p.id, p),
         );
 
         // Add joined circles payouts (may overlap)
         circlesData.joinedCirclesPayouts?.forEach((p: any) =>
-          allPayoutsMap.set(p.id, p)
+          allPayoutsMap.set(p.id, p),
         );
 
         const processedPayouts = Array.from(allPayoutsMap.values()).map(
@@ -1024,7 +1054,7 @@ export const useCircleSavings = (
             payoutAmount: BigInt(payout.payoutAmount),
             user: payout.user, // Include user info for payout received indicator
             timestamp: BigInt(payout.transaction.blockTimestamp),
-          })
+          }),
         );
         setPayouts(processedPayouts);
 
@@ -1037,19 +1067,21 @@ export const useCircleSavings = (
             position: BigInt(pos.position),
             timestamp: BigInt(pos.transaction.blockTimestamp),
             transactionHash: pos.transaction.transactionHash,
-          })
+          }),
         );
         setPositions(processedPositions);
 
         // Process votes cast
-        const processedVotes = (circlesData.voteCasts || []).map((vote: any) => ({
-          id: vote.id,
-          circleId: BigInt(vote.circleId),
-          voter: vote.voter,
-          choice: vote.choice,
-          timestamp: BigInt(vote.transaction.blockTimestamp),
-          transactionHash: vote.transaction.transactionHash,
-        }));
+        const processedVotes = (circlesData.voteCasts || []).map(
+          (vote: any) => ({
+            id: vote.id,
+            circleId: BigInt(vote.circleId),
+            voter: vote.voter,
+            choice: vote.choice,
+            timestamp: BigInt(vote.transaction.blockTimestamp),
+            transactionHash: vote.transaction.transactionHash,
+          }),
+        );
         setVotes(processedVotes);
 
         // Process late payments
@@ -1077,7 +1109,7 @@ export const useCircleSavings = (
             deductionAmount: BigInt(forf.deductionAmount),
             timestamp: BigInt(forf.transaction.blockTimestamp),
             transactionHash: forf.transaction.transactionHash,
-          })
+          }),
         );
         setForfeitures(processedForfeitures);
 
@@ -1091,7 +1123,7 @@ export const useCircleSavings = (
             invitedAt: BigInt(inv.invitedAt),
             timestamp: BigInt(inv.transaction.blockTimestamp),
             transactionHash: inv.transaction.transactionHash,
-          })
+          }),
         );
         setInvitations(processedInvitations);
 
@@ -1100,16 +1132,16 @@ export const useCircleSavings = (
 
         // Add user withdrawals first
         circlesData.collateralWithdrawns?.forEach((cw: any) =>
-          allWithdrawalsMap.set(cw.id, cw)
+          allWithdrawalsMap.set(cw.id, cw),
         );
 
         // Add joined circles withdrawals
         circlesData.joinedCirclesCollateralWithdrawals?.forEach((cw: any) =>
-          allWithdrawalsMap.set(cw.id, cw)
+          allWithdrawalsMap.set(cw.id, cw),
         );
 
         const processedCollateralWithdrawals = Array.from(
-          allWithdrawalsMap.values()
+          allWithdrawalsMap.values(),
         ).map((cw: any) => ({
           id: cw.id,
           circleId: BigInt(cw.circleId),
@@ -1166,16 +1198,16 @@ export const useCircleSavings = (
 
         // Add user's returns
         circlesData.collateralReturneds.forEach((cr: any) =>
-          allCollateralReturnsMap.set(cr.id, cr)
+          allCollateralReturnsMap.set(cr.id, cr),
         );
 
         // Add all circle returns
         circlesData.joinedCirclesCollateralReturns?.forEach((cr: any) =>
-          allCollateralReturnsMap.set(cr.id, cr)
+          allCollateralReturnsMap.set(cr.id, cr),
         );
 
         const processedCollateralReturns = Array.from(
-          allCollateralReturnsMap.values()
+          allCollateralReturnsMap.values(),
         ).map((cr: any) => ({
           id: cr.id,
           circleId: BigInt(cr.circleId),
@@ -1263,7 +1295,14 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles, client, chain]
+    [
+      account?.address,
+      contract,
+      sendTransaction,
+      refetchCircles,
+      client,
+      chain,
+    ],
   );
 
   // Join circle
@@ -1327,7 +1366,14 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles, client, chain]
+    [
+      account?.address,
+      contract,
+      sendTransaction,
+      refetchCircles,
+      client,
+      chain,
+    ],
   );
 
   // Contribute to circle
@@ -1391,7 +1437,14 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles, client, chain]
+    [
+      account?.address,
+      contract,
+      sendTransaction,
+      refetchCircles,
+      client,
+      chain,
+    ],
   );
 
   // Update circle visibility
@@ -1449,7 +1502,14 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles, client, chain]
+    [
+      account?.address,
+      contract,
+      sendTransaction,
+      refetchCircles,
+      client,
+      chain,
+    ],
   );
 
   // Invite members (for private circles)
@@ -1486,7 +1546,7 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [account?.address, contract, sendTransaction, refetchCircles],
   );
 
   // Check vault address for a token
@@ -1504,7 +1564,7 @@ export const useCircleSavings = (
         return "0x0000000000000000000000000000000000000000";
       }
     },
-    [contract]
+    [contract],
   );
 
   // Initiate voting
@@ -1541,7 +1601,7 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [account?.address, contract, sendTransaction, refetchCircles],
   );
 
   // Cast vote
@@ -1578,7 +1638,7 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [account?.address, contract, sendTransaction, refetchCircles],
   );
 
   // Execute vote
@@ -1615,7 +1675,7 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [account?.address, contract, sendTransaction, refetchCircles],
   );
 
   // Withdraw collateral
@@ -1652,7 +1712,7 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [account?.address, contract, sendTransaction, refetchCircles],
   );
 
   // helper function to identify late members
@@ -1675,7 +1735,7 @@ export const useCircleSavings = (
       const member = joinedCircles.find(
         (j) =>
           j.circleId === circleId &&
-          j.id.toLowerCase() === address.toLowerCase()
+          j.id.toLowerCase() === address.toLowerCase(),
       );
 
       if (!member) return null;
@@ -1712,7 +1772,8 @@ export const useCircleSavings = (
 
         // Check if below 60% threshold
         const belowThreshold =
-          Number(circle.currentMembers) < (Number(circle.maxMembers) * 60) / 100;
+          Number(circle.currentMembers) <
+          (Number(circle.maxMembers) * 60) / 100;
 
         if (ultimatumPassed && belowThreshold) {
           canWithdraw = true;
@@ -1748,7 +1809,7 @@ export const useCircleSavings = (
         collateralLocked,
       };
     },
-    [circles, joinedCircles, account?.address]
+    [circles, joinedCircles, account?.address],
   );
 
   const getLateMembersForCircle = useCallback(
@@ -1767,16 +1828,16 @@ export const useCircleSavings = (
         .map((c) => c.id);
       // Get the recipient for current round (they're exempt)
       const recipient = positions.find(
-        (p) => p.circleId === circleId && p.position === currentRound
+        (p) => p.circleId === circleId && p.position === currentRound,
       )?.user?.id;
       // Find late members (haven't contributed and aren't the recipient)
       const lateMembers = circleMembers.filter(
         (memberId) =>
-          !contributedMembers.includes(memberId) && memberId !== recipient
+          !contributedMembers.includes(memberId) && memberId !== recipient,
       );
       return lateMembers;
     },
-    [circles, joinedCircles, contributions, positions]
+    [circles, joinedCircles, contributions, positions],
   );
 
   // Forfeit member (any member can call)
@@ -1810,7 +1871,7 @@ export const useCircleSavings = (
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchCircles]
+    [account?.address, contract, sendTransaction, refetchCircles],
   );
 
   // Get single circle by ID
@@ -1820,7 +1881,7 @@ export const useCircleSavings = (
         SUBGRAPH_URL,
         singleCircleQuery,
         { circleId },
-        SUBGRAPH_HEADERS
+        SUBGRAPH_HEADERS,
       );
 
       if (result.circles && result.circles.length > 0) {
