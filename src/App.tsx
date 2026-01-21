@@ -1,7 +1,8 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import AuthModal from "./modals/AuthModal";
 // import LinkContactModal from "./modals/LinkContactModal";
 import ProfileCreationModal from "./modals/ProfileCreationModal";
+import PushNotificationReminderModal from "./modals/PushNotificationReminderModal";
 import { Route, Routes, Navigate } from "react-router";
 import { useActiveAccount } from "thirdweb/react";
 import { useUserProfile } from "./hooks/useUserProfile";
@@ -20,6 +21,7 @@ import {
   cleanURL,
 } from "./utils/referral";
 import { CircleAndGoalsProvider } from "./contexts/CircleAndGoalsContext";
+import { shouldShowPushReminder } from "./utils/pushNotificationManager";
 
 // Lazy load page components for code-splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -59,6 +61,7 @@ function App({ client }: AppProps) {
   } = useUserProfile(client);
 
   // const [showLinkContact, setShowLinkContact] = useState(false);
+  const [showPushReminder, setShowPushReminder] = useState(false);
 
   // Show auth modal if not authenticated
   const showAuthModal = !account;
@@ -110,6 +113,20 @@ function App({ client }: AppProps) {
       cleanURL();
     }
   }, [hasProfile]);
+
+  // Check if we should show push notification reminder
+  useEffect(() => {
+    // Only check when user is authenticated, has profile, and app is loaded
+    if (showDashboard && !isLoading) {
+      // Add a small delay to let the user settle in before showing the prompt
+      const timer = setTimeout(async () => {
+        const shouldShow = await shouldShowPushReminder();
+        setShowPushReminder(shouldShow);
+      }, 2000); // 2 second delay after dashboard loads
+
+      return () => clearTimeout(timer);
+    }
+  }, [showDashboard, isLoading]);
 
   return (
     <main className="min-h-screen">
@@ -248,6 +265,13 @@ function App({ client }: AppProps) {
                 onSkip={() => setShowLinkContact(false)}
               />
             )} */}
+
+              {/* Push Notification Reminder Modal - shows to users who haven't subscribed */}
+              {showPushReminder && (
+                <PushNotificationReminderModal
+                  onClose={() => setShowPushReminder(false)}
+                />
+              )}
 
               {/* PWA Install Prompt - Global, non-intrusive */}
               <PWAInstallPrompt />
