@@ -22,6 +22,8 @@ import {
 } from "./utils/referral";
 import { CircleAndGoalsProvider } from "./contexts/CircleAndGoalsContext";
 import { shouldShowPushReminder } from "./utils/pushNotificationManager";
+import BiometricReminderModal from "./modals/BiometricReminderModal";
+import { shouldShowBiometricReminder } from "./utils/biometricReminderManager";
 
 // Lazy load page components for code-splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -62,6 +64,7 @@ function App({ client }: AppProps) {
 
   // const [showLinkContact, setShowLinkContact] = useState(false);
   const [showPushReminder, setShowPushReminder] = useState(false);
+  const [showBiometricReminder, setShowBiometricReminder] = useState(false);
 
   // Show auth modal if not authenticated
   const showAuthModal = !account;
@@ -127,6 +130,24 @@ function App({ client }: AppProps) {
       return () => clearTimeout(timer);
     }
   }, [showDashboard, isLoading]);
+
+  // Check if we should show biometric reminder (after push notification)
+  useEffect(() => {
+    // Only check when user is authenticated, has profile, and app is loaded
+    // AND push reminder is not showing (biometric comes after push)
+    if (showDashboard && !isLoading && !showPushReminder) {
+      // Add delay: 2s base + 5s extra if push was just dismissed
+      const delay = 7000; // 7 seconds to allow push modal flow to complete
+      const timer = setTimeout(async () => {
+        const shouldShow = await shouldShowBiometricReminder(
+          profile?.accountId ? String(profile.accountId) : null,
+        );
+        setShowBiometricReminder(shouldShow);
+      }, delay);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showDashboard, isLoading, showPushReminder, profile?.accountId]);
 
   return (
     <main className="min-h-screen">
@@ -270,6 +291,14 @@ function App({ client }: AppProps) {
               {showPushReminder && (
                 <PushNotificationReminderModal
                   onClose={() => setShowPushReminder(false)}
+                />
+              )}
+
+              {/* Biometric Security Reminder Modal - shows after push notification reminder */}
+              {showBiometricReminder && profile?.accountId && (
+                <BiometricReminderModal
+                  onClose={() => setShowBiometricReminder(false)}
+                  userId={String(profile.accountId)}
                 />
               )}
 

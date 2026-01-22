@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Fingerprint, AlertCircle, Loader } from "lucide-react";
+import { Fingerprint, ScanFace, AlertCircle, Loader } from "lucide-react";
+import {
+  getDeviceType,
+  getBiometricTypeName,
+} from "../utils/biometricReminderManager";
 
 interface BiometricOverlayProps {
   isOpen: boolean;
@@ -16,6 +20,14 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
+
+  // Get device type and biometric name
+  const deviceType = getDeviceType();
+  const biometricName = getBiometricTypeName();
+
+  // Select icon based on device type
+  const BiometricIcon =
+    deviceType === "ios" || deviceType === "mac" ? ScanFace : Fingerprint;
 
   useEffect(() => {
     if (isOpen && attempts === 0) {
@@ -75,7 +87,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
             {isAuthenticating ? (
               <Loader className="w-12 h-12 text-white animate-spin" />
             ) : (
-              <Fingerprint className="w-12 h-12 text-white" />
+              <BiometricIcon className="w-12 h-12 text-white" />
             )}
           </div>
         </div>
@@ -85,7 +97,7 @@ const BiometricOverlay: React.FC<BiometricOverlayProps> = ({
           className="text-2xl font-bold text-center mb-2"
           style={{ color: colors.text }}
         >
-          Biometric Authentication
+          {biometricName} Authentication
         </h2>
 
         {/* Subtitle */}
