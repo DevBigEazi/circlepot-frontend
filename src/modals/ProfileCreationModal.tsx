@@ -1,11 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import {
-  User,
-  Camera,
-  Check,
-  AlertCircle,
-  Upload,
-} from "lucide-react";
+import { User, Camera, Check, AlertCircle, Upload } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useThirdwebStorage } from "../hooks/useThirdwebStorage";
@@ -16,6 +10,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import LinkContactModal from "./LinkContactModal";
 import { getStoredReferral, clearReferral } from "../utils/referral";
+import { initializeBiometricReminder } from "../utils/biometricReminderManager";
 
 interface ProfileCreationModalProps {
   client: any;
@@ -235,6 +230,9 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
         duration: 4000,
         position: "top-center",
       });
+
+      // Initialize biometric reminder (tracks account creation time)
+      initializeBiometricReminder();
 
       // Show link contact modal to add backup contact info
       setShowLinkContactModal(false); // to do: change back to true when the implementation is ready
