@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract, watchContractEvents, prepareEvent } from "thirdweb";
+import { prepareContractCall, getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { ThirdwebClient } from "thirdweb";
 import { PERSONAL_SAVING_ABI } from "../abis/PersonalSavings";
@@ -138,7 +138,10 @@ const singleGoalQuery = gql`
   }
 `;
 
-export const usePersonalGoals = (client: ThirdwebClient) => {
+export const usePersonalGoals = (
+  client: ThirdwebClient,
+  enablePolling: boolean = false,
+) => {
   const account = useActiveAccount();
   const { mutate: sendTransaction, isPending: isSending } =
     useSendTransaction();
@@ -146,7 +149,9 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [withdrawals, setWithdrawals] = useState<GoalWithdrawal[]>([]);
   const [vaults, setVaults] = useState<Record<string, string>>({});
-  const [vaultProjects, setVaultProjects] = useState<Record<string, string>>({}); // token -> project name
+  const [vaultProjects, setVaultProjects] = useState<Record<string, string>>(
+    {},
+  ); // token -> project name
   const [error, setError] = useState<string | null>(null);
 
   const chain = useMemo(() => defineChain(CHAIN_ID), []);
@@ -159,7 +164,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         address: PERSONAL_SAVINGS_ADDRESS,
         abi: PERSONAL_SAVING_ABI,
       }),
-    [client, chain]
+    [client, chain],
   );
 
   const checkVaultAddress = useCallback(
@@ -183,7 +188,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         return "0x0000000000000000000000000000000000000000";
       }
     },
-    [contract, vaults]
+    [contract, vaults],
   );
 
   // Fetch user goals from Subgraph
@@ -207,48 +212,28 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         });
         return result;
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          throw new Error("Personal goals request timed out. Please check your connection.");
+        if (err instanceof Error && err.name === "AbortError") {
+          throw new Error(
+            "Personal goals request timed out. Please check your connection.",
+          );
         }
         throw err;
       }
     },
     enabled: !!account?.address,
     staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchInterval: enablePolling ? 30000 : 0, // Poll every 30 seconds for responsive updates
     gcTime: 5 * 60 * 1000, // Cache for 5 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: false, // Don't refetch on component mount if data exists
+    refetchOnWindowFocus: true, // Refetch when user returns to tab for fresh data
+    refetchOnMount: true, // Refetch on mount to ensure fresh data
     retry: 2, // Retry failed requests only twice
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
-  // Event listeners for real-time updates
-  useEffect(() => {
-    if (!account?.address) return;
-
-    const events = [
-      prepareEvent({ signature: "event PersonalGoalCreated(uint256 indexed goalId, address indexed owner, string name, uint256 indexed amount, uint256 currentAmount, uint8 frequency, uint256 deadline, bool isActive, address token, uint256 yieldAPY)" }),
-      prepareEvent({ signature: "event GoalContribution(uint256 indexed goalId, address indexed owner, uint256 amount, uint256 currentAmount, address token)" }),
-      prepareEvent({ signature: "event GoalWithdrawn(uint256 indexed goalId, address indexed owner, uint256 amount, uint256 penalty, address token)" })
-    ];
-
-    const unwatch = watchContractEvents({
-      contract,
-      events,
-      onEvents: () => {
-        // Trigger refetch with a slight delay to allow subgraph indexing
-        setTimeout(() => {
-          refetchGoals();
-        }, 2000);
-      },
-    });
-
-    return () => unwatch();
-  }, [account?.address, contract, refetchGoals]);
-
   const queryError = useMemo(() => {
     // If we have an error, show it regardless of loading state
-    if (goalsDataError) return (goalsDataError as any)?.message || "Data server error";
+    if (goalsDataError)
+      return (goalsDataError as any)?.message || "Data server error";
     if (isGoalsLoading) return null;
     return null;
   }, [goalsDataError, isGoalsLoading]);
@@ -272,7 +257,8 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
             const currentAmount = BigInt(goal.currentAmount);
             const target = Number(goalAmount) / 1e18;
             const saved = Number(currentAmount) / 1e18;
-            const progress = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
+            const progress =
+              target > 0 ? Math.min((saved / target) * 100, 100) : 0;
 
             // Helper for frequency index to seconds
             const freqSeconds = (f: number) => {
@@ -285,18 +271,23 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
             const goalContributions = (goalsData.goalContributions || [])
               .filter((c: any) => BigInt(c.goalId) === goalIdBigInt)
               .map((c: any) => ({
-                timestamp: BigInt(c.transaction.blockTimestamp)
+                timestamp: BigInt(c.transaction.blockTimestamp),
               }));
 
             let nextContributionTime = 0;
             if (goalContributions.length > 0) {
-              const lastContribution = goalContributions.reduce((latest: any, current: any) =>
-                current.timestamp > latest.timestamp ? current : latest
+              const lastContribution = goalContributions.reduce(
+                (latest: any, current: any) =>
+                  current.timestamp > latest.timestamp ? current : latest,
               );
-              nextContributionTime = (Number(lastContribution.timestamp) + freqSeconds(goal.frequency)) * 1000;
+              nextContributionTime =
+                (Number(lastContribution.timestamp) +
+                  freqSeconds(goal.frequency)) *
+                1000;
             }
 
-            const canContribute = nextContributionTime === 0 || Date.now() >= nextContributionTime;
+            const canContribute =
+              nextContributionTime === 0 || Date.now() >= nextContributionTime;
 
             return {
               id: goal.id,
@@ -329,7 +320,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           const processedContributions = goalsData.goalContributions.map(
             (contrib: any) => {
               const relatedGoal = goalsData.personalGoals?.find(
-                (g: any) => g.goalId === contrib.goalId
+                (g: any) => g.goalId === contrib.goalId,
               );
 
               return {
@@ -339,7 +330,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
                 goalName: relatedGoal?.goalName || "Unknown Goal",
                 timestamp: BigInt(contrib.transaction.blockTimestamp),
               };
-            }
+            },
           );
           setContributions(processedContributions);
         }
@@ -349,7 +340,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
           const processedWithdrawals = goalsData.goalWithdrawns.map(
             (withdrawal: any) => {
               const relatedGoal = goalsData.personalGoals?.find(
-                (g: any) => g.goalId === withdrawal.goalId
+                (g: any) => g.goalId === withdrawal.goalId,
               );
 
               return {
@@ -360,7 +351,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
                 penalty: BigInt(withdrawal.penalty),
                 timestamp: BigInt(withdrawal.transaction.blockTimestamp),
               };
-            }
+            },
           );
           setWithdrawals(processedWithdrawals);
         }
@@ -450,12 +441,16 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchGoals, client, chain]
+    [account?.address, contract, sendTransaction, refetchGoals, client, chain],
   );
 
   // Contribute to goal
   const contributeToGoal = useCallback(
-    async (goalId: bigint, contributionAmount: bigint, tokenAddress?: string) => {
+    async (
+      goalId: bigint,
+      contributionAmount: bigint,
+      tokenAddress?: string,
+    ) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
@@ -515,7 +510,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchGoals, client, chain]
+    [account?.address, contract, sendTransaction, refetchGoals, client, chain],
   );
 
   // Withdraw from goal
@@ -552,7 +547,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchGoals]
+    [account?.address, contract, sendTransaction, refetchGoals],
   );
 
   // Complete goal
@@ -589,7 +584,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         throw err;
       }
     },
-    [account?.address, contract, sendTransaction, refetchGoals]
+    [account?.address, contract, sendTransaction, refetchGoals],
   );
 
   // Get single goal by ID
@@ -599,7 +594,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
         SUBGRAPH_URL,
         singleGoalQuery,
         { goalId },
-        SUBGRAPH_HEADERS
+        SUBGRAPH_HEADERS,
       );
 
       if (result.personalGoals && result.personalGoals.length > 0) {
@@ -640,7 +635,7 @@ export const usePersonalGoals = (client: ThirdwebClient) => {
     withdrawFromGoal,
     completeGoal,
     withdraw: async (goalId: bigint, amount?: bigint) => {
-      const goal = goals.find(g => g.goalId === goalId);
+      const goal = goals.find((g) => g.goalId === goalId);
       if (!goal) throw new Error("Goal not found");
 
       const isComplete = goal.currentAmount >= goal.goalAmount;
