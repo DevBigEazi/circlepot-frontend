@@ -105,9 +105,9 @@ export const CircleAndGoalsProvider: React.FC<CircleAndGoalsProviderProps> = ({
   client,
 }) => {
   // Call the hooks ONCE at the app level with optimized polling
-  // enablePolling is set to true but with longer intervals (configured in the hooks)
+  // enablePolling is set to true for 30-second subgraph polling (no RPC events)
   const circleData = useCircleSavings(client, true);
-  const goalData = usePersonalGoals(client);
+  const goalData = usePersonalGoals(client, true);
 
   const value: CircleAndGoalsContextType = {
     // Circle Savings Data

@@ -134,7 +134,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         );
         setNotifications(migratedNotifications);
       } catch (error) {
-        console.error("Failed to load notifications:", error);
+        // console.error("Failed to load notifications:", error);
         setNotifications([]);
       }
     }
@@ -186,7 +186,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
           serializeNotifications(notifications),
         );
       } catch (error) {
-        console.error("Failed to save notifications:", error);
+        //console.error("Failed to save notifications:", error);
       }
     }
   }, [notifications]);
@@ -202,24 +202,24 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
     (
       notification: Omit<Notification, "id" | "timestamp" | "read" | "timeAgo">,
     ) => {
-      console.log(
-        "[NotificationsContext] addNotification called:",
-        notification.type,
-        notification.title,
-      );
+      // console.log(
+      //   "[NotificationsContext] addNotification called:",
+      //   notification.type,
+      //   notification.title,
+      // );
       if (!preferences.inAppEnabled) {
-        console.log(
-          "[NotificationsContext] In-app notifications disabled in preferences",
-        );
+        // console.log(
+        //   "[NotificationsContext] In-app notifications disabled in preferences",
+        // );
         return;
       }
 
       // Check if this notification type is enabled
       const prefKey = getPrefKeyFromType(notification.type);
       if (prefKey && !preferences[prefKey]) {
-        console.log(
-          `[NotificationsContext] Notification type "${notification.type}" (pref: ${String(prefKey)}) is disabled`,
-        );
+        // console.log(
+        //   `[NotificationsContext] Notification type "${notification.type}" (pref: ${String(prefKey)}) is disabled`,
+        // );
         return; // User has disabled this notification type
       }
 
@@ -233,10 +233,10 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         read: false,
       };
 
-      console.log(
-        "[NotificationsContext] Adding new notification to state:",
-        newNotification,
-      );
+      // console.log(
+      //   "[NotificationsContext] Adding new notification to state:",
+      //   newNotification,
+      // );
       setNotifications((prev) => [newNotification, ...prev]);
     },
     [preferences],
@@ -306,7 +306,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
         }
       }
     } catch (error: any) {
-      console.error("Push notification error:", error);
+      //console.error("Push notification error:", error);
       toast.error(error.message || "Failed to handle push notifications");
     }
   }, [account?.address, isSubscribed, isPushSupported, preferences]);
@@ -328,7 +328,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({
             toast.success(result.message);
           }
         } catch (error: any) {
-          console.error("Preference update error:", error);
+          //console.error("Preference update error:", error);
           toast.error("Failed to sync preferences with server");
         }
       }

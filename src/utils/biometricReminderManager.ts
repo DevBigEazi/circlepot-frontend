@@ -74,7 +74,7 @@ export function getBiometricReminderState(): BiometricReminderState {
       return JSON.parse(stored);
     }
   } catch (error) {
-    console.error("Failed to load biometric reminder state:", error);
+    //console.error("Failed to load biometric reminder state:", error);
   }
 
   // Default state
@@ -97,7 +97,7 @@ export function saveBiometricReminderState(
     const newState = { ...currentState, ...state };
     localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify(newState));
   } catch (error) {
-    console.error("Failed to save biometric reminder state:", error);
+    //console.error("Failed to save biometric reminder state:", error);
   }
 }
 
@@ -143,7 +143,7 @@ export function isBiometricEnabledForUser(userId: string): boolean {
       return state.isEnabled === true;
     }
   } catch (error) {
-    console.error("Failed to check biometric state:", error);
+    //console.error("Failed to check biometric state:", error);
   }
   return false;
 }
