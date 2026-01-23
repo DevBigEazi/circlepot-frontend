@@ -52,7 +52,7 @@ const BiometricReminderModal: React.FC<BiometricReminderModalProps> = ({
 
       onClose();
     } catch (error) {
-      console.error("Failed to enable biometric:", error);
+      //console.error("Failed to enable biometric:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsEnabling(false);

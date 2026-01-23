@@ -604,13 +604,13 @@ export const useUserProfile = (client: ThirdwebClient) => {
           return ZERO_ADDRESS;
         } catch (err) {
           if (attempt < 2) {
-            console.warn(
-              `Referral resolution attempt ${attempt} failed, retrying...`,
-              err,
-            );
+            //console.warn(
+            //  `Referral resolution attempt ${attempt} failed, retrying...`,
+            //  err,
+            //);
             return performResolve(attempt + 1);
           }
-          console.error("Referral resolution error after retries:", err);
+          //console.error("Referral resolution error after retries:", err);
           return ZERO_ADDRESS;
         }
       };

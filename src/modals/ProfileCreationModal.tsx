@@ -200,7 +200,7 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
 
         // If resolution returned zero address but we had a code, it failed
         if (referrerAddr === "0x0000000000000000000000000000000000000000") {
-          console.warn(`Could not resolve referral code: ${storedRef}`);
+          //console.warn(`Could not resolve referral code: ${storedRef}`);
           // We'll proceed with zero address to not block the user,
           // but logging it helps debug.
         }

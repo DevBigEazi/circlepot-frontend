@@ -269,7 +269,7 @@ export function getPushReminderState(): PushReminderState {
       return JSON.parse(stored);
     }
   } catch (error) {
-    console.error("Failed to load push reminder state:", error);
+    //console.error("Failed to load push reminder state:", error);
   }
 
   // Default state

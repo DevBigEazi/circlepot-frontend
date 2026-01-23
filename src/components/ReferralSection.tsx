@@ -69,7 +69,7 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({
           url: referralLink,
         });
       } catch (err) {
-        console.log("Share cancelled");
+        // console.log("Share cancelled");
       }
     } else {
       handleCopy();

@@ -30,7 +30,7 @@ const PushNotificationReminderModal: React.FC<
       );
       onClose();
     } catch (error) {
-      console.error("Failed to enable push notifications:", error);
+      //console.error("Failed to enable push notifications:", error);
       // Don't close modal if there was an error
     } finally {
       setIsEnabling(false);
