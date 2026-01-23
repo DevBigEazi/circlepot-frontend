@@ -12,8 +12,10 @@ export const REPUTATION_ADDRESS = import.meta.env.VITE_REPUTATION_ADDRESS;
 
 // Subgraph Configuration
 export const SUBGRAPH_URL = import.meta.env.VITE_SUBGRAPH_URL;
-export const SUBGRAPH_HEADERS = { Authorization: "Bearer {api-key}" };
+export const SUBGRAPH_API_KEY = import.meta.env.VITE_SUBGRAPH_API_KEY;
+export const SUBGRAPH_HEADERS = { Authorization: `Bearer ${SUBGRAPH_API_KEY}` };
 
 // Platform Config
-export const PLATFORM_FEE_RECIPIENT = import.meta.env.VITE_PLATFORM_FEE_RECIPIENT; // Dedicated Platform Wallet
+export const PLATFORM_FEE_RECIPIENT = import.meta.env
+  .VITE_PLATFORM_FEE_RECIPIENT; // Dedicated Platform Wallet
 export const WITHDRAWAL_FEE = 0.2; // 0.2 USDm
