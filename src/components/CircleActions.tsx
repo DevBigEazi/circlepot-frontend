@@ -22,7 +22,11 @@ interface CircleActionsProps {
   onCastVote: (circleId: bigint, choice: 1 | 2) => Promise<any>;
   onExecuteVote: (circleId: bigint) => Promise<any>;
   onWithdrawCollateral: (circleId: bigint) => Promise<any>;
-  onContribute: (circleId: bigint, amount: bigint) => Promise<any>;
+  onContribute: (
+    circleId: bigint,
+    amount: bigint,
+    isLate?: boolean,
+  ) => Promise<any>;
   onForfeitMember: (circleId: bigint, lateMembers: string[]) => Promise<any>;
   getLateMembersForCircle: (circleId: bigint) => string[];
   getWithdrawalInfo?: (circleId: bigint, userAddress?: string) => any;
@@ -413,7 +417,8 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             <button
               onClick={() =>
                 handleAction(
-                  () => onContribute(circleId, contributionAmount),
+                  () =>
+                    onContribute(circleId, contributionAmount, deadlineElapsed),
                   "Contribution",
                 )
               }
@@ -454,7 +459,8 @@ const CircleActions: React.FC<CircleActionsProps> = ({
           <button
             onClick={() =>
               handleAction(
-                () => onContribute(circleId, contributionAmount),
+                () =>
+                  onContribute(circleId, contributionAmount, deadlineElapsed),
                 "Contribution",
               )
             }

@@ -1327,13 +1327,21 @@ export const useCircleSavings = (
 
   // Contribute to circle
   const contribute = useCallback(
-    async (circleId: bigint, contributionAmount: bigint) => {
+    async (
+      circleId: bigint,
+      contributionAmount: bigint,
+      isLate: boolean = false,
+    ) => {
       if (!account?.address) {
         throw new Error("No wallet connected");
       }
 
       try {
         setError(null);
+
+        // Calculate late fee (1% = 100 basis points) if late
+        const lateFee = isLate ? (contributionAmount * 100n) / 10000n : 0n;
+        const totalRequired = contributionAmount + lateFee;
 
         const approveTx = prepareContractCall({
           contract: getContract({
@@ -1343,7 +1351,7 @@ export const useCircleSavings = (
             abi: USDm_ABI,
           }),
           method: "approve",
-          params: [CIRCLE_SAVINGS_ADDRESS, contributionAmount],
+          params: [CIRCLE_SAVINGS_ADDRESS, totalRequired],
         });
 
         return new Promise((resolve, reject) => {

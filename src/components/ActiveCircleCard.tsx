@@ -15,7 +15,11 @@ interface ActiveCircleCardProps {
   onCastVote: (circleId: bigint, choice: 1 | 2) => Promise<any>;
   onExecuteVote: (circleId: bigint) => Promise<any>;
   onWithdrawCollateral: (circleId: bigint) => Promise<any>;
-  onContribute: (circleId: bigint, amount: bigint) => Promise<any>;
+  onContribute: (
+    circleId: bigint,
+    amount: bigint,
+    isLate?: boolean,
+  ) => Promise<any>;
   onForfeitMember: (circleId: bigint, lateMembers: string[]) => Promise<any>;
   getWithdrawalInfo?: (circleId: bigint, userAddress?: string) => any;
   getLateMembersForCircle: (circleId: bigint) => string[];
@@ -44,7 +48,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
 
   // Fetch live APY for yield-enabled circles
   const { apy, isLoading: isLoadingAPY } = useYieldAPY(
-    circle.isYieldEnabled ? projectName : undefined
+    circle.isYieldEnabled ? projectName : undefined,
   );
   const [now, setNow] = React.useState(Math.floor(Date.now() / 1000));
 
@@ -59,7 +63,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
   const userPayout = circle.payouts?.find(
     (p: any) =>
       p.user?.id?.toLowerCase() === account?.address?.toLowerCase() &&
-      Number(p.round) === Number(circle.currentRound)
+      Number(p.round) === Number(circle.currentRound),
   );
   const payoutPending = isRecipient && !userPayout;
 
@@ -131,10 +135,10 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
             circle.status === "active"
               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
               : circle.status === "dead"
-              ? "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
-              : circle.status === "completed"
-              ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
-              : "bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300"
+                ? "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+                : circle.status === "completed"
+                  ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
+                  : "bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300"
           }`}
         >
           {circle.status === "created"
@@ -194,7 +198,7 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
           // Check if user has voted
           const userVote = circle.votes?.find(
             (v: any) =>
-              v.voter.id.toLowerCase() === account?.address?.toLowerCase()
+              v.voter.id.toLowerCase() === account?.address?.toLowerCase(),
           );
           const hasVoted = !!userVote;
 
@@ -283,8 +287,8 @@ const ActiveCircleCard: React.FC<ActiveCircleCardProps> = ({
                   {now > Number(circle.contributionDeadline)
                     ? "Forfeit Available"
                     : hasContributed && isRecipient
-                    ? "Time until Forfeit"
-                    : "Contribution Deadline"}
+                      ? "Time until Forfeit"
+                      : "Contribution Deadline"}
                 </div>
                 <div style={{ color: colors.text }}>
                   <CountdownTimer
