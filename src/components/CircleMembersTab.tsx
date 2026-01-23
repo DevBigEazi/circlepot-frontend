@@ -3,7 +3,7 @@ import { Users, CheckCircle } from "lucide-react";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import { request, gql } from "graphql-request";
-import { SUBGRAPH_URL } from "../constants/constants";
+import { SUBGRAPH_URL, SUBGRAPH_HEADERS } from "../constants/constants";
 import { useActiveAccount } from "thirdweb/react";
 
 interface CircleMembersTabProps {
@@ -65,10 +65,15 @@ const CircleMembersTab: React.FC<CircleMembersTabProps> = ({
     ],
     queryFn: async () => {
       if (!circle.rawCircle?.circleId) return null;
-      const result = await request(SUBGRAPH_URL, GET_CIRCLE_MEMBERS, {
-        circleId: circle.rawCircle.circleId.toString(),
-        currentRound: currentRound.toString(),
-      });
+      const result = await request(
+        SUBGRAPH_URL,
+        GET_CIRCLE_MEMBERS,
+        {
+          circleId: circle.rawCircle.circleId.toString(),
+          currentRound: currentRound.toString(),
+        },
+        SUBGRAPH_HEADERS,
+      );
       return result;
     },
     enabled: !!circle.rawCircle?.circleId,
