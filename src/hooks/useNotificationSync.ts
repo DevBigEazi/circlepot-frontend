@@ -26,7 +26,7 @@ export const useNotificationSync = (
         const events = JSON.parse(stored);
         processedEvents.current = new Set(events);
       } catch (error) {
-        console.error("Failed to parse stored processed events:", error);
+        //console.error("Failed to parse stored processed events:", error);
         processedEvents.current = new Set();
       }
     }
@@ -182,7 +182,7 @@ export const useNotificationSync = (
       if (tx.type === "circle_payout") {
         const eventKey = `payout_v6_${txId}_${isMe}`;
         if (!processedEvents.current.has(eventKey)) {
-          console.log(`[NotificationSync] Adding Payout Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
+          //console.log(`[NotificationSync] Adding Payout Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
           addNotification({
             title: isMe ? "Payment Received! 💰" : "Circle Payout Completed ✅",
             message: isMe
@@ -204,7 +204,7 @@ export const useNotificationSync = (
         const eventKey = `late_v6_${txId}_${isMe}`;
         if (!processedEvents.current.has(eventKey)) {
           const roundStr = tx.round ? ` (Round ${tx.round.toString()})` : "";
-          console.log(`[NotificationSync] Adding Late Payment Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
+          //console.log(`[NotificationSync] Adding Late Payment Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
           addNotification({
             title: isMe ? "Late Payment Penalty" : "Member Late Payment",
             message: isMe
@@ -225,7 +225,7 @@ export const useNotificationSync = (
       if (tx.type === "member_forfeited") {
         const eventKey = `forfeit_v6_${txId}_${isMe}`;
         if (!processedEvents.current.has(eventKey)) {
-          console.log(`[NotificationSync] Adding Forfeit Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
+          //console.log(`[NotificationSync] Adding Forfeit Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
           addNotification({
             title: isMe ? "You have been forfeited ⚠️" : "Member Forfeited",
             message: isMe
@@ -246,7 +246,7 @@ export const useNotificationSync = (
       if (tx.type === "collateral_withdrawn") {
         const eventKey = `collateral_v6_${txId}_${isMe}`;
         if (!processedEvents.current.has(eventKey)) {
-          console.log(`[NotificationSync] Adding Collateral Notification: ID=${txId}, isMe=${isMe}`);
+          //console.log(`[NotificationSync] Adding Collateral Notification: ID=${txId}, isMe=${isMe}`);
           addNotification({
             title: isMe ? "Collateral Returned 💵" : "Member Withdrew Collateral",
             message: isMe
@@ -272,7 +272,7 @@ export const useNotificationSync = (
             ? `Your contribution of ${tx.amount} to "${tx.circleName || "Circle"}" was successful${roundStr}.`
             : `${tx.userName || "A member"} contributed ${tx.amount} to "${tx.circleName || "Circle"}"${roundStr}.`;
 
-          console.log(`[NotificationSync] Adding Contribution Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
+          //console.log(`[NotificationSync] Adding Contribution Notification: ID=${txId}, isMe=${isMe}, Round=${tx.round}`);
           addNotification({
             title: isMe ? "Contribution Successful ✅" : "Circle Contribution Made",
             message: msg,
