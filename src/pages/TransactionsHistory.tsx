@@ -13,6 +13,7 @@ import {
   Send,
   Download,
   Gift,
+  Clock,
 } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import {
@@ -40,6 +41,8 @@ const TransactionsHistory: React.FC = () => {
         return Target;
       case "goal_completion":
         return Target;
+      case "late_contribution":
+        return Clock;
       case "late_payment":
       case "dead_circle_fee":
         return AlertCircle;
@@ -81,6 +84,8 @@ const TransactionsHistory: React.FC = () => {
       case "circle_contribution":
       case "goal_contribution":
         return "bg-orange-100 text-orange-600";
+      case "late_contribution":
+        return "bg-amber-100 text-amber-600";
       case "late_payment":
       case "USDm_send":
       case "dead_circle_fee":
@@ -105,6 +110,8 @@ const TransactionsHistory: React.FC = () => {
         return "Goal Withdrawal";
       case "goal_completion":
         return "Goal Completed";
+      case "late_contribution":
+        return "Late Contribution";
       case "late_payment":
         return "Late Payment Fee";
       case "dead_circle_fee":
