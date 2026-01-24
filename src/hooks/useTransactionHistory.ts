@@ -122,7 +122,7 @@ const transactionHistoryQuery = gql`
       }
     }
 
-    # Late payments
+    # Late payments (reputation tracking)
     latePaymentRecordeds(
       where: { user: $userId }
       orderBy: transaction__blockTimestamp
@@ -136,6 +136,28 @@ const transactionHistoryQuery = gql`
       }
       circleId
       round
+      fee
+      transaction {
+        blockTimestamp
+        transactionHash
+      }
+    }
+
+    # Late contributions (contribution made after grace period - fee deducted from collateral)
+    lateContributionMades(
+      where: { user: $userId }
+      orderBy: transaction__blockTimestamp
+      orderDirection: desc
+    ) {
+      id
+      user {
+        id
+        username
+        fullName
+      }
+      circleId
+      round
+      amount
       fee
       transaction {
         blockTimestamp
@@ -256,18 +278,19 @@ const userProfilesQuery = gql`
 export interface Transaction {
   id: string;
   type:
-  | "circle_contribution"
-  | "circle_payout"
-  | "goal_contribution"
-  | "goal_withdrawal"
-  | "goal_completion"
-  | "late_payment"
-  | "collateral_withdrawal"
-  | "collateral_return"
-  | "dead_circle_fee"
-  | "USDm_send"
-  | "USDm_receive"
-  | "referral_reward";
+    | "circle_contribution"
+    | "circle_payout"
+    | "goal_contribution"
+    | "goal_withdrawal"
+    | "goal_completion"
+    | "late_payment"
+    | "late_contribution"
+    | "collateral_withdrawal"
+    | "collateral_return"
+    | "dead_circle_fee"
+    | "USDm_send"
+    | "USDm_receive"
+    | "referral_reward";
   amount: bigint;
   currency: string;
   timestamp: bigint;
@@ -310,7 +333,7 @@ export const useTransactionHistory = () => {
           SUBGRAPH_URL,
           transactionHistoryQuery,
           { userId: account.address.toLowerCase() },
-          SUBGRAPH_HEADERS
+          SUBGRAPH_HEADERS,
         );
 
         const userAddress = account.address.toLowerCase();
@@ -414,7 +437,7 @@ export const useTransactionHistory = () => {
               ...event,
               timestamp: timestamp,
             };
-          })
+          }),
         );
 
         // Extract unique circle IDs from contributions and payouts
@@ -423,6 +446,7 @@ export const useTransactionHistory = () => {
             ...result.contributionMades.map((c: any) => c.circleId),
             ...result.payoutDistributeds.map((p: any) => p.circleId),
             ...result.latePaymentRecordeds.map((l: any) => l.circleId),
+            ...result.lateContributionMades.map((l: any) => l.circleId),
             ...result.collateralWithdrawns.map((cw: any) => cw.circleId),
             ...result.collateralReturneds.map((cr: any) => cr.circleId),
             ...result.deadCircleFeeDeducteds.map((d: any) => d.circleId),
@@ -436,7 +460,7 @@ export const useTransactionHistory = () => {
             SUBGRAPH_URL,
             circleNamesQuery,
             { circleIds },
-            SUBGRAPH_HEADERS
+            SUBGRAPH_HEADERS,
           );
           circleNamesResult.circles.forEach((circle: any) => {
             circleNamesMap.set(circle.circleId, circle.circleName);
@@ -454,12 +478,10 @@ export const useTransactionHistory = () => {
         // Extract unique addresses from USDm transfers
         const uniqueAddresses = [
           ...new Set(
-            USDmTransfers
-              .flatMap((event: any) => [
-                event.args.from?.toLowerCase(),
-                event.args.to?.toLowerCase(),
-              ])
-              .filter((addr: string) => addr && addr !== userAddress)
+            USDmTransfers.flatMap((event: any) => [
+              event.args.from?.toLowerCase(),
+              event.args.to?.toLowerCase(),
+            ]).filter((addr: string) => addr && addr !== userAddress),
           ),
         ];
 
@@ -474,7 +496,7 @@ export const useTransactionHistory = () => {
               SUBGRAPH_URL,
               userProfilesQuery,
               { addresses: uniqueAddresses },
-              SUBGRAPH_HEADERS
+              SUBGRAPH_HEADERS,
             );
             profilesResult.users.forEach((user: any) => {
               userProfilesMap.set(user.id.toLowerCase(), {
@@ -519,10 +541,10 @@ export const useTransactionHistory = () => {
 
     transfersByHash.forEach((events) => {
       const userSends = events.filter(
-        (e) => e.args.from?.toLowerCase() === userAddress
+        (e) => e.args.from?.toLowerCase() === userAddress,
       );
       const userReceives = events.filter(
-        (e) => e.args.to?.toLowerCase() === userAddress
+        (e) => e.args.to?.toLowerCase() === userAddress,
       );
 
       // Handle Sent Transfers (Potential Merging)
@@ -532,7 +554,7 @@ export const useTransactionHistory = () => {
       // If we find multiple sends from the user in one TX, look for a platform fee to merge
       if (userSends.length > 1 && feeRecipient) {
         const feeEvent = userSends.find(
-          (e) => e.args.to?.toLowerCase() === feeRecipient
+          (e) => e.args.to?.toLowerCase() === feeRecipient,
         );
         if (feeEvent) {
           platformFee = BigInt(feeEvent.args.value);
@@ -565,9 +587,10 @@ export const useTransactionHistory = () => {
           fromFullName: "You",
           toUsername: otherProfile?.username || to,
           toFullName: otherProfile?.fullName || "",
-          note: `Sent to ${otherProfile?.username ||
+          note: `Sent to ${
+            otherProfile?.username ||
             (to ? `${to.slice(0, 6)}...${to.slice(-4)}` : "Unknown")
-            }`,
+          }`,
         });
       });
 
@@ -592,9 +615,10 @@ export const useTransactionHistory = () => {
           fromFullName: otherProfile?.fullName || "",
           toUsername: "You",
           toFullName: "You",
-          note: `Received from ${otherProfile?.username ||
+          note: `Received from ${
+            otherProfile?.username ||
             (from ? `${from.slice(0, 6)}...${from.slice(-4)}` : "Unknown")
-            }`,
+          }`,
         });
       });
     });
@@ -712,8 +736,36 @@ export const useTransactionHistory = () => {
       });
     });
 
-    // Process late payments
+    // Process late contributions (paid after grace, fee deducted from collateral)
+    // Create a set of late contribution tx hashes to avoid duplicate late_payment entries
+    const lateContributionTxHashes = new Set<string>();
+    transactionsData.lateContributionMades?.forEach((late: any) => {
+      lateContributionTxHashes.add(late.transaction.transactionHash);
+      const feeAmount = BigInt(late.fee);
+      allTransactions.push({
+        id: late.id,
+        type: "late_contribution",
+        amount: BigInt(late.amount),
+        currency: "USDm",
+        timestamp: BigInt(late.transaction.blockTimestamp),
+        transactionHash: late.transaction.transactionHash,
+        status: "success",
+        fee: feeAmount,
+        circleName:
+          transactionsData.circleNamesMap.get(late.circleId) ||
+          "Unknown Circle",
+        circleId: BigInt(late.circleId),
+        round: BigInt(late.round),
+        note: `Round ${late.round} contribution (late fee deducted from collateral)`,
+      });
+    });
+
+    // Process late payments (only if not already covered by late contribution)
     transactionsData.latePaymentRecordeds?.forEach((late: any) => {
+      // Skip if this tx is already represented by a late contribution
+      if (lateContributionTxHashes.has(late.transaction.transactionHash)) {
+        return;
+      }
       allTransactions.push({
         id: late.id,
         type: "late_payment",
@@ -818,15 +870,16 @@ export const useTransactionHistory = () => {
         transactionHash: reward.transaction.transactionHash,
         status: "success",
         fee: 0n,
-        note: reward.referee === "0x0000000000000000000000000000000000000000"
-          ? "Bulk referral payout"
-          : "Referral reward received",
+        note:
+          reward.referee === "0x0000000000000000000000000000000000000000"
+            ? "Bulk referral payout"
+            : "Referral reward received",
       });
     });
 
     // Sort all transactions by timestamp (newest first)
     return allTransactions.sort(
-      (a, b) => Number(b.timestamp) - Number(a.timestamp)
+      (a, b) => Number(b.timestamp) - Number(a.timestamp),
     );
   }, [transactionsData, account]);
 
