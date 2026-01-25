@@ -14,6 +14,8 @@ import { ActiveCircle } from "../interfaces/interfaces";
 import { toast } from "sonner";
 import VoteModal from "../modals/VoteModal";
 import WithdrawCollateralModal from "../modals/WithdrawCollateralModal";
+import LateContributionModal from "../modals/LateContributionModal";
+import { calculateBaseDeadline } from "../utils/helpers";
 
 interface CircleActionsProps {
   circle: ActiveCircle;
@@ -47,6 +49,8 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   const [copied, setCopied] = useState(false);
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showLateContributionModal, setShowLateContributionModal] =
+    useState(false);
 
   // Get withdrawal info if function is available
   const withdrawalInfo = getWithdrawalInfo
@@ -85,6 +89,56 @@ const CircleActions: React.FC<CircleActionsProps> = ({
   // Grace Period
   // Daily: 12 hours (43200s) | Others: 48 hours (172800s)
   // We use circle.contributionDeadline (including grace period from subgraph) to determine if actions like 'Forfeit' are now accessible.
+
+  // Check if contribution would be late (after base deadline but before grace deadline)
+  const checkIfLate = (): boolean => {
+    if (state !== 3) return false; // Only check for ACTIVE circles
+
+    // Get last payout timestamp from payouts array if available
+    const payouts = circle.payouts;
+    const lastPayoutTimestamp =
+      payouts && payouts.length > 0
+        ? payouts.reduce((latest: any, p: any) =>
+            p.timestamp > latest.timestamp ? p : latest,
+          ).timestamp
+        : undefined;
+
+    const baseDeadline = calculateBaseDeadline(
+      circle.rawCircle.startedAt || 0n,
+      frequency,
+      circle.rawCircle.currentRound || 1n,
+      lastPayoutTimestamp,
+    );
+    return now > Number(baseDeadline);
+  };
+
+  const isLateContribution = checkIfLate();
+  const lateFee = (contributionAmount * 100n) / 10000n; // 1% late fee
+
+  // Handler for late contribution confirmation
+  const handleLateContributionConfirm = async () => {
+    try {
+      await handleAction(
+        () => onContribute(circleId, contributionAmount),
+        "Contribution",
+      );
+      setShowLateContributionModal(false);
+    } catch (error) {
+      // Error already handled by handleAction
+    }
+  };
+
+  // Handler for contribute button click
+  const handleContributeClick = () => {
+    if (isLateContribution) {
+      setShowLateContributionModal(true);
+    } else {
+      handleAction(
+        () => onContribute(circleId, contributionAmount),
+        "Contribution",
+      );
+    }
+  };
 
   // Handler for withdrawal confirmation
   const handleWithdrawConfirm = async () => {
@@ -411,22 +465,19 @@ const CircleActions: React.FC<CircleActionsProps> = ({
         if (!hasContributed) {
           return (
             <button
-              onClick={() =>
-                handleAction(
-                  () => onContribute(circleId, contributionAmount),
-                  "Contribution",
-                )
-              }
+              onClick={handleContributeClick}
               disabled={isLoading}
-              className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-              style={{ background: colors.primary }}
+              className={`flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 ${isLateContribution ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+              style={isLateContribution ? {} : { background: colors.primary }}
             >
               {isLoading ? (
                 "Processing..."
               ) : (
                 <>
                   <DollarSign className="w-4 h-4" />
-                  <span>Contribute</span>
+                  <span>
+                    {isLateContribution ? "Contribute (Late)" : "Contribute"}
+                  </span>
                 </>
               )}
             </button>
@@ -452,22 +503,19 @@ const CircleActions: React.FC<CircleActionsProps> = ({
       if (!hasContributed) {
         return (
           <button
-            onClick={() =>
-              handleAction(
-                () => onContribute(circleId, contributionAmount),
-                "Contribution",
-              )
-            }
+            onClick={handleContributeClick}
             disabled={isLoading}
-            className="flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2"
-            style={{ background: colors.primary }}
+            className={`flex-1 py-2 rounded-lg font-semibold text-xs sm:text-sm transition text-white hover:shadow-md flex items-center justify-center gap-1 sm:gap-2 ${isLateContribution ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+            style={isLateContribution ? {} : { background: colors.primary }}
           >
             {isLoading ? (
               "Processing..."
             ) : (
               <>
                 <DollarSign className="w-4 h-4" />
-                <span>Contribute</span>
+                <span>
+                  {isLateContribution ? "Contribute (Late)" : "Contribute"}
+                </span>
               </>
             )}
           </button>
@@ -550,6 +598,18 @@ const CircleActions: React.FC<CircleActionsProps> = ({
             withdrawalInfo.withdrawalReason ||
             "vote_failed"
           }
+          isLoading={isLoading}
+        />
+      )}
+
+      {showLateContributionModal && (
+        <LateContributionModal
+          contributionAmount={contributionAmount}
+          lateFee={lateFee}
+          circleName={circle.name}
+          onConfirm={handleLateContributionConfirm}
+          onCancel={() => setShowLateContributionModal(false)}
+          colors={colors}
           isLoading={isLoading}
         />
       )}
