@@ -26,6 +26,7 @@ import { useNotifications } from "../contexts/NotificationsContext";
 import { useCurrencyConverter } from "../hooks/useCurrencyConverter";
 import { getInitials } from "../utils/helpers";
 import { MdRoomPreferences } from "react-icons/md";
+import SEO from "../components/SEO";
 
 const Settings: React.FC = () => {
   const colors = useThemeColors();
@@ -133,6 +134,11 @@ const Settings: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Settings"
+        description="Customize your Circlepot experience. Manage preferences, security settings, notifications, and more."
+        url="/settings"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}
@@ -168,7 +174,7 @@ const Settings: React.FC = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-lg font-bold">
+                    <div className="w-full h-full bg-linear-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-lg font-bold">
                       {getInitials(profile?.fullName)}
                     </div>
                   )}

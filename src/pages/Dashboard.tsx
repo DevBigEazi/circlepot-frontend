@@ -18,6 +18,7 @@ import AddFundsModal from "../modals/AddFundsModal";
 import WithdrawModal from "../modals/WithdrawModal";
 import { transformCircles } from "../utils/circleTransformer";
 import { useBalance } from "../hooks/useBalance";
+import SEO from "../components/SEO";
 
 const Dashboard: React.FC = () => {
   const account = useActiveAccount();
@@ -138,6 +139,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Dashboard"
+        description="View your Circlepot dashboard. Track your savings circles, personal goals, and manage your community savings all in one place."
+        url="/dashboard"
+      />
       <NavBar
         colors={colors}
         userName={profile?.username}

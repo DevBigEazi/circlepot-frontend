@@ -22,6 +22,7 @@ import {
 } from "../hooks/useTransactionHistory";
 import NavBar from "../components/NavBar";
 import { TransactionItemSkeleton } from "../components/Skeleton";
+import SEO from "../components/SEO";
 
 const TransactionsHistory: React.FC = () => {
   const navigate = useNavigate();
@@ -177,6 +178,11 @@ const TransactionsHistory: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Transaction History"
+        description="View your complete transaction history on Circlepot. Track contributions, payouts, withdrawals, and all financial activity."
+        url="/transactions"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}

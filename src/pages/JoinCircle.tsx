@@ -17,6 +17,7 @@ import { useCircleSavings } from "../hooks/useCircleSavings";
 import { toast } from "sonner";
 import { formatBigInt, getFrequencyText } from "../utils/helpers";
 import { Skeleton } from "../components/Skeleton";
+import SEO from "../components/SEO";
 
 const JoinCircle: React.FC = () => {
   const { circleId } = useParams<{ circleId: string }>();
@@ -192,264 +193,283 @@ const JoinCircle: React.FC = () => {
   })();
 
   return (
-    <div
-      className="min-h-screen py-8 px-4"
-      style={{ backgroundColor: colors.background }}
-    >
-      <div className="max-w-3xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 mb-6 transition hover:opacity-80"
-          style={{ color: colors.text }}
-        >
-          <ArrowLeft size={20} />
-          <span>Back to Dashboard</span>
-        </button>
-
-        {/* Circle Details Card */}
-        <div
-          className="rounded-2xl p-6 sm:p-8 shadow-lg border"
-          style={{
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-start gap-4 mb-6">
-            <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
-              style={{ backgroundColor: colors.primary }}
-            >
-              <Users className="text-white w-8 h-8" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1
-                className="text-2xl sm:text-3xl font-bold mb-2"
-                style={{ color: colors.text }}
-              >
-                {circle.circleName}
-              </h1>
-              <div className="flex items-center gap-2 flex-wrap">
-                {isPublic ? (
-                  <Globe size={16} style={{ color: colors.primary }} />
-                ) : (
-                  <Lock size={16} style={{ color: colors.secondary }} />
-                )}
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    isPublic
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                      : "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-                  }`}
-                >
-                  {isPublic ? "Public" : "Private"}
-                </span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    isFull
-                      ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
-                      : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
-                  }`}
-                >
-                  {isFull ? "Full" : "Open"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Description */}
-          {circle.circleDescription && (
-            <div className="mb-6">
-              <h3
-                className="text-sm font-semibold mb-2"
-                style={{ color: colors.textLight }}
-              >
-                Description
-              </h3>
-              <p style={{ color: colors.text }}>{circle.circleDescription}</p>
-            </div>
-          )}
-
-          {/* Circle Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div
-              className="p-4 rounded-xl"
-              style={{ backgroundColor: colors.accentBg }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <DollarSign size={20} style={{ color: colors.primary }} />
-                <span className="text-sm" style={{ color: colors.textLight }}>
-                  Contribution Amount
-                </span>
-              </div>
-              <p className="text-2xl font-bold" style={{ color: colors.text }}>
-                ${formatBigInt(circle.contributionAmount)}
-              </p>
-            </div>
-
-            <div
-              className="p-4 rounded-xl"
-              style={{ backgroundColor: colors.accentBg }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Calendar size={20} style={{ color: colors.primary }} />
-                <span className="text-sm" style={{ color: colors.textLight }}>
-                  Frequency
-                </span>
-              </div>
-              <p className="text-2xl font-bold" style={{ color: colors.text }}>
-                {getFrequencyText(circle.frequency)}
-              </p>
-            </div>
-
-            <div
-              className="p-4 rounded-xl"
-              style={{ backgroundColor: colors.accentBg }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Users size={20} style={{ color: colors.primary }} />
-                <span className="text-sm" style={{ color: colors.textLight }}>
-                  Members
-                </span>
-              </div>
-              <p className="text-2xl font-bold" style={{ color: colors.text }}>
-                {Number(circle.currentMembers)} / {Number(circle.maxMembers)}
-              </p>
-            </div>
-
-            <div
-              className="p-4 rounded-xl"
-              style={{ backgroundColor: colors.accentBg }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <DollarSign size={20} style={{ color: colors.primary }} />
-                <span className="text-sm" style={{ color: colors.textLight }}>
-                  Collateral Required
-                </span>
-              </div>
-              <p className="text-2xl font-bold" style={{ color: colors.text }}>
-                ${collateralRequired}
-              </p>
-            </div>
-          </div>
-
-          {/* Info Box */}
-          <div
-            className="p-4 rounded-xl mb-6"
-            style={{ backgroundColor: colors.accentBg }}
+    <>
+      <SEO
+        title={`Join ${circle?.circleName || "Circle"}`}
+        description={`Join ${circle?.circleName || "this savings circle"} on Circlepot. View contribution details, collateral requirements, and start saving with the community.`}
+        url={`/join/${circleId}`}
+      />
+      <div
+        className="min-h-screen py-8 px-4"
+        style={{ backgroundColor: colors.background }}
+      >
+        <div className="max-w-3xl mx-auto">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 mb-6 transition hover:opacity-80"
+            style={{ color: colors.text }}
           >
-            <h3
-              className="font-semibold mb-2 flex items-center gap-2"
-              style={{ color: colors.text }}
-            >
-              <AlertCircle size={18} style={{ color: colors.primary }} />
-              What is Collateral?
-            </h3>
-            <p className="text-sm" style={{ color: colors.textLight }}>
-              Collateral is a refundable deposit that ensures all members
-              fulfill their commitment. It covers your total contributions plus
-              a 1% buffer for late fees. You'll get it back when the circle
-              completes successfully.
-            </p>
-          </div>
+            <ArrowLeft size={20} />
+            <span>Back to Dashboard</span>
+          </button>
 
-          {/* Private Circle Info */}
-          {!isPublic && (
+          {/* Circle Details Card */}
+          <div
+            className="rounded-2xl p-6 sm:p-8 shadow-lg border"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-start gap-4 mb-6">
+              <div
+                className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: colors.primary }}
+              >
+                <Users className="text-white w-8 h-8" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1
+                  className="text-2xl sm:text-3xl font-bold mb-2"
+                  style={{ color: colors.text }}
+                >
+                  {circle.circleName}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {isPublic ? (
+                    <Globe size={16} style={{ color: colors.primary }} />
+                  ) : (
+                    <Lock size={16} style={{ color: colors.secondary }} />
+                  )}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      isPublic
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                        : "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                    }`}
+                  >
+                    {isPublic ? "Public" : "Private"}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      isFull
+                        ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+                    }`}
+                  >
+                    {isFull ? "Full" : "Open"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            {circle.circleDescription && (
+              <div className="mb-6">
+                <h3
+                  className="text-sm font-semibold mb-2"
+                  style={{ color: colors.textLight }}
+                >
+                  Description
+                </h3>
+                <p style={{ color: colors.text }}>{circle.circleDescription}</p>
+              </div>
+            )}
+
+            {/* Circle Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <div
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: colors.accentBg }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <DollarSign size={20} style={{ color: colors.primary }} />
+                  <span className="text-sm" style={{ color: colors.textLight }}>
+                    Contribution Amount
+                  </span>
+                </div>
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  ${formatBigInt(circle.contributionAmount)}
+                </p>
+              </div>
+
+              <div
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: colors.accentBg }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <Calendar size={20} style={{ color: colors.primary }} />
+                  <span className="text-sm" style={{ color: colors.textLight }}>
+                    Frequency
+                  </span>
+                </div>
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  {getFrequencyText(circle.frequency)}
+                </p>
+              </div>
+
+              <div
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: colors.accentBg }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <Users size={20} style={{ color: colors.primary }} />
+                  <span className="text-sm" style={{ color: colors.textLight }}>
+                    Members
+                  </span>
+                </div>
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  {Number(circle.currentMembers)} / {Number(circle.maxMembers)}
+                </p>
+              </div>
+
+              <div
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: colors.accentBg }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <DollarSign size={20} style={{ color: colors.primary }} />
+                  <span className="text-sm" style={{ color: colors.textLight }}>
+                    Collateral Required
+                  </span>
+                </div>
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  ${collateralRequired}
+                </p>
+              </div>
+            </div>
+
+            {/* Info Box */}
             <div
-              className="p-4 rounded-xl mb-6 border-2"
-              style={{
-                backgroundColor: colors.accentBg,
-                borderColor: colors.primary + "40",
-              }}
+              className="p-4 rounded-xl mb-6"
+              style={{ backgroundColor: colors.accentBg }}
             >
               <h3
                 className="font-semibold mb-2 flex items-center gap-2"
                 style={{ color: colors.text }}
               >
-                <Lock size={18} style={{ color: colors.primary }} />
-                Private Circle - Invitation Required
+                <AlertCircle size={18} style={{ color: colors.primary }} />
+                What is Collateral?
               </h3>
               <p className="text-sm" style={{ color: colors.textLight }}>
-                This is a private circle. You can only join if the creator has
-                invited you. When you click "Join Circle", the system will
-                verify your invitation. If you haven't been invited, the process
-                will fail.
+                Collateral is a refundable deposit that ensures all members
+                fulfill their commitment. It covers your total contributions
+                plus a 1% buffer for late fees. You'll get it back when the
+                circle completes successfully.
               </p>
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {!account?.address ? (
+            {/* Private Circle Info */}
+            {!isPublic && (
               <div
-                className="flex-1 p-4 rounded-xl text-center"
-                style={{ backgroundColor: colors.accentBg }}
+                className="p-4 rounded-xl mb-6 border-2"
+                style={{
+                  backgroundColor: colors.accentBg,
+                  borderColor: colors.primary + "40",
+                }}
               >
-                <p style={{ color: colors.text }}>
-                  Please login to join this circle
+                <h3
+                  className="font-semibold mb-2 flex items-center gap-2"
+                  style={{ color: colors.text }}
+                >
+                  <Lock size={18} style={{ color: colors.primary }} />
+                  Private Circle - Invitation Required
+                </h3>
+                <p className="text-sm" style={{ color: colors.textLight }}>
+                  This is a private circle. You can only join if the creator has
+                  invited you. When you click "Join Circle", the system will
+                  verify your invitation. If you haven't been invited, the
+                  process will fail.
                 </p>
               </div>
-            ) : !canJoin ? (
-              <div
-                className="flex-1 p-4 rounded-xl text-center"
-                style={{ backgroundColor: colors.accentBg }}
-              >
-                <p style={{ color: colors.text }}>
-                  {isFull
-                    ? "This circle is full"
-                    : isActive
-                      ? "This circle has already started"
-                      : "You cannot join this circle"}
-                </p>
-              </div>
-            ) : (
-              <>
-                <button
-                  onClick={() => navigate("/")}
-                  className="flex-1 py-3 rounded-xl font-semibold transition border hover:opacity-80"
-                  style={{ borderColor: colors.border, color: colors.text }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleJoinCircle}
-                  disabled={isJoining}
-                  className="flex-1 py-3 rounded-xl font-semibold text-white transition shadow-sm hover:shadow-md disabled:opacity-50"
-                  style={{ background: colors.primary }}
-                >
-                  {isJoining ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Joining...
-                    </span>
-                  ) : (
-                    "Join Circle"
-                  )}
-                </button>
-              </>
             )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              {!account?.address ? (
+                <div
+                  className="flex-1 p-4 rounded-xl text-center"
+                  style={{ backgroundColor: colors.accentBg }}
+                >
+                  <p style={{ color: colors.text }}>
+                    Please login to join this circle
+                  </p>
+                </div>
+              ) : !canJoin ? (
+                <div
+                  className="flex-1 p-4 rounded-xl text-center"
+                  style={{ backgroundColor: colors.accentBg }}
+                >
+                  <p style={{ color: colors.text }}>
+                    {isFull
+                      ? "This circle is full"
+                      : isActive
+                        ? "This circle has already started"
+                        : "You cannot join this circle"}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate("/")}
+                    className="flex-1 py-3 rounded-xl font-semibold transition border hover:opacity-80"
+                    style={{ borderColor: colors.border, color: colors.text }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleJoinCircle}
+                    disabled={isJoining}
+                    className="flex-1 py-3 rounded-xl font-semibold text-white transition shadow-sm hover:shadow-md disabled:opacity-50"
+                    style={{ background: colors.primary }}
+                  >
+                    {isJoining ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Joining...
+                      </span>
+                    ) : (
+                      "Join Circle"
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Creator Info */}
+          <div
+            className="mt-6 p-4 rounded-xl"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            }}
+          >
+            <p className="text-sm" style={{ color: colors.textLight }}>
+              Created by{" "}
+              <span className="font-semibold" style={{ color: colors.text }}>
+                {circle.creator?.username ||
+                  circle.creator?.id?.substring(0, 8) + "..."}
+              </span>
+            </p>
           </div>
         </div>
-
-        {/* Creator Info */}
-        <div
-          className="mt-6 p-4 rounded-xl"
-          style={{
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          }}
-        >
-          <p className="text-sm" style={{ color: colors.textLight }}>
-            Created by{" "}
-            <span className="font-semibold" style={{ color: colors.text }}>
-              {circle.creator?.username ||
-                circle.creator?.id?.substring(0, 8) + "..."}
-            </span>
-          </p>
-        </div>
       </div>
-    </div>
+    </>
   );
 };
 

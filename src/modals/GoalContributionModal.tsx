@@ -168,7 +168,7 @@ export const GoalContributionModal: React.FC<GoalContributionModalProps> = ({
               {isLoading ? (
                 <>
                   <Loader size={18} className="animate-spin" />
-                  Sending Transaction...
+                  Contributing...
                 </>
               ) : (
                 <>
