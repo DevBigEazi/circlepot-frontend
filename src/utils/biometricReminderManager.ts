@@ -10,7 +10,7 @@ interface BiometricReminderState {
 }
 
 const REMINDER_STORAGE_KEY = "Circlepot_biometric_reminder_state";
-const DAYS_BEFORE_SHOWING = 3; // Show reminder after 3 days
+const DAYS_BEFORE_SHOWING = 1; // Show reminder after 1 days
 const SNOOZE_DAYS = 5; // Snooze for 5 days when "Maybe Later" is clicked
 
 /**
