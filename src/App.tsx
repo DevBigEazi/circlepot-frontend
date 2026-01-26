@@ -299,6 +299,8 @@ function App({ client }: AppProps) {
                 <BiometricReminderModal
                   onClose={() => setShowBiometricReminder(false)}
                   userId={String(profile.accountId)}
+                  userName={profile.username || ""}
+                  userEmail={profile.email || ""}
                 />
               )}
 

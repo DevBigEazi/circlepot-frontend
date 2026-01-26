@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useBiometricContext } from "../contexts/BiometricContext";
+import { useBiometric } from "../hooks/useBiometric";
 import {
   Fingerprint,
   ScanFace,
@@ -21,13 +22,19 @@ import {
 interface BiometricReminderModalProps {
   onClose: () => void;
   userId: string;
+  userName?: string;
+  userEmail?: string;
 }
 
 const BiometricReminderModal: React.FC<BiometricReminderModalProps> = ({
   onClose,
+  userId,
+  userName = "",
+  userEmail = "",
 }) => {
   const colors = useThemeColors();
   const { enableBiometric } = useBiometricContext();
+  const { registerBiometric } = useBiometric();
   const [isEnabling, setIsEnabling] = useState(false);
 
   const deviceType = getDeviceType();
@@ -40,17 +47,31 @@ const BiometricReminderModal: React.FC<BiometricReminderModalProps> = ({
   const handleEnableBiometric = async () => {
     setIsEnabling(true);
     try {
-      // Enable biometric in context
-      enableBiometric();
-
-      // Mark as enabled in reminder state
-      markBiometricEnabled();
-
-      toast.success("Biometric Security Enabled!", {
-        description: `${biometricName} is now active for faster, secure access.`,
+      // Actually register biometric credentials via WebAuthn
+      const result = await registerBiometric({
+        userId,
+        userName,
+        userEmail,
       });
 
-      onClose();
+      if (result.success) {
+        // Only enable in context after successful registration
+        enableBiometric();
+
+        // Mark as enabled in reminder state
+        markBiometricEnabled();
+
+        toast.success("Biometric Security Enabled!", {
+          description: `${biometricName} is now active for faster, secure access.`,
+        });
+
+        onClose();
+      } else {
+        // Registration failed or was cancelled
+        toast.error(
+          result.error || "Failed to register biometric. Please try again.",
+        );
+      }
     } catch (error) {
       //console.error("Failed to enable biometric:", error);
       toast.error("Something went wrong. Please try again.");
