@@ -5,6 +5,8 @@
  * when rendered anywhere in the component tree.
  */
 
+import image from "../constants/image";
+
 interface SEOProps {
   title?: string;
   description?: string;
@@ -17,8 +19,8 @@ interface SEOProps {
 const DEFAULT_TITLE = "Circlepot - Save Together, Grow Together, Anywhere";
 const DEFAULT_DESCRIPTION =
   "Join rotating savings circles with people worldwide. Build financial discipline, earn trust, and grow your savings with Circlepot's blockchain-powered community savings platform.";
-const DEFAULT_IMAGE = "https://circlepot.xyz/og-image.png";
-const SITE_URL = "https://circlepot.xyz";
+const DEFAULT_IMAGE = image.logo;
+const SITE_URL = "https://test.circlepot.xyz";
 
 export function SEO({
   title,
