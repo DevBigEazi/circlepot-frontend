@@ -15,6 +15,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import { useNotifications } from "../contexts/NotificationsContext";
 import NavBar from "../components/NavBar";
 import { NotificationPreferences } from "../types/notifications";
+import SEO from "../components/SEO";
 
 const NotificationSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -93,6 +94,11 @@ const NotificationSettings: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Notification Settings"
+        description="Customize your notification preferences. Control alerts for circles, goals, payments, and security updates on Circlepot."
+        url="/notifications/settings"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}

@@ -13,6 +13,7 @@ import InviteMembersModal from "../modals/InviteMembersModal";
 import { ActiveCircle } from "../interfaces/interfaces";
 import { Users, TrendingUp, CheckCircle, AlertOctagon } from "lucide-react";
 import { CircleCardSkeleton } from "../components/Skeleton";
+import SEO from "../components/SEO";
 
 const Circles: React.FC = () => {
   const navigate = useNavigate();
@@ -189,6 +190,11 @@ const Circles: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="My Circles"
+        description="Manage your rotating savings circles. Join, contribute, and track your collaborative savings with trusted members from around the world on Circlepot."
+        url="/circles"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}

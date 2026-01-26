@@ -18,6 +18,7 @@ import { useBalance } from "../hooks/useBalance";
 import { useYieldAPY } from "../hooks/useYieldAPY";
 import { USDm_ADDRESS } from "../constants/constants";
 import { Info } from "lucide-react";
+import SEO from "../components/SEO";
 
 const CreateCircle: React.FC = () => {
   const navigate = useNavigate();
@@ -187,6 +188,11 @@ const CreateCircle: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Create Savings Circle"
+        description="Launch a rotating savings circle and invite members worldwide. Set contribution amounts, frequency, and watch your community grow together on Circlepot."
+        url="/create/circle"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}
