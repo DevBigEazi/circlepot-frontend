@@ -11,6 +11,7 @@ import { client } from "../thirdwebClient";
 import { formatBalance } from "../utils/helpers";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import SEO from "../components/SEO";
 
 const Goals: React.FC = () => {
   const navigate = useNavigate();
@@ -131,6 +132,11 @@ const Goals: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="My Goals"
+        description="Track and manage your personal savings goals. Set deadlines, contribute regularly, and achieve your financial targets with Circlepot."
+        url="/goals"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}

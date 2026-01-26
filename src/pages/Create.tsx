@@ -4,6 +4,7 @@ import { Target, Users, Handshake } from "lucide-react";
 import { useThemeColors } from "../hooks/useThemeColors";
 import NavBar from "../components/NavBar";
 import QuickAction from "../components/QuickAction";
+import SEO from "../components/SEO";
 
 const Create: React.FC = () => {
   const navigate = useNavigate();
@@ -46,233 +47,240 @@ const Create: React.FC = () => {
 
   // Show Create Options
   return (
-    <div
-      className="pb-20 min-h-screen"
-      style={{ backgroundColor: colors.background }}
-    >
-      {/* Navigation Bar */}
-      <NavBar
-        variant="minimal"
-        onBack={() => navigate(-1)}
-        title="What would you like to create ?"
-        subtitle="Choose an option to start saving"
-        colors={colors}
+    <>
+      <SEO
+        title="Create"
+        description="Start your savings journey. Create a personal savings goal or launch a rotating savings circle with people worldwide on Circlepot."
+        url="/create"
       />
+      <div
+        className="pb-20 min-h-screen"
+        style={{ backgroundColor: colors.background }}
+      >
+        {/* Navigation Bar */}
+        <NavBar
+          variant="minimal"
+          onBack={() => navigate(-1)}
+          title="What would you like to create ?"
+          subtitle="Choose an option to start saving"
+          colors={colors}
+        />
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Create Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* Create Personal Goal Option */}
-          <button
-            onClick={handleNavigatePersonalGoal}
-            className="p-6 rounded-2xl border-2 transition-all hover:scale-105 text-left"
-            style={{
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor =
-                colors.primary;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor =
-                colors.border;
-            }}
-          >
-            <div className="flex flex-col items-center">
-              <div
-                className="p-4 rounded-2xl mb-4"
-                style={{ backgroundColor: `${colors.primary}15` }}
-              >
-                <Target size={40} style={{ color: colors.primary }} />
-              </div>
-              <h3
-                className="text-lg font-bold mb-2"
-                style={{ color: colors.text }}
-              >
-                Personal Goal
-              </h3>
-              <p
-                className="text-center text-sm mb-4"
-                style={{ color: colors.textLight }}
-              >
-                Set and track your individual savings targets
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.primary + "20",
-                    color: colors.primary,
-                  }}
-                >
-                  Solo Saving
-                </span>
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.primary + "20",
-                    color: colors.primary,
-                  }}
-                >
-                  Custom Timeline
-                </span>
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.primary + "20",
-                    color: colors.primary,
-                  }}
-                >
-                  Flexible Amount
-                </span>
-              </div>
-            </div>
-          </button>
-
-          {/* Create Savings Circle Option */}
-          <button
-            onClick={handleNavigateCircle}
-            className="p-6 rounded-2xl border-2 transition-all hover:scale-105 text-left"
-            style={{
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor =
-                colors.secondary;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor =
-                colors.border;
-            }}
-          >
-            <div className="flex flex-col items-center">
-              <div
-                className="p-4 rounded-2xl mb-4"
-                style={{ backgroundColor: `${colors.secondary}15` }}
-              >
-                <Users size={40} style={{ color: colors.secondary }} />
-              </div>
-              <h3
-                className="text-lg font-bold mb-2"
-                style={{ color: colors.text }}
-              >
-                Savings Circle
-              </h3>
-              <p
-                className="text-center text-sm mb-4"
-                style={{ color: colors.textLight }}
-              >
-                Create a group savings pool with friends
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.warningBg,
-                    color: colors.secondary,
-                  }}
-                >
-                  Group Saving
-                </span>
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.warningBg,
-                    color: colors.secondary,
-                  }}
-                >
-                  Shared Goals
-                </span>
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.warningBg,
-                    color: colors.secondary,
-                  }}
-                >
-                  Social Support
-                </span>
-              </div>
-            </div>
-          </button>
-
-          {/* Create Non-collateralized Circle (Coming Soon) */}
-          <div
-            className="p-6 rounded-2xl border-2 transition-all relative overflow-hidden text-left"
-            style={{
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: 0.7,
-            }}
-          >
-            {/* Coming Soon Badge */}
-            <div
-              className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase tracking-wider shadow-sm"
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          {/* Create Options Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Create Personal Goal Option */}
+            <button
+              onClick={handleNavigatePersonalGoal}
+              className="p-6 rounded-2xl border-2 transition-all hover:scale-105 text-left"
               style={{
-                backgroundColor: colors.secondary,
-                color: "white",
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor =
+                  colors.primary;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor =
+                  colors.border;
               }}
             >
-              Coming Soon
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div
-                className="p-4 rounded-2xl mb-4"
-                style={{ backgroundColor: `${colors.primary}15` }}
-              >
-                <Handshake size={40} style={{ color: colors.primary }} />
+              <div className="flex flex-col items-center">
+                <div
+                  className="p-4 rounded-2xl mb-4"
+                  style={{ backgroundColor: `${colors.primary}15` }}
+                >
+                  <Target size={40} style={{ color: colors.primary }} />
+                </div>
+                <h3
+                  className="text-lg font-bold mb-2"
+                  style={{ color: colors.text }}
+                >
+                  Personal Goal
+                </h3>
+                <p
+                  className="text-center text-sm mb-4"
+                  style={{ color: colors.textLight }}
+                >
+                  Set and track your individual savings targets
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.primary + "20",
+                      color: colors.primary,
+                    }}
+                  >
+                    Solo Saving
+                  </span>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.primary + "20",
+                      color: colors.primary,
+                    }}
+                  >
+                    Custom Timeline
+                  </span>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.primary + "20",
+                      color: colors.primary,
+                    }}
+                  >
+                    Flexible Amount
+                  </span>
+                </div>
               </div>
-              <h3
-                className="text-lg font-bold mb-2"
-                style={{ color: colors.text }}
+            </button>
+
+            {/* Create Savings Circle Option */}
+            <button
+              onClick={handleNavigateCircle}
+              className="p-6 rounded-2xl border-2 transition-all hover:scale-105 text-left"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor =
+                  colors.secondary;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor =
+                  colors.border;
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <div
+                  className="p-4 rounded-2xl mb-4"
+                  style={{ backgroundColor: `${colors.secondary}15` }}
+                >
+                  <Users size={40} style={{ color: colors.secondary }} />
+                </div>
+                <h3
+                  className="text-lg font-bold mb-2"
+                  style={{ color: colors.text }}
+                >
+                  Savings Circle
+                </h3>
+                <p
+                  className="text-center text-sm mb-4"
+                  style={{ color: colors.textLight }}
+                >
+                  Create a group savings pool with friends
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.warningBg,
+                      color: colors.secondary,
+                    }}
+                  >
+                    Group Saving
+                  </span>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.warningBg,
+                      color: colors.secondary,
+                    }}
+                  >
+                    Shared Goals
+                  </span>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.warningBg,
+                      color: colors.secondary,
+                    }}
+                  >
+                    Social Support
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            {/* Create Non-collateralized Circle (Coming Soon) */}
+            <div
+              className="p-6 rounded-2xl border-2 transition-all relative overflow-hidden text-left"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                opacity: 0.7,
+              }}
+            >
+              {/* Coming Soon Badge */}
+              <div
+                className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase tracking-wider shadow-sm"
+                style={{
+                  backgroundColor: colors.secondary,
+                  color: "white",
+                }}
               >
-                Zero Collateral
-              </h3>
-              <p
-                className="text-center text-sm mb-4"
-                style={{ color: colors.textLight }}
-              >
-                Join savings circles based on your reputation score
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.primary + "20",
-                    color: colors.primary,
-                  }}
+                Coming Soon
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div
+                  className="p-4 rounded-2xl mb-4"
+                  style={{ backgroundColor: `${colors.primary}15` }}
                 >
-                  No Deposit
-                </span>
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.primary + "20",
-                    color: colors.primary,
-                  }}
+                  <Handshake size={40} style={{ color: colors.primary }} />
+                </div>
+                <h3
+                  className="text-lg font-bold mb-2"
+                  style={{ color: colors.text }}
                 >
-                  Reputation
-                </span>
-                <span
-                  className="text-xs px-2 py-1 rounded-lg"
-                  style={{
-                    backgroundColor: colors.primary + "20",
-                    color: colors.primary,
-                  }}
+                  Zero Collateral
+                </h3>
+                <p
+                  className="text-center text-sm mb-4"
+                  style={{ color: colors.textLight }}
                 >
-                  Trust Score
-                </span>
+                  Join savings circles based on your reputation score
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.primary + "20",
+                      color: colors.primary,
+                    }}
+                  >
+                    No Deposit
+                  </span>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.primary + "20",
+                      color: colors.primary,
+                    }}
+                  >
+                    Reputation
+                  </span>
+                  <span
+                    className="text-xs px-2 py-1 rounded-lg"
+                    style={{
+                      backgroundColor: colors.primary + "20",
+                      color: colors.primary,
+                    }}
+                  >
+                    Trust Score
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <QuickAction />
+          <QuickAction />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

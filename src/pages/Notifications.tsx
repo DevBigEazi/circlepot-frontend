@@ -13,6 +13,7 @@ import {
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useNotifications } from "../contexts/NotificationsContext";
 import NavBar from "../components/NavBar";
+import SEO from "../components/SEO";
 
 const Notifications: React.FC = () => {
   const navigate = useNavigate();
@@ -132,9 +133,7 @@ const Notifications: React.FC = () => {
         notification.type,
       );
     if (activeTab === "profile")
-      return ["credit_score_changed"].includes(
-        notification.type,
-      );
+      return ["credit_score_changed"].includes(notification.type);
     return true;
   });
 
@@ -149,6 +148,11 @@ const Notifications: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Notifications"
+        description="Stay updated with your Circlepot activity. View circle invites, payment reminders, goal milestones, and important alerts."
+        url="/notifications"
+      />
       <NavBar
         variant="tabs"
         onBack={() => navigate(-1)}

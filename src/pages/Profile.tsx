@@ -21,6 +21,7 @@ import { Skeleton } from "../components/Skeleton";
 import UpdateContactModal from "../modals/UpdateContactModal";
 import { getInitials } from "../utils/helpers";
 import ReferralSection from "../components/ReferralSection";
+import SEO from "../components/SEO";
 
 const Profile: React.FC = () => {
   const colors = useThemeColors();
@@ -236,6 +237,11 @@ const Profile: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="My Profile"
+        description="Manage your Circlepot profile. Update your photo, name, and contact information. Share your referral link to invite others worldwide."
+        url="/profile"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}
@@ -296,7 +302,7 @@ const Profile: React.FC = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold">
+                        <div className="w-full h-full bg-linear-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold">
                           {getInitials(profile?.fullName)}
                         </div>
                       )}

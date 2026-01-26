@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { USDm_ADDRESS } from "../constants/constants";
 import { Info } from "lucide-react";
+import SEO from "../components/SEO";
 
 const CreatePersonalGoal: React.FC = () => {
   const navigate = useNavigate();
@@ -269,6 +270,11 @@ const CreatePersonalGoal: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Create Personal Goal"
+        description="Set a personal savings goal and track your progress. Define your target, contribution schedule, and optionally earn yield on your savings."
+        url="/create/personal-goal"
+      />
       <NavBar
         variant="minimal"
         onBack={() => navigate(-1)}
